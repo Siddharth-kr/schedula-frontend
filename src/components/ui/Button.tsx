@@ -10,7 +10,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={isLoading || disabled}
-        className={`flex w-full items-center justify-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-deep)] disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
+        className={`flex w-full items-center justify-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[var(--brand-deep)] hover:shadow active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70 ${className}`}
         {...props}
       >
         {isLoading ? (

@@ -71,23 +71,29 @@ export function BookingForm({ doctor }: BookingFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+        <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-800 ring-1 ring-inset ring-red-200" role="alert">
           {error}
         </div>
       )}
 
       {/* Date Selection */}
-      <section>
-        <h3 className="mb-4 text-lg font-semibold text-[var(--ink)]">1. Select a Date</h3>
+      <section className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h3 className="mb-5 text-lg font-bold text-[var(--ink)]">1. Select a Date</h3>
         <Input 
           label="Appointment Date" 
           type="date" 
           min={todayStr}
           value={date}
           onChange={(e) => {
-            setDate(e.target.value);
+            const selectedDate = e.target.value;
+            // Add subtle validation for past dates manually typed
+            if (new Date(selectedDate) < new Date(todayStr)) {
+              setDate("");
+              return;
+            }
+            setDate(selectedDate);
             setTime(""); // Reset time when date changes
           }}
           required
@@ -95,10 +101,12 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Time Selection */}
-      <section>
-        <h3 className="mb-4 text-lg font-semibold text-[var(--ink)]">2. Select a Time</h3>
+      <section className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h3 className="mb-5 text-lg font-bold text-[var(--ink)]">2. Select a Time</h3>
         {!date ? (
-          <p className="text-sm text-[var(--muted)]">Please select a date first to see available times.</p>
+          <div className="rounded-xl bg-stone-50 p-8 text-center ring-1 ring-inset ring-stone-200/50">
+            <p className="text-sm font-medium text-[var(--muted)]">Please select a date first to view available times.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {TIME_SLOTS.map((slot) => {
@@ -108,10 +116,10 @@ export function BookingForm({ doctor }: BookingFormProps) {
                   key={slot}
                   type="button"
                   onClick={() => setTime(slot)}
-                  className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`rounded-xl border px-3 py-3 text-sm font-semibold transition-all active:scale-[0.97] ${
                     isSelected
-                      ? "border-[var(--brand)] bg-[var(--brand)] text-white"
-                      : "border-[var(--line)] bg-white text-[var(--ink)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                      ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-md ring-2 ring-[var(--brand)]/20"
+                      : "border-[var(--line)] bg-white text-[var(--ink)] shadow-sm hover:border-[var(--brand)] hover:text-[var(--brand)]"
                   }`}
                 >
                   {slot}
@@ -123,8 +131,8 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Reason */}
-      <section>
-        <h3 className="mb-4 text-lg font-semibold text-[var(--ink)]">3. Visit Details</h3>
+      <section className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h3 className="mb-5 text-lg font-bold text-[var(--ink)]">3. Visit Details</h3>
         <Input 
           label="Reason for visit (optional)" 
           type="text" 
@@ -135,34 +143,45 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Summary & Submit */}
-      <div className="rounded-xl border border-[var(--line)] bg-stone-50 p-5 mt-4">
-        <h3 className="mb-4 text-base font-semibold text-[var(--ink)]">Booking Summary</h3>
-        <dl className="mb-6 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-[var(--muted)]">Doctor</dt>
-            <dd className="font-medium text-[var(--ink)]">{doctor.name}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-[var(--muted)]">Specialty</dt>
-            <dd className="font-medium text-[var(--ink)]">{doctor.specialty}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-[var(--muted)]">Date & Time</dt>
-            <dd className="font-medium text-[var(--ink)]">
-              {date ? new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : "—"} 
-              {time ? `, ${time}` : ""}
-            </dd>
-          </div>
-          <div className="flex justify-between border-t border-[var(--line)] pt-2 mt-2">
-            <dt className="font-medium text-[var(--ink)]">Total Fee</dt>
-            <dd className="font-bold text-[var(--ink)]">${doctor.consultationFee}</dd>
-          </div>
-        </dl>
+      <section className="mt-2 overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-md">
+        <div className="bg-stone-50/80 p-6 border-b border-[var(--line)]">
+          <h3 className="text-base font-bold tracking-tight text-[var(--ink)] uppercase">Booking Summary</h3>
+        </div>
+        
+        <div className="p-6">
+          <dl className="space-y-4 text-sm">
+            <div className="flex justify-between items-center">
+              <dt className="text-[var(--muted)] font-medium">Doctor</dt>
+              <dd className="font-bold text-[var(--ink)] text-right">{doctor.name}</dd>
+            </div>
+            <div className="flex justify-between items-center">
+              <dt className="text-[var(--muted)] font-medium">Specialty</dt>
+              <dd className="font-semibold text-[var(--brand)] text-right">{doctor.specialty}</dd>
+            </div>
+            <div className="flex justify-between items-center">
+              <dt className="text-[var(--muted)] font-medium">Date & Time</dt>
+              <dd className="font-bold text-[var(--ink)] text-right">
+                {date ? new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : "—"} 
+                {time ? `, ${time}` : ""}
+              </dd>
+            </div>
+            <div className="my-4 border-t border-dashed border-[var(--line)]"></div>
+            <div className="flex justify-between items-center text-lg">
+              <dt className="font-bold text-[var(--ink)]">Total Fee</dt>
+              <dd className="font-bold text-[var(--brand)]">${doctor.consultationFee}</dd>
+            </div>
+          </dl>
 
-        <Button type="submit" disabled={!canSubmit || isLoading} isLoading={isLoading}>
-          Confirm Booking
-        </Button>
-      </div>
+          <div className="mt-8">
+            <Button type="submit" disabled={!canSubmit || isLoading} isLoading={isLoading}>
+              Confirm Booking
+            </Button>
+            <p className="mt-3 text-center text-xs font-medium text-[var(--muted)]">
+              You won&apos;t be charged until your appointment.
+            </p>
+          </div>
+        </div>
+      </section>
     </form>
   );
 }

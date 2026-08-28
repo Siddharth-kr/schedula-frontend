@@ -16,14 +16,14 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-[var(--line)] bg-white/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-[var(--line)] bg-white/85 backdrop-blur-md shadow-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8 lg:px-12">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="grid size-8 place-items-center rounded-lg bg-[var(--brand)] font-serif font-bold text-white">
+          <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
+            <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-lg font-bold text-white shadow-sm ring-1 ring-[var(--brand-deep)]/20">
               S
             </div>
-            <span className="text-lg font-bold tracking-tight text-[var(--ink)]">Schedula</span>
+            <span className="text-xl font-bold tracking-tight text-[var(--ink)]">Schedula</span>
           </Link>
           
           <div className="hidden space-x-6 sm:block">
@@ -47,7 +47,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <Link 
             href="/login" 
-            className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-deep)]"
+            className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[var(--brand-deep)] hover:shadow active:scale-[0.98]"
           >
             Sign In
           </Link>

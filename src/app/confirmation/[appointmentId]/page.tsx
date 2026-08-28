@@ -46,35 +46,35 @@ export default function ConfirmationPage() {
         )}
 
         {status === "ready" && appointment && (
-          <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white text-center shadow-sm">
-            <div className="bg-emerald-50 px-6 py-8">
-              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50">
-                <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="overflow-hidden rounded-3xl border border-[var(--line)] bg-white text-center shadow-xl shadow-stone-200/50">
+            <div className="bg-emerald-50/50 px-6 py-10 sm:px-10">
+              <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-8 ring-emerald-500/20">
+                <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-emerald-900">Booking Confirmed!</h1>
-              <p className="mt-2 text-sm text-emerald-700">
+              <h1 className="text-3xl font-bold tracking-tight text-emerald-950">Booking Confirmed!</h1>
+              <p className="mt-2.5 text-sm font-medium text-emerald-800">
                 Your appointment with {appointment.clinician} has been successfully scheduled.
               </p>
             </div>
             
-            <div className="px-6 py-6 text-left">
-              <dl className="space-y-4 text-sm">
-                <div className="flex justify-between border-b border-[var(--line)] pb-4">
-                  <dt className="text-[var(--muted)]">Patient</dt>
-                  <dd className="font-medium text-[var(--ink)]">{appointment.patient.name}</dd>
+            <div className="px-6 py-8 text-left sm:px-10">
+              <dl className="space-y-5 text-sm">
+                <div className="flex justify-between border-b border-[var(--line)] pb-5">
+                  <dt className="text-[var(--muted)] font-medium">Patient</dt>
+                  <dd className="font-bold text-[var(--ink)] text-right">{appointment.patient.name}</dd>
                 </div>
-                <div className="flex justify-between border-b border-[var(--line)] pb-4">
-                  <dt className="text-[var(--muted)]">Doctor</dt>
-                  <dd className="font-medium text-[var(--ink)]">
+                <div className="flex justify-between border-b border-[var(--line)] pb-5">
+                  <dt className="text-[var(--muted)] font-medium">Doctor</dt>
+                  <dd className="font-bold text-[var(--ink)] text-right">
                     {appointment.clinician}
-                    <span className="block text-right text-xs font-normal text-[var(--muted)]">{appointment.specialty}</span>
+                    <span className="block text-right text-xs font-semibold text-[var(--brand)]">{appointment.specialty}</span>
                   </dd>
                 </div>
-                <div className="flex justify-between border-b border-[var(--line)] pb-4">
-                  <dt className="text-[var(--muted)]">Date & Time</dt>
-                  <dd className="font-medium text-[var(--ink)]">
+                <div className="flex justify-between border-b border-[var(--line)] pb-5">
+                  <dt className="text-[var(--muted)] font-medium">Date & Time</dt>
+                  <dd className="font-bold text-[var(--ink)] text-right">
                     {new Date(appointment.startsAt).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
                     <br />
                     <span className="text-[var(--muted)]">
@@ -82,23 +82,25 @@ export default function ConfirmationPage() {
                     </span>
                   </dd>
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-[var(--muted)]">Status</dt>
-                  <dd className="font-medium capitalize text-emerald-600">{appointment.status}</dd>
+                <div className="flex justify-between items-center">
+                  <dt className="text-[var(--muted)] font-medium">Status</dt>
+                  <dd className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold capitalize text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                    {appointment.status}
+                  </dd>
                 </div>
               </dl>
             </div>
             
-            <div className="bg-stone-50 px-6 py-5 sm:flex sm:flex-row-reverse sm:gap-3">
+            <div className="bg-stone-50/80 px-6 py-6 sm:flex sm:flex-row-reverse sm:gap-3 sm:px-10 border-t border-[var(--line)]">
               <Link 
                 href="/doctors"
-                className="block w-full rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-deep)] sm:w-auto"
+                className="block w-full rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[var(--brand-deep)] hover:shadow active:scale-[0.98] sm:w-auto"
               >
                 Book Another
               </Link>
               <Link 
                 href="/"
-                className="mt-3 block w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--ink)] hover:bg-stone-50 sm:mt-0 sm:w-auto"
+                className="mt-3 block w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--ink)] shadow-sm transition-all hover:border-[var(--brand)] hover:text-[var(--brand)] active:scale-[0.98] sm:mt-0 sm:w-auto"
               >
                 View Dashboard
               </Link>

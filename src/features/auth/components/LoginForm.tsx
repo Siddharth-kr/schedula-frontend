@@ -14,6 +14,7 @@ export function LoginForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,16 +111,25 @@ export function LoginForm() {
         autoComplete="email"
         disabled={isLoading}
       />
-      <Input
-        label="Password"
-        type="password"
-        placeholder="••••••••"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        error={passwordError}
-        autoComplete={mode === "login" ? "current-password" : "new-password"}
-        disabled={isLoading}
-      />
+      <div className="relative">
+        <Input
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={passwordError}
+          autoComplete={mode === "login" ? "current-password" : "new-password"}
+          disabled={isLoading}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className={`absolute right-3 text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] ${passwordError ? 'top-8' : 'top-9'}`}
+        >
+          {showPassword ? "Hide" : "Show"}
+        </button>
+      </div>
       <div className="mt-2">
         <Button type="submit" isLoading={isLoading}>
           {mode === "login" ? "Sign in" : "Create account"}
