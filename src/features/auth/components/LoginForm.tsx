@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { loginWithEmail } from "../api/login";
-import { signupWithEmail } from "../api/signup";
 
 export function LoginForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
   
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,34 +18,21 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Basic validation state
-  const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
   const validate = () => {
     let isValid = true;
-    setNameError("");
     setEmailError("");
     setPasswordError("");
 
-    if (mode === "signup" && !name.trim()) {
-      setNameError("Name is required");
-      isValid = false;
-    }
-
     if (!email) {
       setEmailError("Email is required");
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError("Please enter a valid email address");
       isValid = false;
     }
 
     if (!password) {
       setPasswordError("Password is required");
-      isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
       isValid = false;
     }
 
@@ -62,12 +47,8 @@ export function LoginForm() {
 
     setIsLoading(true);
     try {
-      if (mode === "login") {
-        await loginWithEmail(email, password);
-      } else {
-        await signupWithEmail(name, email, password);
-      }
-      // Navigate to doctors page after successful login/signup
+      await loginWithEmail(email, password);
+      // Navigate to doctors page after successful login
       router.push("/doctors");
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -83,24 +64,11 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+        <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200" role="alert">
           {error}
         </div>
       )}
       
-      {mode === "signup" && (
-        <Input
-          label="Full Name"
-          type="text"
-          placeholder="Alex Patient"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          error={nameError}
-          autoComplete="name"
-          disabled={isLoading}
-        />
-      )}
-
       <Input
         label="Email address"
         type="email"
@@ -115,46 +83,40 @@ export function LoginForm() {
         <Input
           label="Password"
           type={showPassword ? "text" : "password"}
-          placeholder="••••••••"
+          placeholder=""
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={passwordError}
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
+          autoComplete="current-password"
           disabled={isLoading}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className={`absolute right-3 text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] ${passwordError ? 'top-8' : 'top-9'}`}
+          className={`absolute right-3 text-xs font-bold text-[var(--brand)] hover:text-[var(--brand-deep)] ${passwordError ? 'top-8' : 'top-9'}`}
         >
           {showPassword ? "Hide" : "Show"}
         </button>
       </div>
       <div className="mt-2">
-        <Button type="submit" isLoading={isLoading}>
-          {mode === "login" ? "Sign in" : "Create account"}
+        <Button type="submit" isLoading={isLoading} className="w-full py-4 text-base">
+          Sign in
         </Button>
       </div>
       
       <p className="text-center text-sm text-[var(--muted)]">
-        {mode === "login" ? "Don't have an account? " : "Already have an account? "}
-        <button 
-          type="button" 
-          onClick={() => {
-            setMode(mode === "login" ? "signup" : "login");
-            setError(null);
-          }}
-          className="font-semibold text-[var(--brand)] hover:underline"
+        Don&apos;t have an account?{" "}
+        <Link 
+          href="/register"
+          className="font-semibold text-[var(--brand)] hover:underline transition-all"
         >
-          {mode === "login" ? "Sign up" : "Sign in"}
-        </button>
+          Sign up
+        </Link>
       </p>
 
-      {mode === "login" && (
-        <p className="text-center text-xs text-[var(--muted)]">
-          Tip: Use password <strong>password123</strong>
-        </p>
-      )}
+      <p className="text-center text-xs text-[var(--muted)] mt-2">
+        Tip: Use password <strong>password123</strong>
+      </p>
     </form>
   );
 }

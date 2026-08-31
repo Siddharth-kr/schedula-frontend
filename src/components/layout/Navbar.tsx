@@ -42,7 +42,7 @@ export function Navbar() {
 
   // Hide navbar on auth screens if desired, but prompt says "provide simple link back to Schedula"
   // so we should probably show it, or a simplified version. For now, keep it on.
-  if (pathname === "/login" || pathname === "/doctor/login" || pathname === "/doctor/register") {
+  if (pathname === "/login" || pathname === "/register" || pathname === "/doctor/login" || pathname === "/doctor/register") {
     // Return simplified navbar for auth pages
     return (
       <nav className="sticky top-0 z-50 w-full border-b border-[var(--line)] bg-white/85 backdrop-blur-md shadow-sm">
