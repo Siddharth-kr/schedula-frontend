@@ -1,20 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root { 
-  --canvas: #f9fafb; 
-  --ink: #111827; 
-  --muted: #6b7280; 
-  --line: #e5e7eb; 
-  --brand: #0e6b56; 
-  --brand-deep: #08483a; 
+  --canvas: #F7F9F8; 
+  --ink: #1B4B66; 
+  --muted: #64748b; 
+  --line: #e2e8f0; 
+  --brand: #4F9C90; 
+  --brand-deep: #3D8A7E; 
+  --sage: #8FBFAE;
+  --success: #2F8F6F;
+  --error: #C1503D;
 }
+
 * { box-sizing: border-box; } 
 html { background: var(--canvas); } 
 body { 
   background: var(--canvas); 
   color: var(--ink); 
-  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-inter), Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 } 
@@ -24,4 +29,7 @@ button:focus-visible, a:focus-visible {
   outline: 2px solid var(--brand); 
   outline-offset: 2px; 
 }
-@media (prefers-reduced-motion: no-preference) { button, a { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease; } button:active { transform: scale(0.97); } }
+@media (prefers-reduced-motion: no-preference) { 
+  button, a { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease; } 
+  button:active { transform: scale(0.97); } 
+}

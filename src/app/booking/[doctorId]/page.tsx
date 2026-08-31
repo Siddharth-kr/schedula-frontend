@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { getDoctor } from "@/features/doctors/api/get-doctor";
 import type { Doctor } from "@/types/doctor";
 import { BookingForm } from "@/features/booking/components/BookingForm";
@@ -39,9 +40,9 @@ export default function BookingPage() {
         {status === "error" && (
           <div className="rounded-2xl border border-red-100 bg-red-50 p-10 text-center" role="alert">
             <p className="text-lg font-medium text-red-800">Doctor not found.</p>
-            <a href="/doctors" className="mt-4 inline-block rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm hover:bg-red-50 active:scale-[0.98]">
+            <Link href="/doctors" className="mt-4 inline-block rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm hover:bg-red-50 active:scale-[0.98]">
               Back to Doctors
-            </a>
+            </Link>
           </div>
         )}
 

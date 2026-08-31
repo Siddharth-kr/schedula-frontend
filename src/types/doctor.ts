@@ -4,6 +4,8 @@ export type Doctor = {
   specialty: string;
   imageUrl: string | null;
   experienceYears: number;
+  qualification?: string;
+  bio?: string;
   rating: number;
   reviewCount: number;
   consultationFee: number;

@@ -1,49 +1,50 @@
-import { LoginForm } from "@/features/auth/components/LoginForm";
+import { DoctorLoginForm } from "@/features/doctor-auth/components/DoctorLoginForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign in | Schedula",
+  title: "Doctor Login | Schedula",
 };
 
-export default function LoginPage() {
+export default function DoctorLoginPage() {
   return (
     <main className="flex min-h-[calc(100vh-4rem)] bg-[var(--canvas)]">
       {/* Left pane: Healthcare Visual */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[var(--ink)] flex-col justify-between p-12 xl:p-20 text-white">
+      <div className="hidden lg:flex lg:w-1/2 bg-[var(--brand)] flex-col justify-between p-12 xl:p-20 text-white">
         <div>
-          <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-2xl font-bold shadow-sm ring-1 ring-white/20">
-            S
+          <div className="grid size-12 place-items-center rounded-xl bg-white/10 font-serif text-2xl font-bold shadow-sm ring-1 ring-white/20">
+            D
           </div>
         </div>
         <div>
           <h1 className="font-serif text-5xl xl:text-6xl font-bold leading-tight tracking-tight mb-6 text-[var(--canvas)]">
-            Healthcare<br />without the hassle.
+            Provider Portal
           </h1>
-          <p className="text-lg text-stone-300 max-w-md">
-            Book appointments, manage your schedule, and connect with top medical professionals in seconds.
+          <p className="text-lg text-emerald-50 max-w-md">
+            Manage your practice, configure your availability, and connect with your patients effortlessly.
           </p>
         </div>
-        <div className="text-sm font-medium text-stone-400">
-          © {new Date().getFullYear()} Schedula. All rights reserved.
+        <div className="text-sm font-medium text-emerald-100/60">
+          © {new Date().getFullYear()} Schedula for Providers.
         </div>
       </div>
 
       {/* Right pane: Form */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8 sm:p-12 xl:p-20">
-        <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
+          
           <div className="text-center lg:text-left">
             <div className="lg:hidden mx-auto grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-2xl font-bold text-white shadow-sm ring-1 ring-white/20 mb-8">
-              S
+              D
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-[var(--ink)] font-serif">
-              Welcome back
+              Doctor Login
             </h2>
             <p className="mt-2.5 text-base text-[var(--muted)]">
-              Sign in to manage your appointments
+              Sign in to manage your practice
             </p>
           </div>
           
-          <LoginForm />
+          <DoctorLoginForm />
         </div>
       </div>
     </main>
