@@ -28,6 +28,7 @@ export type AvailabilitySlot = {
   startTime: string; // 24h format, e.g. "09:00"
   endTime: string; // 24h format, e.g. "09:30"
   isBooked: boolean;
+  isUnavailable?: boolean; // explicit unavailability that splits/overrides rules
   appointmentId?: string; // set when booked
 };
 

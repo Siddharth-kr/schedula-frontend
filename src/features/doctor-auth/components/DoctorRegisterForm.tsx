@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { doctorRegister } from "../api/doctor-register";
+import { toast } from "react-toastify";
 
 export function DoctorRegisterForm() {
   const router = useRouter();
@@ -94,9 +95,11 @@ export function DoctorRegisterForm() {
         email,
         password,
       });
+      toast.success("Doctor account created successfully.");
       // Redirect to login page after successful registration
       router.push("/doctor/login");
     } catch (err: unknown) {
+      toast.error("Failed to create doctor account.");
       if (err instanceof Error) {
         setError(err.message);
       } else {

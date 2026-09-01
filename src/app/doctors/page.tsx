@@ -19,7 +19,7 @@ export default function DoctorsPage() {
       <div className="mx-auto max-w-7xl">
         <header className="mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between border-b border-[var(--line)] pb-8">
           <div>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-[var(--ink)] font-serif">Our Specialists</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--ink)] font-serif">Our Specialists</h1>
             <p className="mt-3 max-w-2xl text-lg text-[var(--muted)]">Find the right specialist and book an appointment instantly.</p>
           </div>
           <div className="w-full sm:w-80">
@@ -33,15 +33,15 @@ export default function DoctorsPage() {
         </header>
 
         {status === "loading" && (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Loading doctors">
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Loading doctors">
             {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="h-80 w-full animate-pulse rounded-2xl bg-slate-100 ring-1 ring-slate-200" />
+              <div key={item} className="h-64 w-full animate-pulse rounded-2xl bg-slate-100 ring-1 ring-slate-200" />
             ))}
           </div>
         )}
 
         {status === "error" && (
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-12 text-center" role="alert">
+          <div className="rounded-2xl border border-red-100 bg-red-50 p-8 text-center" role="alert">
             <div className="mx-auto grid size-12 place-items-center rounded-full bg-red-100 text-[var(--error)] mb-4">
               <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -59,7 +59,7 @@ export default function DoctorsPage() {
         )}
 
         {status === "ready" && filteredDoctors.length > 0 && (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredDoctors.map((doctor) => (
               <DoctorCard key={doctor.id} doctor={doctor} />
             ))}
@@ -67,7 +67,7 @@ export default function DoctorsPage() {
         )}
 
         {status === "ready" && filteredDoctors.length === 0 && (
-          <div className="rounded-2xl border border-[var(--line)] bg-slate-50/50 p-16 text-center">
+          <div className="rounded-2xl border border-[var(--line)] bg-slate-50/50 p-10 text-center">
             <div className="mx-auto grid size-16 place-items-center rounded-full bg-slate-100 text-[var(--muted)] mb-5">
               <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

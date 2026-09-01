@@ -57,10 +57,10 @@ export default function DoctorPortfolioPage() {
 
   return (
     <main className="min-h-screen bg-[var(--canvas)] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-4xl">
         
         {/* Back Link */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Link href="/doctors" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-[var(--brand)] transition-colors">
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Back to doctors
@@ -69,20 +69,20 @@ export default function DoctorPortfolioPage() {
 
         {status === "loading" && (
           <div className="space-y-6" aria-busy="true">
+            <div className="h-48 w-full animate-pulse rounded-2xl bg-white ring-1 ring-[var(--line)]" />
             <div className="h-64 w-full animate-pulse rounded-2xl bg-white ring-1 ring-[var(--line)]" />
-            <div className="h-96 w-full animate-pulse rounded-2xl bg-white ring-1 ring-[var(--line)]" />
           </div>
         )}
 
         {status === "error" && (
-          <div className="rounded-2xl border border-[var(--line)] bg-white p-16 text-center shadow-sm" role="alert">
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-10 text-center shadow-sm" role="alert">
             <div className="mx-auto grid size-16 place-items-center rounded-full bg-slate-50 text-[var(--muted)] mb-6 ring-1 ring-[var(--line)]">
               <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-[var(--ink)] font-serif mb-2">Doctor not found</h2>
-            <p className="text-[var(--muted)] mb-8">The professional you are looking for does not exist or has been removed.</p>
+            <p className="text-[var(--muted)] mb-6">The professional you are looking for does not exist or has been removed.</p>
             <Link href="/doctors" className="inline-flex justify-center items-center rounded-xl bg-[var(--brand)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[var(--brand-deep)] active:scale-[0.98]">
               Browse all doctors
             </Link>
@@ -90,13 +90,13 @@ export default function DoctorPortfolioPage() {
         )}
 
         {status === "ready" && doctor && (
-          <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-start">
+          <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
             
             {/* Left Column: Doctor Info */}
-            <div className="space-y-8">
+            <div className="space-y-6">
               
               {/* Header Card */}
-              <div className="rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm">
+              <div className="rounded-3xl border border-[var(--line)] bg-white p-5 sm:p-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
                   <div className="grid size-24 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-4xl font-bold text-white shadow-md ring-1 ring-white/20">
                     {doctor.name.replace("Dr. ", "").charAt(0)}
@@ -129,7 +129,7 @@ export default function DoctorPortfolioPage() {
               </div>
 
               {/* About Card */}
-              <div className="rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm">
+              <div className="rounded-3xl border border-[var(--line)] bg-white p-5 sm:p-6 shadow-sm">
                 <h2 className="text-xl font-bold text-[var(--ink)] font-serif mb-4">About</h2>
                 <p className="text-[var(--muted)] leading-relaxed text-base">
                   {doctor.bio || `${doctor.name} is a dedicated ${doctor.specialty.toLowerCase()} with ${doctor.experienceYears} years of medical experience. They are committed to providing personalized, comprehensive healthcare and staying current with the latest medical advancements to ensure optimal patient outcomes.`}
@@ -165,7 +165,7 @@ export default function DoctorPortfolioPage() {
             {/* Right Column: Booking & Availability */}
             <div className="space-y-6 lg:sticky lg:top-8">
               
-              <div className="rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-md">
+              <div className="rounded-3xl border border-[var(--line)] bg-white p-5 sm:p-6 shadow-md">
                 <div className="mb-6 flex items-end justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Consultation</p>
@@ -173,7 +173,7 @@ export default function DoctorPortfolioPage() {
                   </div>
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-6">
                   <h3 className="font-bold text-[var(--ink)] mb-4 flex items-center gap-2">
                     <svg className="size-5 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     Availability Preview

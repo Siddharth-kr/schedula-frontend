@@ -13,6 +13,7 @@ const fraunces = Fraunces({
 });
 
 import { Navbar } from "@/components/layout/Navbar";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Schedula | Appointment operations starter",
@@ -30,6 +31,7 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans text-[var(--ink)]">
+        <ToastProvider />
         <Navbar />
         {children}
       </body>

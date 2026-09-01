@@ -2,12 +2,15 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getDoctorSession } from "@/lib/availability-store";
 import type { DoctorProfile } from "@/types/availability";
+import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment } from "@/types/appointment";
 import { Input } from "@/components/ui/Input";
+import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 
-type StatusFilter = "all" | "pending" | "confirmed" | "cancelled";
+type StatusFilter = "all" | "pending" | "confirmed" | "upcoming" | "completed" | "cancelled" | "missed";
 
 export function DoctorAppointments() {
   const router = useRouter();
@@ -30,23 +33,15 @@ export function DoctorAppointments() {
     
     async function fetchAppointments(doc: DoctorProfile) {
       try {
-        const res = await fetch("/api/appointments");
-        if (!res.ok) throw new Error("Failed to fetch appointments");
+        const myAppointments = getAppointmentsForDoctor(doc.id);
         
-        const json = await res.json();
-        const allAppointments: Appointment[] = json.data || [];
-        
-        // Strict isolation: only appointments for this doctor
-        const myAppointments = allAppointments.filter(
-          (apt) => apt.clinician === doc.name
-        );
-        
-        // Sort newest/closest first
-        myAppointments.sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+        // Sort by date descending
+        myAppointments.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
         
         setDoctor(doc);
         setAppointments(myAppointments);
-      } catch {
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
         setErrorMsg("Failed to load appointments. Please try again later.");
       } finally {
         setIsLoading(false);
@@ -54,6 +49,21 @@ export function DoctorAppointments() {
     }
     
     fetchAppointments(session);
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "schedula_appointments") {
+        fetchAppointments(session);
+      }
+    };
+    const handleCustomChange = () => fetchAppointments(session);
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("schedula_appointments_updated", handleCustomChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("schedula_appointments_updated", handleCustomChange);
+    };
   }, [router]);
 
   // Derived filtered list
@@ -88,7 +98,7 @@ export function DoctorAppointments() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-12 lg:px-12 space-y-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end border-b border-[var(--line)] pb-6">
         <div>
@@ -106,7 +116,7 @@ export function DoctorAppointments() {
       {/* Filters Toolbar */}
       <div className="flex flex-col justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[var(--line)] sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
-          {(["all", "pending", "confirmed", "cancelled"] as StatusFilter[]).map((status) => (
+          {(["all", "pending", "confirmed", "upcoming", "completed", "cancelled", "missed"] as StatusFilter[]).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -134,7 +144,7 @@ export function DoctorAppointments() {
       {/* Appointments List */}
       <section className="rounded-3xl bg-white shadow-sm ring-1 ring-[var(--line)] overflow-hidden">
         {filteredAppointments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-20 text-center">
+          <div className="flex flex-col items-center justify-center p-12 text-center">
             <div className="grid size-16 place-items-center rounded-full bg-slate-50 text-[var(--muted)] ring-1 ring-inset ring-[var(--line)]">
               <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -151,7 +161,7 @@ export function DoctorAppointments() {
               const displayTime = dateObj.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit' });
               
               return (
-                <div key={apt.id} className="flex flex-col p-6 hover:bg-slate-50/50 sm:flex-row sm:items-center justify-between gap-6 transition-colors">
+                <div key={apt.id} className="flex flex-col p-5 hover:bg-slate-50/50 sm:flex-row sm:items-center justify-between gap-6 transition-colors">
                   <div className="flex items-center gap-5">
                     <div className="hidden sm:grid size-12 place-items-center rounded-2xl bg-[var(--brand)]/10 font-bold text-[var(--brand)] ring-1 ring-[var(--brand)]/20">
                       {apt.patient.initials}
@@ -176,16 +186,18 @@ export function DoctorAppointments() {
                   </div>
                   
                   <div className="flex items-center justify-between gap-6 sm:flex-col sm:items-end sm:gap-2.5">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
-                      apt.status === "confirmed" ? "bg-[var(--success)]/10 text-[var(--success)] ring-1 ring-inset ring-[var(--success)]/20" :
-                      apt.status === "pending" ? "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20" :
-                      "bg-red-50 text-[var(--error)] ring-1 ring-inset ring-[var(--error)]/20"
-                    }`}>
-                      {apt.status}
-                    </span>
-                    <span className="text-sm font-semibold text-[var(--muted)] max-w-[240px] truncate" title={apt.reason}>
-                      {apt.reason || "General Consultation"}
-                    </span>
+                    <AppointmentStatusBadge status={apt.status} />
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-sm font-semibold text-[var(--muted)] max-w-[240px] truncate" title={apt.reason}>
+                        {apt.reason || "General Consultation"}
+                      </span>
+                      <Link 
+                        href={`/doctor/appointments/${apt.id}`}
+                        className="text-sm font-bold text-[var(--brand)] hover:text-[var(--brand-deep)] hover:underline"
+                      >
+                        View Details →
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );

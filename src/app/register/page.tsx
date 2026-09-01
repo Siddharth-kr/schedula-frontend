@@ -9,16 +9,16 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-[calc(100vh-4rem)] bg-[var(--canvas)]">
       {/* Left pane: Healthcare Visual */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-1/3 bg-[var(--ink)] flex-col justify-between p-12 xl:p-16 text-white relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-5/12 xl:w-1/3 bg-[var(--ink)] flex-col justify-between p-8 xl:p-12 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)]/20 to-[var(--ink)] opacity-50"></div>
         <div className="relative z-10">
-          <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-2xl font-bold shadow-sm ring-1 ring-white/20 mb-16">
+          <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-2xl font-bold shadow-sm ring-1 ring-white/20 mb-8">
             S
           </div>
           <h1 className="font-serif text-4xl xl:text-5xl font-bold leading-tight tracking-tight mb-6 text-[var(--canvas)]">
             Your healthcare, organized.
           </h1>
-          <p className="text-base xl:text-lg text-stone-300 max-w-sm mb-12">
+          <p className="text-base xl:text-lg text-stone-300 max-w-sm mb-8">
             Book appointments, manage your visits, and stay connected with your healthcare providers  all in one place.
           </p>
           
@@ -50,8 +50,8 @@ export default function RegisterPage() {
       </div>
 
       {/* Right pane: Form */}
-      <div className="flex w-full lg:w-7/12 xl:w-2/3 items-center justify-center p-6 sm:p-10 xl:p-16 overflow-y-auto">
-        <div className="w-full max-w-2xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex w-full lg:w-7/12 xl:w-2/3 items-center justify-center p-6 sm:p-8 xl:p-12 overflow-y-auto">
+        <div className="w-full max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center lg:text-left">
             <div className="lg:hidden mx-auto grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-2xl font-bold text-white shadow-sm ring-1 ring-white/20 mb-8">
               S

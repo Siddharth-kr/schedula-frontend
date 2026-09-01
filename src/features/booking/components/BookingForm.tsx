@@ -8,6 +8,7 @@ import type { Doctor } from "@/types/doctor";
 import { createAppointment } from "@/features/appointments/api/create-appointment";
 import { getAvailableSlotsForDoctor, markSlotBooked } from "@/lib/availability-store";
 import type { AvailabilitySlot } from "@/types/availability";
+import { toast } from "react-toastify";
 
 type BookingFormProps = {
   doctor: Doctor;
@@ -80,6 +81,7 @@ export function BookingForm({ doctor }: BookingFormProps) {
     const stillAvailable = latestSlots.find(s => s.id === selectedSlot.id && !s.isBooked);
     
     if (!stillAvailable) {
+      toast.warning("This appointment slot is no longer available.");
       setError("This time slot is no longer available. Please select another slot.");
       // Refresh UI slots to remove the booked one
       setAvailableSlots(latestSlots);
@@ -103,6 +105,7 @@ export function BookingForm({ doctor }: BookingFormProps) {
     try {
       const appointment = await createAppointment({
         patient: { name: patientName },
+        doctorId: doctor.id,
         clinician: doctor.name,
         specialty: doctor.specialty,
         startsAt,
@@ -112,8 +115,10 @@ export function BookingForm({ doctor }: BookingFormProps) {
       // Mark the slot as booked in our frontend availability store
       markSlotBooked(selectedSlot.id, appointment.id);
       
+      toast.success("Appointment booked successfully.");
       router.push(`/confirmation/${appointment.id}`);
     } catch (err: unknown) {
+      toast.error("Unable to book the appointment. Please try again.");
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -133,7 +138,7 @@ export function BookingForm({ doctor }: BookingFormProps) {
 
   if (availableSlots.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--line)] bg-slate-50/50 py-20 text-center shadow-sm">
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--line)] bg-slate-50/50 py-12 text-center shadow-sm">
         <div className="grid size-14 place-items-center rounded-full bg-slate-100 mb-5 text-[var(--muted)] ring-1 ring-inset ring-[var(--line)]">
           <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -146,7 +151,7 @@ export function BookingForm({ doctor }: BookingFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {error && (
         <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-[var(--error)] ring-1 ring-inset ring-[var(--error)]/20" role="alert">
           {error}
@@ -154,8 +159,8 @@ export function BookingForm({ doctor }: BookingFormProps) {
       )}
 
       {/* Date Selection */}
-      <section className="rounded-3xl border border-[var(--line)] bg-white p-8 shadow-sm">
-        <h3 className="mb-6 text-xl font-bold text-[var(--ink)] font-serif">1. Select a Date</h3>
+      <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-xl font-bold text-[var(--ink)] font-serif">1. Select a Date</h3>
         <div className="flex flex-col gap-2 w-full">
           <label className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">Available Dates</label>
           <select
@@ -175,14 +180,14 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Time Selection */}
-      <section className="rounded-3xl border border-[var(--line)] bg-white p-8 shadow-sm">
-        <h3 className="mb-6 text-xl font-bold text-[var(--ink)] font-serif">2. Select a Time</h3>
+      <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-xl font-bold text-[var(--ink)] font-serif">2. Select a Time</h3>
         {!date ? (
-          <div className="rounded-2xl bg-slate-50/80 p-10 text-center ring-1 ring-inset ring-slate-200/50">
+          <div className="rounded-2xl bg-slate-50/80 p-6 text-center ring-1 ring-inset ring-slate-200/50">
             <p className="text-sm font-semibold text-[var(--muted)]">Please select a date first to view available times.</p>
           </div>
         ) : slotsForDate.length === 0 ? (
-          <div className="rounded-2xl bg-slate-50/80 p-10 text-center ring-1 ring-inset ring-slate-200/50">
+          <div className="rounded-2xl bg-slate-50/80 p-6 text-center ring-1 ring-inset ring-slate-200/50">
             <p className="text-sm font-semibold text-[var(--muted)]">No available times for this date.</p>
           </div>
         ) : (
@@ -210,8 +215,8 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Reason */}
-      <section className="rounded-3xl border border-[var(--line)] bg-white p-8 shadow-sm">
-        <h3 className="mb-6 text-xl font-bold text-[var(--ink)] font-serif">3. Visit Details</h3>
+      <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-xl font-bold text-[var(--ink)] font-serif">3. Visit Details</h3>
         <Input 
           label="Reason for visit (optional)" 
           type="text" 
@@ -224,12 +229,12 @@ export function BookingForm({ doctor }: BookingFormProps) {
       {/* Summary & Submit */}
       {selectedSlot && (
         <section className="mt-4 overflow-hidden rounded-3xl border border-[var(--brand)]/20 bg-white shadow-xl shadow-[var(--brand)]/5 transition-all animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-[var(--ink)] p-6 sm:px-8">
+          <div className="bg-[var(--ink)] p-5 sm:px-6">
             <h3 className="text-lg font-bold text-white font-serif">Booking Summary</h3>
           </div>
           
-          <div className="p-6 sm:p-8">
-            <dl className="space-y-5 text-sm">
+          <div className="p-5 sm:p-6">
+            <dl className="space-y-4 text-sm">
               <div className="flex justify-between items-center">
                 <dt className="text-[var(--muted)] font-semibold uppercase tracking-wider text-xs">Doctor</dt>
                 <dd className="font-bold text-[var(--ink)] text-base text-right">{doctor.name}</dd>

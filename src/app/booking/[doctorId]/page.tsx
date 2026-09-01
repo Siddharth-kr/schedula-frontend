@@ -28,7 +28,7 @@ export default function BookingPage() {
   }, [doctorId]);
 
   return (
-    <main className="min-h-screen bg-[var(--canvas)] px-4 py-12 sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-[var(--canvas)] px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-3xl">
         {status === "loading" && (
           <div className="space-y-6" aria-busy="true">
@@ -48,12 +48,12 @@ export default function BookingPage() {
 
         {status === "ready" && doctor && (
           <>
-            <header className="mb-10 text-center sm:text-left">
+            <header className="mb-8 text-center sm:text-left">
               <h1 className="text-3xl font-bold tracking-tight text-[var(--ink)] sm:text-4xl">Book Appointment</h1>
               <p className="mt-3 text-base text-[var(--muted)]">Complete your booking with <span className="font-semibold text-[var(--ink)]">{doctor.name}</span>.</p>
             </header>
 
-            <div className="rounded-3xl border border-[var(--line)] bg-stone-50/30 p-4 sm:p-8">
+            <div className="rounded-3xl border border-[var(--line)] bg-stone-50/30 p-4 sm:p-6">
               <BookingForm doctor={doctor} />
             </div>
           </>

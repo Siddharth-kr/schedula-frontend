@@ -10,7 +10,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
 
   return (
     <article className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-[var(--line)] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-[var(--brand)]/10 hover:border-[var(--brand)]/30">
-      <div className="p-8">
+      <div className="p-5">
         <div className="flex items-start justify-between">
           <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-3xl font-bold text-white shadow-md ring-1 ring-white/20">
             {doctor.name.replace("Dr. ", "").charAt(0)}
@@ -28,7 +28,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
           </div>
         </div>
         
-        <div className="mt-6">
+        <div className="mt-4">
           <h3 className="text-2xl font-bold tracking-tight text-[var(--ink)] font-serif group-hover:text-[var(--brand)] transition-colors line-clamp-1">{doctor.name}</h3>
           <p className="mt-1 text-sm font-semibold text-[var(--brand)]">
             {doctor.specialty} {doctor.qualification && <span className="text-[var(--muted)] font-normal text-xs ml-1">• {doctor.qualification}</span>}
@@ -39,7 +39,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
         </div>
       </div>
 
-      <div className="border-t border-[var(--line)] bg-slate-50/80 p-6 sm:p-8">
+      <div className="border-t border-[var(--line)] bg-slate-50/80 p-6 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Consultation</p>

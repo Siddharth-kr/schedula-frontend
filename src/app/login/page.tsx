@@ -30,7 +30,7 @@ export default function LoginPage() {
 
       {/* Right pane: Form */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8 sm:p-12 xl:p-20">
-        <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center lg:text-left">
             <div className="lg:hidden mx-auto grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-2xl font-bold text-white shadow-sm ring-1 ring-white/20 mb-8">
               S

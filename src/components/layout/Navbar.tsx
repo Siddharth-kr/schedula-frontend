@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getDoctorSession, clearDoctorSession } from "@/lib/availability-store";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -11,6 +12,7 @@ export function Navbar() {
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [role, setRole] = useState<"public" | "patient" | "doctor">("public");
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Re-evaluate session whenever pathname changes (cheap and effective for mock frontend auth)
   useEffect(() => {
@@ -18,6 +20,7 @@ export function Navbar() {
       const doctorSession = getDoctorSession();
       if (doctorSession) {
         setRole("doctor");
+        setUserId(doctorSession.name);
         return;
       }
 
@@ -25,11 +28,13 @@ export function Navbar() {
         const patientSession = localStorage.getItem("mock_user");
         if (patientSession) {
           setRole("patient");
+          setUserId(JSON.parse(patientSession).name);
           return;
         }
       } catch {}
 
       setRole("public");
+      setUserId(null);
     });
   }, [pathname]);
 
@@ -70,7 +75,7 @@ export function Navbar() {
     { href: "/doctors", label: "Find Doctors" },
     { href: "/#how-it-works", label: "How It Works" },
     { href: "/#about", label: "About" },
-    ...(role === "patient" ? [{ href: "/#appointments", label: "Appointments" }] : []),
+    ...(role === "patient" ? [{ href: "/appointments", label: "Appointments" }] : []),
   ];
 
   const currentLinks = role === "doctor" ? doctorLinks : patientLinks;
@@ -90,7 +95,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Left side: Logo & Desktop Links */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6">
           <Link href={role === "doctor" ? "/doctor/dashboard" : "/"} className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
             <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] font-serif text-lg font-bold text-white shadow-sm ring-1 ring-[var(--brand-deep)]/20">
               S
@@ -100,7 +105,7 @@ export function Navbar() {
             </span>
           </Link>
           
-          <div className="hidden space-x-6 md:block">
+          <div className="hidden space-x-4 md:block">
             {currentLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -108,7 +113,7 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
-                    isActive ? "text-[var(--brand)] border-b-2 border-[var(--brand)] pb-5 pt-1" : "text-[var(--muted)]"
+                    isActive ? "text-[var(--brand)] border-b-2 border-[var(--brand)] pb-1" : "text-[var(--muted)]"
                   }`}
                 >
                   {link.label}
@@ -121,6 +126,7 @@ export function Navbar() {
         {/* Right side: Auth Actions & Mobile Toggle */}
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4">
+            {userId && <NotificationBell userId={userId} />}
             {role === "public" && (
               <Link href="/login" className="text-sm font-semibold text-[var(--ink)] hover:text-[var(--brand)]">
                 Login
@@ -145,13 +151,14 @@ export function Navbar() {
               </button>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden p-2 text-[var(--ink)] hover:bg-stone-100 rounded-md"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
+          
+          <div className="flex items-center gap-3 md:hidden">
+            {userId && <NotificationBell userId={userId} />}
+            <button 
+              className="p-2 text-[var(--ink)] hover:text-[var(--brand)] transition-colors rounded-lg bg-slate-50 border border-[var(--line)]"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
             {isMobileMenuOpen ? (
               <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,6 +171,7 @@ export function Navbar() {
           </button>
         </div>
       </div>
+    </div>
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (

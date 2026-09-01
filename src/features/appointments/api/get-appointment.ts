@@ -1,12 +1,10 @@
 import type { Appointment } from "@/types/appointment";
+import { getAppointmentById } from "@/lib/appointment-store";
 
 export async function getAppointment(id: string): Promise<Appointment> {
-  const response = await fetch(`/api/appointments/${id}`);
-  
-  if (!response.ok) {
-    throw new Error("Unable to load appointment");
+  const appointment = getAppointmentById(id);
+  if (!appointment) {
+    throw new Error("Appointment not found");
   }
-  
-  const body = await response.json();
-  return body.data;
+  return appointment;
 }

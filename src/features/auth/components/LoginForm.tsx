@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { loginWithEmail } from "../api/login";
+import { toast } from "react-toastify";
 
 export function LoginForm() {
   const router = useRouter();
@@ -48,9 +49,11 @@ export function LoginForm() {
     setIsLoading(true);
     try {
       await loginWithEmail(email, password);
+      toast.success("Welcome back!");
       // Navigate to doctors page after successful login
       router.push("/doctors");
     } catch (err: unknown) {
+      toast.error("Invalid email or password.");
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -99,7 +102,7 @@ export function LoginForm() {
         </button>
       </div>
       <div className="mt-2">
-        <Button type="submit" isLoading={isLoading} className="w-full py-4 text-base">
+        <Button type="submit" isLoading={isLoading} className="w-full py-3 text-base">
           Sign in
         </Button>
       </div>

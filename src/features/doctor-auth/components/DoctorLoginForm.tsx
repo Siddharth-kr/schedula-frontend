@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { doctorLogin } from "../api/doctor-login";
+import { toast } from "react-toastify";
 
 export function DoctorLoginForm() {
   const router = useRouter();
@@ -50,9 +51,11 @@ export function DoctorLoginForm() {
 
     setIsLoading(true);
     try {
-      await doctorLogin(email, password);
+      const doctor = await doctorLogin(email, password);
+      toast.success(`Welcome, ${doctor.name}.`);
       router.push("/doctor/dashboard");
     } catch (err: unknown) {
+      toast.error("Invalid email or password.");
       if (err instanceof Error) {
         setError(err.message);
       } else {

@@ -28,8 +28,8 @@ export default function LandingPage() {
     <main className="flex flex-col min-h-screen bg-[var(--canvas)]">
       
       {/* 1. HERO SECTION */}
-      <section className="bg-white px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
-        <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="bg-white px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="max-w-2xl">
             <span className="inline-block font-semibold uppercase tracking-widest text-sm text-[var(--brand)] mb-4">
               Healthcare made simpler
@@ -109,7 +109,7 @@ export default function LandingPage() {
       </section>
 
       {/* 3. POPULAR SPECIALTIES */}
-      <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-24 bg-white">
+      <section className="px-4 sm:px-6 lg:px-8 py-12 lg:py-16 bg-white">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -135,7 +135,7 @@ export default function LandingPage() {
       </section>
 
       {/* 4. FEATURED DOCTORS */}
-      <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-24 bg-[var(--canvas)]">
+      <section className="px-4 sm:px-6 lg:px-8 py-12 lg:py-16 bg-[var(--canvas)]">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -156,7 +156,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. HOW IT WORKS */}
-      <section id="how-it-works" className="px-4 sm:px-6 lg:px-8 py-20 lg:py-24 bg-white border-y border-[var(--line)]">
+      <section id="how-it-works" className="px-4 sm:px-6 lg:px-8 py-12 lg:py-16 bg-white border-y border-[var(--line)]">
         <div className="mx-auto max-w-5xl text-center">
           <h2 className="text-3xl font-bold text-[var(--ink)] font-serif mb-16">How Schedula works</h2>
           
@@ -183,7 +183,7 @@ export default function LandingPage() {
       </section>
 
       {/* 6. TRUST SECTION */}
-      <section id="about" className="px-4 sm:px-6 lg:px-8 py-20 lg:py-24 bg-[var(--ink)] text-white">
+      <section id="about" className="px-4 sm:px-6 lg:px-8 py-12 lg:py-16 bg-[var(--ink)] text-white">
         <div className="mx-auto max-w-7xl">
           <div className="grid md:grid-cols-2 gap-12 lg:gap-24 items-center">
             <div>
@@ -230,7 +230,7 @@ export default function LandingPage() {
       </section>
 
       {/* 7. FINAL CTA */}
-      <section className="px-4 sm:px-6 lg:px-8 py-24 text-center bg-white">
+      <section className="px-4 sm:px-6 lg:px-8 py-12 lg:py-16 text-center bg-white">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-3xl font-bold text-[var(--ink)] font-serif mb-4">Ready to find the right doctor?</h2>
           <p className="text-lg text-[var(--muted)] mb-8">Browse available doctors and choose an appointment time that works for you.</p>

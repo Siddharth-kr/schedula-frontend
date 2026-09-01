@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { signupWithEmail } from "../api/signup";
+import { toast } from "react-toastify";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -110,6 +111,7 @@ export function RegisterForm() {
       const fullName = `${firstName.trim()} ${lastName.trim()}`;
       await signupWithEmail(fullName, email, password);
       
+      toast.success("Account created successfully.");
       // Navigate to login page after successful signup
       router.push("/login");
     } catch (err: unknown) {
@@ -126,7 +128,7 @@ export function RegisterForm() {
 
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-10">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
       {error && (
         <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200" role="alert">
           {error}
@@ -134,7 +136,7 @@ export function RegisterForm() {
       )}
       
       {/* SECTION 1: Personal Info */}
-      <section className="space-y-6">
+      <section className="space-y-5">
         <div className="border-b border-[var(--line)] pb-3">
           <h3 className="text-lg font-bold text-[var(--ink)] font-serif">1. Personal Information</h3>
         </div>
@@ -149,7 +151,7 @@ export function RegisterForm() {
               value={gender} 
               onChange={(e) => setGender(e.target.value)} 
               disabled={isLoading}
-              className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base font-medium shadow-sm outline-none transition-all disabled:opacity-50 ${
+              className={`w-full rounded-xl border bg-white px-4 py-2.5 text-base font-medium shadow-sm outline-none transition-all disabled:opacity-50 ${
                 errors.gender ? "border-[var(--error)] text-[var(--error)]" : "border-[var(--line)] text-[var(--ink)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
               }`}
             >
@@ -165,7 +167,7 @@ export function RegisterForm() {
       </section>
 
       {/* SECTION 2: Contact Info */}
-      <section className="space-y-6">
+      <section className="space-y-5">
         <div className="border-b border-[var(--line)] pb-3">
           <h3 className="text-lg font-bold text-[var(--ink)] font-serif">2. Contact Information</h3>
         </div>
@@ -184,7 +186,7 @@ export function RegisterForm() {
       </section>
 
       {/* SECTION 3: Optional Healthcare */}
-      <section className="space-y-6 rounded-2xl bg-stone-50 p-6 border border-[var(--line)]">
+      <section className="space-y-5 rounded-2xl bg-stone-50 p-6 border border-[var(--line)]">
         <div className="border-b border-[var(--line)] pb-3 flex justify-between items-end">
           <h3 className="text-lg font-bold text-[var(--ink)] font-serif">Healthcare Profile</h3>
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Optional</span>
@@ -197,7 +199,7 @@ export function RegisterForm() {
       </section>
 
       {/* SECTION 4: Security */}
-      <section className="space-y-6">
+      <section className="space-y-5">
         <div className="border-b border-[var(--line)] pb-3">
           <h3 className="text-lg font-bold text-[var(--ink)] font-serif">3. Account Security</h3>
         </div>
@@ -255,7 +257,7 @@ export function RegisterForm() {
       </section>
 
       {/* SECTION 5: Submit */}
-      <section className="space-y-6 pt-4">
+      <section className="space-y-5 pt-4">
         <div>
           <label className="flex items-start gap-3 cursor-pointer group">
             <div className="flex h-6 items-center">
@@ -273,7 +275,7 @@ export function RegisterForm() {
           </label>
         </div>
 
-        <Button type="submit" isLoading={isLoading} className="w-full py-4 text-base">
+        <Button type="submit" isLoading={isLoading} className="w-full py-3 text-base">
           {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
         

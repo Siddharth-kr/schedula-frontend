@@ -6,6 +6,7 @@ import { getDoctorSession, setDoctorSession, updateDoctor } from "@/lib/availabi
 import type { DoctorProfile } from "@/types/availability";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { toast } from "react-toastify";
 
 export function DoctorProfileForm() {
   const router = useRouter();
@@ -111,12 +112,15 @@ export function DoctorProfileForm() {
       if (updatedDoctor) {
         setDoctor(updatedDoctor);
         setDoctorSession(updatedDoctor); // Update local session
+        toast.success("Profile updated successfully.");
         setSuccessMsg("Profile updated successfully!");
         setIsEditing(false);
       } else {
+        toast.error("Failed to update profile.");
         setErrorMsg("Failed to update profile. Doctor not found.");
       }
     } catch {
+      toast.error("An unexpected error occurred.");
       setErrorMsg("An unexpected error occurred.");
     } finally {
       setIsSaving(false);
@@ -135,7 +139,7 @@ export function DoctorProfileForm() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end border-b border-[var(--line)] pb-8">
         <div>
@@ -186,14 +190,14 @@ export function DoctorProfileForm() {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-12">
+      <form onSubmit={handleSave} className="space-y-8">
         
         {/* Personal Information */}
-        <section className={`rounded-3xl border border-[var(--line)] bg-white p-8 sm:p-10 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
-          <h2 className="text-xl font-bold text-[var(--ink)] mb-8 font-serif">
+        <section className={`rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
+          <h2 className="text-xl font-bold text-[var(--ink)] mb-6 font-serif">
             Personal Information
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Input
               label="Full Name (with Title)"
               type="text"
@@ -227,11 +231,11 @@ export function DoctorProfileForm() {
         </section>
 
         {/* Professional Information */}
-        <section className={`rounded-3xl border border-[var(--line)] bg-white p-8 sm:p-10 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
-          <h2 className="text-xl font-bold text-[var(--ink)] mb-8 font-serif">
+        <section className={`rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
+          <h2 className="text-xl font-bold text-[var(--ink)] mb-6 font-serif">
             Professional Information
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Input
               label="Specialty"
               type="text"
@@ -266,11 +270,11 @@ export function DoctorProfileForm() {
         </section>
 
         {/* Contact Information */}
-        <section className={`rounded-3xl border border-[var(--line)] bg-white p-8 sm:p-10 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
-          <h2 className="text-xl font-bold text-[var(--ink)] mb-8 font-serif">
+        <section className={`rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
+          <h2 className="text-xl font-bold text-[var(--ink)] mb-6 font-serif">
             Contact & Account Information
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Input
               label="Phone Number"
               type="tel"

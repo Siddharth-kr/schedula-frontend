@@ -22,6 +22,7 @@ export async function POST(request: Request) {
         age: 30, // Default mock age
       },
       clinician: body.clinician,
+      doctorId: body.doctorId || "doc-unknown",
       specialty: body.specialty || "General Medicine",
       startsAt: body.startsAt,
       durationMinutes: 30,

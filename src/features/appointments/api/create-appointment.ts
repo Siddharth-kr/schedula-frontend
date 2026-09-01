@@ -1,7 +1,9 @@
 import type { Appointment } from "@/types/appointment";
+import { addAppointment } from "@/lib/appointment-store";
 
 type CreateAppointmentPayload = {
   patient: { name: string };
+  doctorId: string;
   clinician: string;
   specialty?: string;
   startsAt: string;
@@ -21,5 +23,13 @@ export async function createAppointment(payload: CreateAppointmentPayload): Prom
     throw new Error(body.error || "Unable to create appointment");
   }
   
-  return body.data;
+  // Save to frontend local storage store as well, injecting the doctorId since backend might omit it
+  const appointmentRecord = { ...body.data, doctorId: payload.doctorId };
+  addAppointment(appointmentRecord);
+  
+  // Notify doctor
+  const { addNotification } = require("@/lib/notification-store");
+  addNotification({ userId: appointmentRecord.doctorId, message: `New booking from ${appointmentRecord.patient.name}.`, type: "booking", appointmentId: appointmentRecord.id });
+  
+  return appointmentRecord;
 }

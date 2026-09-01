@@ -149,6 +149,25 @@ export function markSlotBooked(slotId: string, appointmentId?: string): void {
   writeJSON(SLOTS_KEY, slots);
 }
 
+export function markSlotUnavailable(slotId: string): void {
+  const slots = getAllSlots();
+  const slot = slots.find((s) => s.id === slotId);
+  if (!slot || slot.isBooked) return;
+
+  slot.isUnavailable = true;
+  writeJSON(SLOTS_KEY, slots);
+}
+
+export function freeSlot(slotId: string): void {
+  const slots = getAllSlots();
+  const slot = slots.find((s) => s.id === slotId);
+  if (!slot) return;
+
+  slot.isBooked = false;
+  slot.appointmentId = undefined;
+  writeJSON(SLOTS_KEY, slots);
+}
+
 // ── Recurring Rules CRUD ───────────────────────────────────────────────────
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -179,17 +198,27 @@ function materializeRule(rule: RecurringRule): void {
     if (date.getDay() === rule.dayOfWeek) {
       const dateStr = date.toISOString().split("T")[0];
       
-      // Idempotency / Overlap check
-      if (!hasOverlap(slots, rule.doctorId, dateStr, rule.startTime, rule.endTime)) {
-        slots.push({
-          id: generateId("slot-rec"),
-          doctorId: rule.doctorId,
-          date: dateStr,
-          startTime: rule.startTime,
-          endTime: rule.endTime,
-          isBooked: false,
-        });
-        slotsUpdated = true;
+      // Chunk into 30 minute intervals
+      let currentStart = rule.startTime;
+      while (currentStart < rule.endTime) {
+        let [h, m] = currentStart.split(':').map(Number);
+        m += 30;
+        if (m >= 60) { h += 1; m -= 60; }
+        const nextStart = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        if (nextStart > rule.endTime) break; // don't overflow
+        
+        if (!hasOverlap(slots, rule.doctorId, dateStr, currentStart, nextStart)) {
+          slots.push({
+            id: generateId("slot-rec"),
+            doctorId: rule.doctorId,
+            date: dateStr,
+            startTime: currentStart,
+            endTime: nextStart,
+            isBooked: false,
+          });
+          slotsUpdated = true;
+        }
+        currentStart = nextStart;
       }
     }
   }
@@ -243,7 +272,7 @@ export function getAvailableSlotsForDoctor(doctorId: string): AvailabilitySlot[]
   const todayStr = new Date().toISOString().split("T")[0];
 
   return getSlotsForDoctor(doctorId)
-    .filter((s) => !s.isBooked && s.date >= todayStr)
+    .filter((s) => !s.isBooked && !s.isUnavailable && s.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
 }
 
