@@ -1,4 +1,4 @@
-import { UnifiedScheduleCalendar } from "@/features/doctor-portal/components/UnifiedScheduleCalendar";
+import { AvailabilityManager } from "@/features/doctor-portal/components/AvailabilityManager";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function DoctorAvailabilityPage() {
   return (
     <main className="flex-1 bg-[var(--canvas)]">
-      <UnifiedScheduleCalendar />
+      <AvailabilityManager />
     </main>
   );
 }

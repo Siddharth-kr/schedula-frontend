@@ -1,5 +1,6 @@
 import type { Appointment } from "@/types/appointment";
 import { addAppointment } from "@/lib/appointment-store";
+import { addNotification } from "@/lib/notification-store";
 
 type CreateAppointmentPayload = {
   patient: { name: string };
@@ -28,7 +29,6 @@ export async function createAppointment(payload: CreateAppointmentPayload): Prom
   addAppointment(appointmentRecord);
   
   // Notify doctor
-  const { addNotification } = require("@/lib/notification-store");
   addNotification({ userId: appointmentRecord.doctorId, message: `New booking from ${appointmentRecord.patient.name}.`, type: "booking", appointmentId: appointmentRecord.id });
   
   return appointmentRecord;

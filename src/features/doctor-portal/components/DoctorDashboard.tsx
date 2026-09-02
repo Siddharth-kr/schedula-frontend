@@ -6,14 +6,13 @@ import Link from "next/link";
 import { getDoctorSession, clearDoctorSession } from "@/lib/availability-store";
 import type { DoctorProfile } from "@/types/availability";
 import type { Appointment } from "@/types/appointment";
-import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
+import { DashboardCalendar } from "./DashboardCalendar";
 
 export function DoctorDashboard() {
   const router = useRouter();
   
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [todayMetrics, setTodayMetrics] = useState({
     total: 0,
     confirmed: 0,
@@ -46,15 +45,6 @@ export function DoctorDashboard() {
           pending: todaysAppointments.filter((a: Appointment) => a.status === "pending").length,
         });
         
-        // Only show upcoming/pending/confirmed
-        const activeAppointments = myAppointments.filter(
-          (apt: Appointment) => ["pending", "confirmed", "upcoming"].includes(apt.status)
-        );
-        
-        // Sort by date ascending (closest first)
-        activeAppointments.sort((a: Appointment, b: Appointment) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
-        
-        setAppointments(activeAppointments);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -124,7 +114,7 @@ export function DoctorDashboard() {
             <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-slate-600">
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
-            <span className="text-sm font-semibold text-[var(--ink)]">Today's Bookings</span>
+            <span className="text-sm font-semibold text-[var(--ink)]">Today&apos;s Bookings</span>
           </div>
           <div className="flex items-end justify-between">
             <span className="font-serif text-3xl font-bold text-[var(--ink)]">{todayMetrics.total}</span>
@@ -178,81 +168,7 @@ export function DoctorDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main Column: Appointments */}
         <div className="lg:col-span-2 space-y-6">
-          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[var(--line)]">
-            <div className="flex items-center justify-between border-b border-[var(--line)] bg-slate-50/50 px-5 py-4">
-              <h2 className="font-semibold text-[var(--ink)]">Upcoming Appointments</h2>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-[var(--line)]">
-                {appointments.length} Total
-              </span>
-            </div>
-
-            {appointments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center bg-slate-50/30 py-10 text-center">
-                <div className="grid size-14 place-items-center rounded-full bg-slate-100 text-[var(--muted)]">
-                  <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="mt-5 text-base font-semibold text-[var(--ink)]">No upcoming appointments</h3>
-                <p className="mt-2 text-sm text-[var(--muted)] max-w-sm">Your schedule is currently clear. Ensure your availability is set.</p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-[var(--line)]" role="list">
-                {appointments.map((apt) => {
-                  const aptDate = new Date(apt.startsAt);
-                  const dateStr = aptDate.toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  });
-                  const timeStr = aptDate.toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  });
-                  
-                  return (
-                    <li
-                      key={apt.id}
-                      className="flex flex-col justify-between gap-4 px-5 py-4 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--brand)]/10 text-base font-bold text-[var(--brand-deep)] ring-1 ring-[var(--brand)]/20">
-                          {apt.patient.initials}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-[var(--ink)] text-base">{apt.patient.name}</h4>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm font-medium text-[var(--muted)]">
-                            <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-0.5 rounded-md">
-                              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              {dateStr}
-                            </span>
-                            <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-0.5 rounded-md">
-                              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              {timeStr}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--line)] pt-4">
-                        <AppointmentStatusBadge status={apt.status} />
-                        <span className="text-sm font-medium text-[var(--muted)] bg-slate-50 px-2 py-0.5 rounded border border-[var(--line)] max-w-[200px] truncate">{apt.reason}</span>
-                        <div className="ml-auto">
-                          <Link href={`/doctor/appointments/${apt.id}`} className="text-sm font-bold text-[var(--brand)] hover:underline">
-                            View Details →
-                          </Link>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+          <DashboardCalendar />
         </div>
 
         {/* Right Column: Quick Actions & Profile */}

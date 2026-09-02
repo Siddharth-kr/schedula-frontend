@@ -15,7 +15,9 @@ export function NotificationBell({ userId }: { userId: string }) {
   };
 
   useEffect(() => {
-    loadNotifs();
+    Promise.resolve().then(() => {
+      loadNotifs();
+    });
     const handleUpdate = () => loadNotifs();
     window.addEventListener("schedula_notifications_updated", handleUpdate);
     return () => window.removeEventListener("schedula_notifications_updated", handleUpdate);
