@@ -272,6 +272,12 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
         views={["day", "week", "month"]}
         eventPropGetter={eventPropGetter as any /* eslint-disable-line @typescript-eslint/no-explicit-any */}
         onEventDrop={onEventDrop}
+        draggableAccessor={(e: any) => {
+          const ev = e as CalendarEvent;
+          if (ev.type !== "appointment") return false;
+          const apt = ev.data as Appointment;
+          return ["pending", "confirmed", "upcoming"].includes(apt.status);
+        }}
         resizable={false}
         selectable={true}
         step={30}
