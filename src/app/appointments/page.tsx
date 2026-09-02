@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
-import { getAppointmentsForPatient } from "@/lib/appointment-store";
+import type { Prescription } from "@/types/prescription";
+import { getAppointmentsForPatient, addReview } from "@/lib/appointment-store";
+import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
+import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
+import { toast } from "react-toastify";
 
 type FilterStatus = "all" | AppointmentStatus;
 
@@ -13,84 +17,97 @@ export default function PatientAppointmentsPage() {
   const router = useRouter();
   
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Record<string, Prescription>>({});
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
   const [patientName, setPatientName] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [viewingPrescription, setViewingPrescription] = useState<{apt: Appointment, p: Prescription} | null>(null);
+  const [reviewingApt, setReviewingApt] = useState<Appointment | null>(null);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+
+  const loadData = () => {
     try {
       const stored = localStorage.getItem("mock_user");
-      if (stored) {
-        const user = JSON.parse(stored);
-        if (user.role === "patient") {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setPatientName(user.name);
-          return;
+      if (!stored) {
+        router.push("/login");
+        return;
+      }
+      const user = JSON.parse(stored);
+      if (user.role !== "patient") {
+        router.push("/login");
+        return;
+      }
+      setPatientName(user.name);
+
+      const patientAppointments = getAppointmentsForPatient(user.name);
+      patientAppointments.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+      setAppointments(patientAppointments);
+
+      const pMap: Record<string, Prescription> = {};
+      for (const apt of patientAppointments) {
+        if (apt.status === "completed") {
+          const p = getPrescriptionByAppointmentId(apt.id);
+          if (p) pMap[apt.id] = p;
         }
       }
-      // Not logged in or not a patient
-      router.push("/login");
+      setPrescriptions(pMap);
     } catch {
       router.push("/login");
-    }
-  }, [router]);
-
-  useEffect(() => {
-    if (!patientName) return;
-
-    try {
-      setIsLoading(true);
-      
-      // Isolate patient's appointments
-      const patientAppointments = getAppointmentsForPatient(patientName);
-      
-      // Sort by date descending
-      patientAppointments.sort((a: Appointment, b: Appointment) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
-      
-      setAppointments(patientAppointments);
-      setError(null);
-    } catch {
-      setError("Unable to load appointments.");
     } finally {
       setIsLoading(false);
     }
-  }, [patientName]);
+  };
+
+  useEffect(() => {
+    Promise.resolve().then(loadData);
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "schedula_appointments" || e.key === "schedula_prescriptions") loadData();
+    };
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("schedula_appointments_updated", loadData);
+    window.addEventListener("schedula_prescriptions_updated", loadData);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("schedula_appointments_updated", loadData);
+      window.removeEventListener("schedula_prescriptions_updated", loadData);
+    };
+  }, [router]);
 
   const filteredAppointments = useMemo(() => {
     if (filter === "all") return appointments;
-    return appointments.filter((apt) => apt.status === filter);
+    return appointments.filter(a => a.status === filter);
   }, [appointments, filter]);
 
   const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    }).format(new Date(dateString));
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "long", day: "numeric" }).format(date);
   };
 
-  const formatTime = (dateString: string, durationMin: number) => {
-    const start = new Date(dateString);
+  const formatTime = (startString: string, durationMin: number) => {
+    const start = new Date(startString);
     const end = new Date(start.getTime() + durationMin * 60000);
-    
-    const timeFormatter = new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit"
-    });
-    
+    const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
     return `${timeFormatter.format(start)} - ${timeFormatter.format(end)}`;
   };
 
-  if (!patientName) return null; // Prevent flash before redirect
+  const submitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reviewingApt) {
+      addReview(reviewingApt.id, { rating, text: reviewText });
+      toast.success("Review submitted successfully");
+      setReviewingApt(null);
+      loadData();
+    }
+  };
+
+  if (!patientName) return null;
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[var(--canvas)] py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        
-        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8 pb-4 border-b border-[var(--line)]">
           <div>
             <h1 className="text-3xl font-bold text-[var(--ink)] font-serif mb-2">My Appointments</h1>
@@ -101,121 +118,146 @@ export default function PatientAppointmentsPage() {
           </Link>
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="rounded-xl bg-red-50 p-6 flex flex-col items-center justify-center text-center border border-red-100">
-            <p className="text-red-700 font-medium mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()} type="button">Try Again</Button>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {!error && isLoading && (
+        {isLoading ? (
           <div className="py-12 flex flex-col items-center justify-center text-[var(--muted)] space-y-4">
-            <svg className="animate-spin size-8 text-[var(--brand)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
             <p className="font-medium">Loading your appointments...</p>
           </div>
-        )}
+        ) : appointments.length === 0 ? (
+          <div className="rounded-2xl bg-white border border-[var(--line)] p-8 text-center flex flex-col items-center shadow-sm">
+            <h3 className="text-xl font-bold text-[var(--ink)] font-serif mb-2">No appointments yet</h3>
+            <p className="text-[var(--muted)] mb-8 max-w-md">You haven&apos;t booked any appointments yet.</p>
+            <Link href="/doctors">
+              <Button type="button" className="px-8">Find a Doctor</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
+              {(["all", "upcoming", "completed", "cancelled", "missed"] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                    filter === status 
+                      ? "bg-[var(--ink)] text-white shadow-sm" 
+                      : "bg-white border border-[var(--line)] text-[var(--muted)] hover:border-[var(--brand)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
 
-        {/* Content */}
-        {!error && !isLoading && (
-          <>
-            {appointments.length === 0 ? (
-              // Empty State (No appointments ever booked)
-              <div className="rounded-2xl bg-white border border-[var(--line)] p-8 text-center flex flex-col items-center shadow-sm">
-                <div className="size-16 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] flex items-center justify-center mb-6">
-                  <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                </div>
-                <h3 className="text-xl font-bold text-[var(--ink)] font-serif mb-2">No appointments yet</h3>
-                <p className="text-[var(--muted)] mb-8 max-w-md">You haven&apos;t booked any appointments yet. Browse our directory of trusted healthcare professionals to get started.</p>
-                <Link href="/doctors">
-                  <Button type="button" className="px-8">Find a Doctor</Button>
-                </Link>
+            {filteredAppointments.length === 0 ? (
+              <div className="py-16 text-center">
+                <p className="text-[var(--muted)]">No appointments found for the selected filter.</p>
               </div>
             ) : (
-              // Appointments List
-              <div className="space-y-4">
-                
-                {/* Filters */}
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
-                  {(["all", "upcoming", "completed", "cancelled", "missed"] as const).map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilter(status)}
-                      className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                        filter === status 
-                          ? "bg-[var(--ink)] text-white shadow-sm" 
-                          : "bg-white border border-[var(--line)] text-[var(--muted)] hover:border-[var(--brand)] hover:text-[var(--ink)]"
-                      }`}
-                    >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
-                </div>
-
-                {filteredAppointments.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <p className="text-[var(--muted)]">No appointments found for the selected filter.</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {filteredAppointments.map((apt) => (
-                      <div key={apt.id} className="flex flex-col sm:flex-row justify-between p-6 bg-white rounded-2xl border border-[var(--line)] shadow-sm hover:shadow-md transition-shadow gap-6 group">
+              <div className="grid gap-4">
+                {filteredAppointments.map((apt) => (
+                  <div key={apt.id} className="flex flex-col bg-white rounded-2xl border border-[var(--line)] shadow-sm hover:shadow-md transition-shadow group overflow-hidden">
+                    <div className="flex flex-col sm:flex-row justify-between p-6 gap-6">
+                      <div className="flex flex-col gap-1.5">
+                        <h3 className="text-lg font-bold text-[var(--ink)] group-hover:text-[var(--brand)] transition-colors">
+                          Dr. {apt.clinician}
+                        </h3>
+                        <p className="text-sm font-medium text-[var(--muted)] mb-3">{apt.specialty}</p>
                         
-                        <div className="flex flex-col gap-1.5">
-                          <h3 className="text-lg font-bold text-[var(--ink)] group-hover:text-[var(--brand)] transition-colors">
-                            Dr. {apt.clinician}
-                          </h3>
-                          <p className="text-sm font-medium text-[var(--muted)] mb-3">
-                            {apt.specialty}
-                          </p>
-                          
-                          <div className="flex items-center gap-2 text-sm text-[var(--ink)]">
-                            <svg className="size-4 text-[var(--brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                            <span className="font-medium">{formatDate(apt.startsAt)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
-                            <svg className="size-4 text-[var(--brand)]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <span>{formatTime(apt.startsAt, apt.durationMinutes)}</span>
-                          </div>
+                        <div className="flex items-center gap-2 text-sm text-[var(--ink)]">
+                          <span className="font-medium">{formatDate(apt.startsAt)}</span>
                         </div>
+                        <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                          <span>{formatTime(apt.startsAt, apt.durationMinutes)}</span>
+                        </div>
+                      </div>
 
-                        <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end sm:text-right gap-4 border-t border-[var(--line)] sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
-                          {apt.status === "confirmed" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--success)]/10 text-[var(--success)]">
-                              Confirmed
-                            </span>
+                      <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end sm:text-right gap-4 border-t border-[var(--line)] sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
+                        {apt.status === "completed" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700">Completed</span>}
+                        {apt.status === "confirmed" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--success)]/10 text-[var(--success)]">Confirmed</span>}
+                        {apt.status === "pending" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600">Pending</span>}
+                        {apt.status === "cancelled" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--error)]/10 text-[var(--error)]">Cancelled</span>}
+                        
+                        <Link href={`/confirmation/${apt.id}`}>
+                          <button className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-deep)] hover:underline transition-all">
+                            View Details
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+
+                    {apt.status === "completed" && (
+                      <div className="bg-slate-50 border-t border-[var(--line)] px-6 py-4 flex flex-wrap gap-4 items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {prescriptions[apt.id] ? (
+                            <>
+                              <span className="text-sm font-bold text-emerald-600">Prescription Available</span>
+                              <button onClick={() => setViewingPrescription({apt, p: prescriptions[apt.id]})} className="text-sm font-semibold text-[var(--brand)] hover:underline border-l pl-2 ml-2 border-[var(--line)]">
+                                View Prescription
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-sm font-medium text-[var(--muted)]">Prescription Not Available</span>
                           )}
-                          {apt.status === "pending" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600">
-                              Pending
-                            </span>
+                        </div>
+                        <div className="flex gap-3 items-center">
+                          {!apt.review ? (
+                            <button onClick={() => setReviewingApt(apt)} className="text-sm font-semibold text-[var(--ink)] hover:text-[var(--brand)] transition-colors">
+                              Review
+                            </button>
+                          ) : (
+                            <span className="text-sm text-[var(--muted)]">★ {apt.review.rating}/5</span>
                           )}
-                          {apt.status === "cancelled" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--error)]/10 text-[var(--error)]">
-                              Cancelled
-                            </span>
-                          )}
-                          
-                          <Link href={`/confirmation/${apt.id}`}>
-                            <button className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-deep)] hover:underline transition-all">
-                              View Details
+                          <Link href={`/booking/${apt.doctorId}`}>
+                            <button className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white hover:bg-[var(--brand-deep)] transition-colors">
+                              Rebook
                             </button>
                           </Link>
                         </div>
-                        
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
+                ))}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
+
+      {viewingPrescription && (
+        <UserPrescription 
+          prescription={viewingPrescription.p} 
+          appointment={viewingPrescription.apt} 
+          onClose={() => setViewingPrescription(null)} 
+        />
+      )}
+
+      {reviewingApt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+            <h2 className="text-lg font-bold text-[var(--ink)] mb-4">How was your appointment?</h2>
+            <form onSubmit={submitReview} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">Rating</label>
+                <select value={rating} onChange={e => setRating(Number(e.target.value))} className="w-full rounded-lg border border-[var(--line)] px-3 py-2 outline-none">
+                  <option value={5}>★★★★★ (5)</option>
+                  <option value={4}>★★★★☆ (4)</option>
+                  <option value={3}>★★★☆☆ (3)</option>
+                  <option value={2}>★★☆☆☆ (2)</option>
+                  <option value={1}>★☆☆☆☆ (1)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">Review (Optional)</label>
+                <textarea value={reviewText} onChange={e => setReviewText(e.target.value)} rows={3} className="w-full rounded-lg border border-[var(--line)] px-3 py-2 outline-none" placeholder="Write your review..."></textarea>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setReviewingApt(null)} className="px-4 py-2 text-sm font-medium text-[var(--muted)]">Cancel</button>
+                <button type="submit" className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white hover:bg-[var(--brand-deep)]">Submit Review</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
