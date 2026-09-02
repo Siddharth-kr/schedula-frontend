@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function DoctorPrescriptionsPage() {
   return (
-    <main className="flex-1 bg-[var(--canvas)]">
+    <main className="flex-1 bg-background">
       <DoctorPrescriptionDashboard />
     </main>
   );

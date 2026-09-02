@@ -28,7 +28,7 @@ export default function BookingPage() {
   }, [doctorId]);
 
   return (
-    <main className="min-h-screen bg-[var(--canvas)] px-4 py-8 sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-3xl">
         {status === "loading" && (
           <div className="space-y-6" aria-busy="true">
@@ -38,9 +38,9 @@ export default function BookingPage() {
         )}
 
         {status === "error" && (
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-10 text-center" role="alert">
+          <div className="rounded-2xl border border-red-100 bg-error/10 p-10 text-center" role="alert">
             <p className="text-lg font-medium text-red-800">Doctor not found.</p>
-            <Link href="/doctors" className="mt-4 inline-block rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm hover:bg-red-50 active:scale-[0.98]">
+            <Link href="/doctors" className="mt-4 inline-block rounded-lg border border-error/30 bg-white px-4 py-2 text-sm font-semibold text-error shadow-sm hover:bg-error/10 active:scale-[0.98]">
               Back to Doctors
             </Link>
           </div>
@@ -49,11 +49,11 @@ export default function BookingPage() {
         {status === "ready" && doctor && (
           <>
             <header className="mb-8 text-center sm:text-left">
-              <h1 className="text-3xl font-bold tracking-tight text-[var(--ink)] sm:text-4xl">Book Appointment</h1>
-              <p className="mt-3 text-base text-[var(--muted)]">Complete your booking with <span className="font-semibold text-[var(--ink)]">{doctor.name}</span>.</p>
+              <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Book Appointment</h1>
+              <p className="mt-3 text-base text-text-secondary">Complete your booking with <span className="font-semibold text-text-primary">{doctor.name}</span>.</p>
             </header>
 
-            <div className="rounded-3xl border border-[var(--line)] bg-stone-50/30 p-4 sm:p-6">
+            <div className="rounded-3xl border border-border bg-stone-50/30 p-4 sm:p-6">
               <BookingForm doctor={doctor} />
             </div>
           </>

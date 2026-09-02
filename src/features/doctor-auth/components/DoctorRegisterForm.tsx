@@ -114,14 +114,14 @@ export function DoctorRegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-10">
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm text-[var(--error)] ring-1 ring-inset ring-[var(--error)]/20" role="alert">
+        <div className="rounded-xl bg-error/10 p-4 text-sm text-error ring-1 ring-inset ring-[var(--error)]/20" role="alert">
           {error}
         </div>
       )}
 
       {/* 1. Personal Details */}
       <section className="space-y-6">
-        <h2 className="text-xl font-bold text-[var(--ink)] border-b border-[var(--line)] pb-3 font-serif">1. Personal Details</h2>
+        <h2 className="text-xl font-bold text-text-primary border-b border-border pb-3 font-serif">1. Personal Details</h2>
         <Input
           label="Full Name (with Title)"
           type="text"
@@ -132,27 +132,27 @@ export function DoctorRegisterForm() {
           disabled={isLoading}
         />
         <div className="flex flex-col gap-2 w-full">
-          <label htmlFor="bio" className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">Brief Bio</label>
+          <label htmlFor="bio" className="text-sm font-semibold uppercase tracking-wider text-text-secondary">Brief Bio</label>
           <textarea
             id="bio"
             rows={3}
-            className={`w-full rounded-xl border bg-white px-4 py-3 text-base font-medium shadow-sm outline-none transition-all placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-50 ${
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-base font-medium shadow-sm outline-none transition-all placeholder:text-text-secondary disabled:cursor-not-allowed disabled:bg-background disabled:opacity-50 ${
               errors.bio
-                ? "border-[var(--error)] focus:border-[var(--error)] focus:ring-2 focus:ring-[var(--error)]/20"
-                : "border-[var(--line)] hover:border-slate-300 focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+                ? "border-error focus:border-error focus:ring-2 focus:ring-[var(--error)]/20"
+                : "border-border hover:border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
             }`}
             placeholder="A short description about your practice and approach..."
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             disabled={isLoading}
           />
-          {errors.bio && <span className="text-xs font-bold text-[var(--error)]">{errors.bio}</span>}
+          {errors.bio && <span className="text-xs font-bold text-error">{errors.bio}</span>}
         </div>
       </section>
 
       {/* 2. Professional Details */}
       <section className="space-y-6">
-        <h2 className="text-xl font-bold text-[var(--ink)] border-b border-[var(--line)] pb-3 font-serif">2. Professional Details</h2>
+        <h2 className="text-xl font-bold text-text-primary border-b border-border pb-3 font-serif">2. Professional Details</h2>
         <Input
           label="Specialty"
           type="text"
@@ -188,7 +188,7 @@ export function DoctorRegisterForm() {
 
       {/* 3. Contact & Account Details */}
       <section className="space-y-6">
-        <h2 className="text-xl font-bold text-[var(--ink)] border-b border-[var(--line)] pb-3 font-serif">3. Account Details</h2>
+        <h2 className="text-xl font-bold text-text-primary border-b border-border pb-3 font-serif">3. Account Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Input
             label="Phone Number"
@@ -224,7 +224,7 @@ export function DoctorRegisterForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute right-4 text-xs font-bold uppercase tracking-wider text-[var(--muted)] hover:text-[var(--ink)] ${errors.password ? 'top-[42px]' : 'top-[42px]'}`}
+              className={`absolute right-4 text-xs font-bold uppercase tracking-wider text-text-secondary hover:text-text-primary ${errors.password ? 'top-[42px]' : 'top-[42px]'}`}
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -241,16 +241,16 @@ export function DoctorRegisterForm() {
         </div>
       </section>
 
-      <div className="mt-6 border-t border-[var(--line)] pt-8 flex flex-col items-center gap-5">
-        <Button type="submit" isLoading={isLoading} className="w-full h-12 text-base font-bold shadow-lg shadow-[var(--brand)]/20">
+      <div className="mt-6 border-t border-border pt-8 flex flex-col items-center gap-5">
+        <Button type="submit" isLoading={isLoading} className="w-full h-12 text-base font-bold shadow-lg shadow-[var(--color-primary)]/20">
           Create Doctor Account
         </Button>
 
-        <p className="text-center text-sm font-semibold text-[var(--muted)]">
+        <p className="text-center text-sm font-semibold text-text-secondary">
           Already have an account?{" "}
           <Link 
             href="/doctor/login"
-            className="text-[var(--brand)] hover:text-[var(--brand-deep)] hover:underline"
+            className="text-primary hover:text-primary-dark hover:underline"
           >
             Sign in
           </Link>
@@ -258,7 +258,7 @@ export function DoctorRegisterForm() {
 
         <Link 
           href="/"
-          className="text-sm font-bold text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
+          className="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors"
         >
           &larr; Back to Patient Portal
         </Link>

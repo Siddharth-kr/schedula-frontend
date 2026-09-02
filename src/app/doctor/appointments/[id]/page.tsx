@@ -2,7 +2,7 @@ import { DoctorAppointmentDetails } from "@/features/doctor-portal/components/Do
 
 export default function DoctorAppointmentDetailsPage() {
   return (
-    <main className="flex-1 bg-[var(--canvas)]">
+    <main className="flex-1 bg-background">
       <DoctorAppointmentDetails />
     </main>
   );

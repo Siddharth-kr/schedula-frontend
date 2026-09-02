@@ -69,7 +69,7 @@ export function DoctorLoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+        <div className="rounded-md bg-error/10 p-3 text-sm text-error ring-1 ring-inset ring-red-200" role="alert">
           {error}
         </div>
       )}
@@ -99,7 +99,7 @@ export function DoctorLoginForm() {
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className={`absolute right-3 text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] ${passwordError ? 'top-8' : 'top-9'}`}
+          className={`absolute right-3 text-xs font-medium text-text-secondary hover:text-text-primary ${passwordError ? 'top-8' : 'top-9'}`}
         >
           {showPassword ? "Hide" : "Show"}
         </button>
@@ -111,12 +111,12 @@ export function DoctorLoginForm() {
         </Button>
       </div>
       
-      <div className="mt-4 flex flex-col items-center gap-4 border-t border-[var(--line)] pt-6">
-        <p className="text-center text-sm text-[var(--muted)]">
+      <div className="mt-4 flex flex-col items-center gap-4 border-t border-border pt-6">
+        <p className="text-center text-sm text-text-secondary">
           Don&apos;t have a doctor account?{" "}
           <Link 
             href="/doctor/register"
-            className="font-semibold text-[var(--brand)] hover:underline"
+            className="font-semibold text-primary hover:underline"
           >
             Register here
           </Link>
@@ -124,7 +124,7 @@ export function DoctorLoginForm() {
 
         <Link 
           href="/"
-          className="text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)]"
+          className="text-sm font-medium text-text-secondary hover:text-text-primary"
         >
           &larr; Back to Patient Portal
         </Link>

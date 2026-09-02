@@ -131,8 +131,8 @@ export function DoctorProfileForm() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="size-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--brand)]"></div>
-          <p className="text-sm font-medium text-[var(--muted)]">Loading profile...</p>
+          <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-text-secondary)] border-t-[var(--color-primary)]"></div>
+          <p className="text-sm font-medium text-text-secondary">Loading profile...</p>
         </div>
       </div>
     );
@@ -141,19 +141,19 @@ export function DoctorProfileForm() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end border-b border-[var(--line)] pb-8">
+      <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end border-b border-border pb-8">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--ink)] font-serif">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text-primary font-serif">
             My Profile
           </h1>
-          <p className="mt-2 text-base text-[var(--muted)]">
+          <p className="mt-2 text-base text-text-secondary">
             Manage your personal and professional information.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             type="button"
-            className="rounded-xl border border-[var(--line)] bg-white px-5 py-3 text-sm font-bold text-[var(--ink)] shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98]"
+            className="rounded-xl border border-border bg-white px-5 py-3 text-sm font-bold text-text-primary shadow-sm transition-all hover:bg-background hover:border-slate-300 active:scale-[0.98]"
             onClick={() => router.push("/doctor/availability")}
           >
             Manage Availability
@@ -167,25 +167,25 @@ export function DoctorProfileForm() {
       </div>
 
       {isEditing && (
-        <div className="mb-8 rounded-xl bg-amber-50 p-4 border border-amber-200 shadow-sm flex items-start gap-3">
-          <svg className="size-5 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="mb-8 rounded-xl bg-background p-4 border border-amber-200 shadow-sm flex items-start gap-3">
+          <svg className="size-5 text-text-secondary mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
           <div>
             <h3 className="text-sm font-bold text-amber-800">You are in edit mode</h3>
-            <p className="text-sm text-amber-700 mt-1">Make your changes below and click Save Changes when finished.</p>
+            <p className="text-sm text-text-secondary mt-1">Make your changes below and click Save Changes when finished.</p>
           </div>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-8 rounded-xl bg-[var(--success)]/10 p-5 text-sm font-bold text-[var(--success)] ring-1 ring-inset ring-[var(--success)]/20 shadow-sm">
+        <div className="mb-8 rounded-xl bg-success/10 p-5 text-sm font-bold text-success ring-1 ring-inset ring-[var(--success)]/20 shadow-sm">
           {successMsg}
         </div>
       )}
       
       {errorMsg && (
-        <div className="mb-8 rounded-xl bg-red-50 p-5 text-sm font-bold text-[var(--error)] ring-1 ring-inset ring-[var(--error)]/20 shadow-sm">
+        <div className="mb-8 rounded-xl bg-error/10 p-5 text-sm font-bold text-error ring-1 ring-inset ring-[var(--error)]/20 shadow-sm">
           {errorMsg}
         </div>
       )}
@@ -193,8 +193,8 @@ export function DoctorProfileForm() {
       <form onSubmit={handleSave} className="space-y-8">
         
         {/* Personal Information */}
-        <section className={`rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
-          <h2 className="text-xl font-bold text-[var(--ink)] mb-6 font-serif">
+        <section className={`rounded-3xl border border-border bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-primary/20 shadow-md' : ''}`}>
+          <h2 className="text-xl font-bold text-text-primary mb-6 font-serif">
             Personal Information
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -206,12 +206,12 @@ export function DoctorProfileForm() {
               disabled={!isEditing || isSaving}
             />
             <div className="flex flex-col gap-2 w-full">
-              <label className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">Gender</label>
+              <label className="text-sm font-semibold uppercase tracking-wider text-text-secondary">Gender</label>
               <select
                 value={formData.gender}
                 onChange={(e) => handleChange("gender", e.target.value)}
                 disabled={!isEditing || isSaving}
-                className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-base font-medium shadow-sm outline-none transition-all disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+                className="w-full rounded-xl border border-border bg-white px-4 py-3 text-base font-medium shadow-sm outline-none transition-all disabled:cursor-not-allowed disabled:bg-background disabled:text-text-secondary focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -231,8 +231,8 @@ export function DoctorProfileForm() {
         </section>
 
         {/* Professional Information */}
-        <section className={`rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
-          <h2 className="text-xl font-bold text-[var(--ink)] mb-6 font-serif">
+        <section className={`rounded-3xl border border-border bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-primary/20 shadow-md' : ''}`}>
+          <h2 className="text-xl font-bold text-text-primary mb-6 font-serif">
             Professional Information
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -270,8 +270,8 @@ export function DoctorProfileForm() {
         </section>
 
         {/* Contact Information */}
-        <section className={`rounded-3xl border border-[var(--line)] bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-[var(--brand)]/20 shadow-md' : ''}`}>
-          <h2 className="text-xl font-bold text-[var(--ink)] mb-6 font-serif">
+        <section className={`rounded-3xl border border-border bg-white p-6 sm:p-8 shadow-sm transition-all ${isEditing ? 'ring-2 ring-primary/20 shadow-md' : ''}`}>
+          <h2 className="text-xl font-bold text-text-primary mb-6 font-serif">
             Contact & Account Information
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -290,7 +290,7 @@ export function DoctorProfileForm() {
                 onChange={() => {}} // Make email strictly readonly in UI
                 disabled={true} 
               />
-              <span className="text-xs font-semibold text-slate-400 mt-2 block">Email address cannot be changed.</span>
+              <span className="text-xs font-semibold text-text-secondary mt-2 block">Email address cannot be changed.</span>
             </div>
             <div className="sm:col-span-2">
               <Input
@@ -306,16 +306,16 @@ export function DoctorProfileForm() {
 
         {/* Form Actions */}
         {isEditing && (
-          <div className="flex items-center justify-end gap-5 pt-4 border-t border-[var(--line)]">
+          <div className="flex items-center justify-end gap-5 pt-4 border-t border-border">
             <button
               type="button"
               onClick={handleCancel}
               disabled={isSaving}
-              className="px-5 py-3 text-sm font-bold text-[var(--muted)] hover:text-[var(--ink)] hover:underline disabled:opacity-50 transition-colors"
+              className="px-5 py-3 text-sm font-bold text-text-secondary hover:text-text-primary hover:underline disabled:opacity-50 transition-colors"
             >
               Cancel
             </button>
-            <Button type="submit" isLoading={isSaving} className="shadow-lg shadow-[var(--brand)]/20">
+            <Button type="submit" isLoading={isSaving} className="shadow-lg shadow-[var(--color-primary)]/20">
               Save Changes
             </Button>
           </div>

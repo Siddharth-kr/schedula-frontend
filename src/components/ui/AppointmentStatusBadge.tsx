@@ -5,20 +5,20 @@ export function AppointmentStatusBadge({ status }: { status: AppointmentStatus }
   switch (status) {
     case "confirmed":
     case "upcoming":
-      colorClasses = "bg-[var(--success)]/10 text-[var(--success)] ring-[var(--success)]/20";
+      colorClasses = "bg-success/10 text-success ring-[var(--success)]/20";
       break;
     case "pending":
-      colorClasses = "bg-amber-50 text-amber-700 ring-amber-600/20";
+      colorClasses = "bg-background text-text-secondary ring-border";
       break;
     case "completed":
-      colorClasses = "bg-[var(--brand)]/10 text-[var(--brand-deep)] ring-[var(--brand)]/20";
+      colorClasses = "bg-primary/10 text-primary-dark ring-primary/20";
       break;
     case "missed":
       colorClasses = "bg-stone-100 text-stone-600 ring-stone-500/20";
       break;
     case "cancelled":
     default:
-      colorClasses = "bg-red-50 text-[var(--error)] ring-[var(--error)]/20";
+      colorClasses = "bg-error/10 text-error ring-[var(--error)]/20";
       break;
   }
 

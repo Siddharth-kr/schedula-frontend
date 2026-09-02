@@ -175,9 +175,9 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
         color = "#b45309"; // amber-700
         border = "1px solid #fde68a";
       } else {
-        backgroundColor = "var(--brand)";
+        backgroundColor = "var(--color-primary)";
         color = "white";
-        border = "1px solid var(--brand-deep)";
+        border = "1px solid var(--color-primary-dark)";
       }
     }
     return { style: { backgroundColor, color, border, borderRadius: "4px", fontWeight: "600", fontSize: "0.75rem", padding: "2px 4px" } };
@@ -242,14 +242,14 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
       <style>{`
         .rbc-calendar { font-family: var(--font-inter), sans-serif; border: none; }
         .rbc-time-view { border: none; }
-        .rbc-time-header { border-bottom: 1px solid var(--line); }
+        .rbc-time-header { border-bottom: 1px solid var(--color-border); }
         .rbc-time-content { border-top: none; }
-        .rbc-day-bg + .rbc-day-bg { border-left: 1px solid var(--line); }
-        .rbc-timeslot-group { border-bottom: 1px solid var(--line); min-height: 48px; }
+        .rbc-day-bg + .rbc-day-bg { border-left: 1px solid var(--color-border); }
+        .rbc-timeslot-group { border-bottom: 1px solid var(--color-border); min-height: 48px; }
         .rbc-time-slot { border-top: 1px solid #f1f5f9; }
-        .rbc-time-gutter .rbc-timeslot-group { border-bottom: none; border-right: 1px solid var(--line); }
-        .rbc-header { padding: 12px 0; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); border-bottom: none; border-left: 1px solid var(--line); }
-        .rbc-header + .rbc-header { border-left: 1px solid var(--line); }
+        .rbc-time-gutter .rbc-timeslot-group { border-bottom: none; border-right: 1px solid var(--color-border); }
+        .rbc-header { padding: 12px 0; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: var(--color-text-secondary); border-bottom: none; border-left: 1px solid var(--color-border); }
+        .rbc-header + .rbc-header { border-left: 1px solid var(--color-border); }
         .rbc-allday-cell { display: none; }
         .rbc-time-view .rbc-header { border-bottom: none; }
         .rbc-today { background-color: #f8fafc; }

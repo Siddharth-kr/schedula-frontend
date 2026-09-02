@@ -25,14 +25,14 @@ export function MiniCalendar({ date, onChange }: Props) {
   return (
     <div className="w-full select-none">
       <div className="flex items-center justify-between mb-4 px-2">
-        <h3 className="text-sm font-semibold text-[var(--ink)]">
+        <h3 className="text-sm font-semibold text-text-primary">
           {format(date, "MMMM yyyy")}
         </h3>
         <div className="flex gap-1">
-          <button onClick={prevMonth} className="p-1 rounded hover:bg-slate-100 text-[var(--muted)]">
+          <button onClick={prevMonth} className="p-1 rounded hover:bg-background text-text-secondary">
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <button onClick={nextMonth} className="p-1 rounded hover:bg-slate-100 text-[var(--muted)]">
+          <button onClick={nextMonth} className="p-1 rounded hover:bg-background text-text-secondary">
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </button>
         </div>
@@ -40,7 +40,7 @@ export function MiniCalendar({ date, onChange }: Props) {
       
       <div className="grid grid-cols-7 gap-1 text-center mb-1">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <div key={i} className="text-[10px] font-semibold text-[var(--muted)]">
+          <div key={i} className="text-[10px] font-semibold text-text-secondary">
             {d}
           </div>
         ))}
@@ -58,10 +58,10 @@ export function MiniCalendar({ date, onChange }: Props) {
               onClick={() => onChange(day)}
               className={`
                 flex size-7 items-center justify-center rounded-full text-xs mx-auto
-                ${isSelected ? "bg-[var(--brand)] text-white font-bold" : "hover:bg-slate-100"}
+                ${isSelected ? "bg-primary text-white font-bold" : "hover:bg-background"}
                 ${!isCurrentMonth && !isSelected ? "text-slate-300" : ""}
-                ${isToday && !isSelected ? "text-[var(--brand)] font-bold bg-blue-50" : ""}
-                ${isCurrentMonth && !isSelected && !isToday ? "text-[var(--ink)]" : ""}
+                ${isToday && !isSelected ? "text-primary font-bold bg-primary/10" : ""}
+                ${isCurrentMonth && !isSelected && !isToday ? "text-text-primary" : ""}
               `}
             >
               {format(day, "d")}

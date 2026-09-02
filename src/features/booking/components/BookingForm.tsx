@@ -131,21 +131,21 @@ export function BookingForm({ doctor }: BookingFormProps) {
   if (!isLoaded) {
     return (
       <div className="flex h-40 items-center justify-center">
-        <div className="size-6 animate-spin rounded-full border-2 border-[var(--muted)] border-t-[var(--brand)]"></div>
+        <div className="size-6 animate-spin rounded-full border-2 border-[var(--color-text-secondary)] border-t-[var(--color-primary)]"></div>
       </div>
     );
   }
 
   if (availableSlots.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--line)] bg-slate-50/50 py-12 text-center shadow-sm">
-        <div className="grid size-14 place-items-center rounded-full bg-slate-100 mb-5 text-[var(--muted)] ring-1 ring-inset ring-[var(--line)]">
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-background/50 py-12 text-center shadow-sm">
+        <div className="grid size-14 place-items-center rounded-full bg-background mb-5 text-text-secondary ring-1 ring-inset ring-border">
           <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-        <h3 className="text-lg font-bold text-[var(--ink)] font-serif">No available appointments</h3>
-        <p className="mt-2 text-sm text-[var(--muted)] max-w-sm">This doctor currently has no open availability. Please check back later.</p>
+        <h3 className="text-lg font-bold text-text-primary font-serif">No available appointments</h3>
+        <p className="mt-2 text-sm text-text-secondary max-w-sm">This doctor currently has no open availability. Please check back later.</p>
       </div>
     );
   }
@@ -153,21 +153,21 @@ export function BookingForm({ doctor }: BookingFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-[var(--error)] ring-1 ring-inset ring-[var(--error)]/20" role="alert">
+        <div className="rounded-xl bg-error/10 p-4 text-sm font-medium text-error ring-1 ring-inset ring-[var(--error)]/20" role="alert">
           {error}
         </div>
       )}
 
       {/* Date Selection */}
-      <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-xl font-bold text-[var(--ink)] font-serif">1. Select a Date</h3>
+      <section className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-xl font-bold text-text-primary font-serif">1. Select a Date</h3>
         <div className="flex flex-col gap-2 w-full">
-          <label className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">Available Dates</label>
+          <label className="text-sm font-semibold uppercase tracking-wider text-text-secondary">Available Dates</label>
           <select
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-base font-medium shadow-sm outline-none transition-all focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+            className="w-full rounded-xl border border-border bg-white px-4 py-3 text-base font-medium shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             <option value="" disabled>Select a date...</option>
             {availableDates.map(d => (
@@ -180,15 +180,15 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Time Selection */}
-      <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-xl font-bold text-[var(--ink)] font-serif">2. Select a Time</h3>
+      <section className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-xl font-bold text-text-primary font-serif">2. Select a Time</h3>
         {!date ? (
-          <div className="rounded-2xl bg-slate-50/80 p-6 text-center ring-1 ring-inset ring-slate-200/50">
-            <p className="text-sm font-semibold text-[var(--muted)]">Please select a date first to view available times.</p>
+          <div className="rounded-2xl bg-background/80 p-6 text-center ring-1 ring-inset ring-slate-200/50">
+            <p className="text-sm font-semibold text-text-secondary">Please select a date first to view available times.</p>
           </div>
         ) : slotsForDate.length === 0 ? (
-          <div className="rounded-2xl bg-slate-50/80 p-6 text-center ring-1 ring-inset ring-slate-200/50">
-            <p className="text-sm font-semibold text-[var(--muted)]">No available times for this date.</p>
+          <div className="rounded-2xl bg-background/80 p-6 text-center ring-1 ring-inset ring-slate-200/50">
+            <p className="text-sm font-semibold text-text-secondary">No available times for this date.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -201,12 +201,12 @@ export function BookingForm({ doctor }: BookingFormProps) {
                   onClick={() => setSelectedSlotId(slot.id)}
                   className={`rounded-xl border px-4 py-3.5 text-base font-bold transition-all active:scale-[0.97] flex flex-col items-center justify-center gap-1 ${
                     isSelected
-                      ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-md ring-2 ring-[var(--brand)]/20"
-                      : "border-[var(--line)] bg-white text-[var(--ink)] shadow-sm hover:border-[var(--brand)] hover:text-[var(--brand)] hover:bg-slate-50"
+                      ? "border-primary bg-primary text-white shadow-md ring-2 ring-primary/20"
+                      : "border-border bg-white text-text-primary shadow-sm hover:border-primary hover:text-primary hover:bg-background"
                   }`}
                 >
                   <span>{slot.startTime}</span>
-                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isSelected ? 'text-emerald-100' : 'text-[var(--muted)]'}`}>to {slot.endTime}</span>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isSelected ? 'text-emerald-100' : 'text-text-secondary'}`}>to {slot.endTime}</span>
                 </button>
               );
             })}
@@ -215,8 +215,8 @@ export function BookingForm({ doctor }: BookingFormProps) {
       </section>
 
       {/* Reason */}
-      <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-xl font-bold text-[var(--ink)] font-serif">3. Visit Details</h3>
+      <section className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-xl font-bold text-text-primary font-serif">3. Visit Details</h3>
         <Input 
           label="Reason for visit (optional)" 
           type="text" 
@@ -228,45 +228,45 @@ export function BookingForm({ doctor }: BookingFormProps) {
 
       {/* Summary & Submit */}
       {selectedSlot && (
-        <section className="mt-4 overflow-hidden rounded-3xl border border-[var(--brand)]/20 bg-white shadow-xl shadow-[var(--brand)]/5 transition-all animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-[var(--ink)] p-5 sm:px-6">
+        <section className="mt-4 overflow-hidden rounded-3xl border border-primary/20 bg-white shadow-xl shadow-[var(--color-primary)]/5 transition-all animate-in fade-in slide-in-from-bottom-4">
+          <div className="bg-primary-dark p-5 sm:px-6">
             <h3 className="text-lg font-bold text-white font-serif">Booking Summary</h3>
           </div>
           
           <div className="p-5 sm:p-6">
             <dl className="space-y-4 text-sm">
               <div className="flex justify-between items-center">
-                <dt className="text-[var(--muted)] font-semibold uppercase tracking-wider text-xs">Doctor</dt>
-                <dd className="font-bold text-[var(--ink)] text-base text-right">{doctor.name}</dd>
+                <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Doctor</dt>
+                <dd className="font-bold text-text-primary text-base text-right">{doctor.name}</dd>
               </div>
               <div className="flex justify-between items-center">
-                <dt className="text-[var(--muted)] font-semibold uppercase tracking-wider text-xs">Specialty</dt>
-                <dd className="font-bold text-[var(--brand)] text-base text-right">{doctor.specialty}</dd>
+                <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Specialty</dt>
+                <dd className="font-bold text-primary text-base text-right">{doctor.specialty}</dd>
               </div>
               <div className="flex justify-between items-center">
-                <dt className="text-[var(--muted)] font-semibold uppercase tracking-wider text-xs">Date</dt>
-                <dd className="font-bold text-[var(--ink)] text-base text-right">
+                <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Date</dt>
+                <dd className="font-bold text-text-primary text-base text-right">
                   {new Date(selectedSlot.date).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' })}
                 </dd>
               </div>
               <div className="flex justify-between items-center">
-                <dt className="text-[var(--muted)] font-semibold uppercase tracking-wider text-xs">Time</dt>
-                <dd className="font-bold text-[var(--ink)] text-base text-right">
+                <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Time</dt>
+                <dd className="font-bold text-text-primary text-base text-right">
                   {selectedSlot.startTime} – {selectedSlot.endTime}
                 </dd>
               </div>
-              <div className="my-6 border-t border-dashed border-[var(--line)]"></div>
+              <div className="my-6 border-t border-dashed border-border"></div>
               <div className="flex justify-between items-center text-xl">
-                <dt className="font-bold text-[var(--ink)] font-serif">Total Fee</dt>
-                <dd className="font-bold text-[var(--brand)]">${doctor.consultationFee}</dd>
+                <dt className="font-bold text-text-primary font-serif">Total Fee</dt>
+                <dd className="font-bold text-primary">${doctor.consultationFee}</dd>
               </div>
             </dl>
 
             <div className="mt-8">
-              <Button type="submit" className="w-full h-12 text-base font-bold shadow-lg shadow-[var(--brand)]/20" disabled={!canSubmit || isLoading} isLoading={isLoading}>
+              <Button type="submit" className="w-full h-12 text-base font-bold shadow-lg shadow-[var(--color-primary)]/20" disabled={!canSubmit || isLoading} isLoading={isLoading}>
                 Confirm Booking
               </Button>
-              <p className="mt-4 text-center text-xs font-semibold text-[var(--muted)]">
+              <p className="mt-4 text-center text-xs font-semibold text-text-secondary">
                 You won&apos;t be charged until your appointment.
               </p>
             </div>

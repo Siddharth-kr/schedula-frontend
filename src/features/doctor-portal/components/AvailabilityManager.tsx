@@ -127,20 +127,20 @@ export function AvailabilityManager() {
     <div className="mx-auto max-w-4xl space-y-8 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-[var(--ink)]">Doctor Availability</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">Manage your recurring schedule and exceptions.</p>
+          <h1 className="font-serif text-3xl font-bold text-text-primary">Doctor Availability</h1>
+          <p className="mt-2 text-sm text-text-secondary">Manage your recurring schedule and exceptions.</p>
         </div>
-        <button onClick={() => setIsCreating(!isCreating)} className="rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[var(--brand-deep)]">
+        <button onClick={() => setIsCreating(!isCreating)} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark">
           {isCreating ? "Cancel" : "+ Create Availability"}
         </button>
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreate} className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
-          <div className="mb-6 flex gap-4 border-b border-[var(--line)] pb-4">
+        <form onSubmit={handleCreate} className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <div className="mb-6 flex gap-4 border-b border-border pb-4">
             {(["recurring", "one-time", "unavailable"] as const).map(t => (
               <label key={t} className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={type === t} onChange={() => setType(t)} className="text-[var(--brand)] focus:ring-[var(--brand)]" />
+                <input type="radio" checked={type === t} onChange={() => setType(t)} className="text-primary focus:ring-primary" />
                 <span className="text-sm font-medium capitalize">{t.replace("-", " ")}</span>
               </label>
             ))}
@@ -149,14 +149,14 @@ export function AvailabilityManager() {
           <div className="grid grid-cols-2 gap-6">
             {type === "recurring" ? (
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-[var(--ink)] mb-2">Select Days</label>
+                <label className="block text-sm font-medium text-text-primary mb-2">Select Days</label>
                 <div className="flex flex-wrap gap-2">
                   {DAYS.map((d, i) => (
                     <button 
                       type="button" 
                       key={i} 
                       onClick={() => toggleDay(i)}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-colors ${selectedDays.includes(i) ? 'bg-[var(--brand)] border-[var(--brand)] text-white' : 'bg-white border-[var(--line)] text-[var(--muted)] hover:border-[var(--brand)] hover:text-[var(--brand)]'}`}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-colors ${selectedDays.includes(i) ? 'bg-primary border-primary text-white' : 'bg-white border-border text-text-secondary hover:border-primary hover:text-primary'}`}
                     >
                       {d}
                     </button>
@@ -165,22 +165,22 @@ export function AvailabilityManager() {
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium text-[var(--ink)] mb-1">Date</label>
-                <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-xl border border-[var(--line)] px-4 py-2.5 text-sm focus:border-[var(--brand)] focus:outline-none bg-slate-50" />
+                <label className="block text-sm font-medium text-text-primary mb-1">Date</label>
+                <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none bg-background" />
               </div>
             )}
             
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">Start Time</label>
-              <input type="time" required value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full rounded-xl border border-[var(--line)] px-4 py-2.5 text-sm focus:border-[var(--brand)] focus:outline-none bg-slate-50" />
+              <label className="block text-sm font-medium text-text-primary mb-1">Start Time</label>
+              <input type="time" required value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none bg-background" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">End Time</label>
-              <input type="time" required value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full rounded-xl border border-[var(--line)] px-4 py-2.5 text-sm focus:border-[var(--brand)] focus:outline-none bg-slate-50" />
+              <label className="block text-sm font-medium text-text-primary mb-1">End Time</label>
+              <input type="time" required value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none bg-background" />
             </div>
           </div>
           <div className="mt-6 flex justify-end">
-            <button type="submit" className="rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-bold text-white hover:bg-[var(--brand-deep)]">
+            <button type="submit" className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-dark">
               {type === 'unavailable' ? 'Mark Unavailable' : 'Create Schedule'}
             </button>
           </div>
@@ -189,60 +189,60 @@ export function AvailabilityManager() {
 
       <div className="space-y-6">
         {/* Recurring Rules Section */}
-        <section className="rounded-2xl border border-[var(--line)] bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-[var(--line)] bg-slate-50/50 px-6 py-4">
-            <h2 className="font-semibold text-[var(--ink)]">Recurring Schedule</h2>
+        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-border bg-background/50 px-6 py-4">
+            <h2 className="font-semibold text-text-primary">Recurring Schedule</h2>
           </div>
-          <ul className="divide-y divide-[var(--line)]">
-            {rules.length === 0 && <li className="p-6 text-sm text-[var(--muted)]">No recurring schedules set.</li>}
+          <ul className="divide-y divide-border">
+            {rules.length === 0 && <li className="p-6 text-sm text-text-secondary">No recurring schedules set.</li>}
             {rules.map(rule => (
-              <li key={rule.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+              <li key={rule.id} className="flex items-center justify-between px-6 py-4 hover:bg-background transition-colors">
                 <div>
-                  <span className="font-bold text-[var(--ink)] w-24 inline-block">{DAYS[rule.dayOfWeek]}</span>
-                  <span className="ml-4 text-sm font-medium text-[var(--muted)]">{formatTime(rule.startTime)} - {formatTime(rule.endTime)}</span>
+                  <span className="font-bold text-text-primary w-24 inline-block">{DAYS[rule.dayOfWeek]}</span>
+                  <span className="ml-4 text-sm font-medium text-text-secondary">{formatTime(rule.startTime)} - {formatTime(rule.endTime)}</span>
                 </div>
-                <button onClick={() => handleDeleteRule(rule.id)} className="text-sm font-bold text-[var(--error)] hover:underline">Remove</button>
+                <button onClick={() => handleDeleteRule(rule.id)} className="text-sm font-bold text-error hover:underline">Remove</button>
               </li>
             ))}
           </ul>
         </section>
 
         {/* Unavailable Section */}
-        <section className="rounded-2xl border border-[var(--line)] bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-[var(--line)] bg-slate-50/50 px-6 py-4">
-            <h2 className="font-semibold text-[var(--ink)]">Unavailable / Time Off</h2>
+        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-border bg-background/50 px-6 py-4">
+            <h2 className="font-semibold text-text-primary">Unavailable / Time Off</h2>
           </div>
-          <ul className="divide-y divide-[var(--line)]">
-            {upcomingUnavailable.length === 0 && <li className="p-6 text-sm text-[var(--muted)]">No upcoming time off set.</li>}
+          <ul className="divide-y divide-border">
+            {upcomingUnavailable.length === 0 && <li className="p-6 text-sm text-text-secondary">No upcoming time off set.</li>}
             {upcomingUnavailable.map(slot => (
-              <li key={slot.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+              <li key={slot.id} className="flex items-center justify-between px-6 py-4 hover:bg-background transition-colors">
                 <div>
-                  <span className="font-bold text-[var(--ink)] w-28 inline-block">{format(parse(slot.date, "yyyy-MM-dd", new Date()), "dd MMM yyyy")}</span>
-                  <span className="ml-4 text-sm font-medium text-[var(--muted)]">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-                  <span className="ml-4 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-600">Unavailable</span>
+                  <span className="font-bold text-text-primary w-28 inline-block">{format(parse(slot.date, "yyyy-MM-dd", new Date()), "dd MMM yyyy")}</span>
+                  <span className="ml-4 text-sm font-medium text-text-secondary">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
+                  <span className="ml-4 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-error">Unavailable</span>
                 </div>
-                <button onClick={() => handleDeleteSlot(slot.id)} className="text-sm font-bold text-[var(--ink)] hover:text-[var(--brand)] hover:underline">Restore</button>
+                <button onClick={() => handleDeleteSlot(slot.id)} className="text-sm font-bold text-text-primary hover:text-primary hover:underline">Restore</button>
               </li>
             ))}
           </ul>
         </section>
 
         {/* Individual Availability Section */}
-        <section className="rounded-2xl border border-[var(--line)] bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-[var(--line)] bg-slate-50/50 px-6 py-4 flex justify-between items-center">
-            <h2 className="font-semibold text-[var(--ink)]">Upcoming Available Slots</h2>
-            <span className="text-xs text-[var(--muted)]">{upcomingAvailable.length} slots found</span>
+        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-border bg-background/50 px-6 py-4 flex justify-between items-center">
+            <h2 className="font-semibold text-text-primary">Upcoming Available Slots</h2>
+            <span className="text-xs text-text-secondary">{upcomingAvailable.length} slots found</span>
           </div>
           <div className="max-h-96 overflow-y-auto">
-            <ul className="divide-y divide-[var(--line)]">
-              {upcomingAvailable.length === 0 && <li className="p-6 text-sm text-[var(--muted)]">No upcoming availability.</li>}
+            <ul className="divide-y divide-border">
+              {upcomingAvailable.length === 0 && <li className="p-6 text-sm text-text-secondary">No upcoming availability.</li>}
               {upcomingAvailable.map(slot => (
-                <li key={slot.id} className="flex items-center justify-between px-6 py-3 hover:bg-slate-50 transition-colors">
+                <li key={slot.id} className="flex items-center justify-between px-6 py-3 hover:bg-background transition-colors">
                   <div>
-                    <span className="font-semibold text-[var(--ink)] text-sm w-28 inline-block">{format(parse(slot.date, "yyyy-MM-dd", new Date()), "dd MMM yyyy")}</span>
-                    <span className="ml-4 text-sm font-medium text-[var(--muted)]">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
+                    <span className="font-semibold text-text-primary text-sm w-28 inline-block">{format(parse(slot.date, "yyyy-MM-dd", new Date()), "dd MMM yyyy")}</span>
+                    <span className="ml-4 text-sm font-medium text-text-secondary">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
                   </div>
-                  <button onClick={() => handleDeleteSlot(slot.id)} className="text-sm font-bold text-[var(--error)] hover:underline">Remove</button>
+                  <button onClick={() => handleDeleteSlot(slot.id)} className="text-sm font-bold text-error hover:underline">Remove</button>
                 </li>
               ))}
             </ul>

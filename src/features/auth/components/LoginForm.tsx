@@ -67,7 +67,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+        <div className="rounded-xl bg-error/10 p-4 text-sm font-medium text-error ring-1 ring-inset ring-red-200" role="alert">
           {error}
         </div>
       )}
@@ -96,7 +96,7 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className={`absolute right-3 text-xs font-bold text-[var(--brand)] hover:text-[var(--brand-deep)] ${passwordError ? 'top-8' : 'top-9'}`}
+          className={`absolute right-3 text-xs font-bold text-primary hover:text-primary-dark ${passwordError ? 'top-8' : 'top-9'}`}
         >
           {showPassword ? "Hide" : "Show"}
         </button>
@@ -107,17 +107,17 @@ export function LoginForm() {
         </Button>
       </div>
       
-      <p className="text-center text-sm text-[var(--muted)]">
+      <p className="text-center text-sm text-text-secondary">
         Don&apos;t have an account?{" "}
         <Link 
           href="/register"
-          className="font-semibold text-[var(--brand)] hover:underline transition-all"
+          className="font-semibold text-primary hover:underline transition-all"
         >
           Sign up
         </Link>
       </p>
 
-      <p className="text-center text-xs text-[var(--muted)] mt-2">
+      <p className="text-center text-xs text-text-secondary mt-2">
         Tip: Use password <strong>password123</strong>
       </p>
     </form>

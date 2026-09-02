@@ -90,8 +90,8 @@ export function DoctorAppointments() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="size-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--brand)]"></div>
-          <p className="text-sm font-medium text-[var(--muted)]">Loading appointments...</p>
+          <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-text-secondary)] border-t-[var(--color-primary)]"></div>
+          <p className="text-sm font-medium text-text-secondary">Loading appointments...</p>
         </div>
       </div>
     );
@@ -100,21 +100,21 @@ export function DoctorAppointments() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end border-b border-[var(--line)] pb-6">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end border-b border-border pb-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--ink)] font-serif">All Appointments</h1>
-          <p className="mt-2 text-base text-[var(--muted)]">View and manage all your patient bookings.</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text-primary font-serif">All Appointments</h1>
+          <p className="mt-2 text-base text-text-secondary">View and manage all your patient bookings.</p>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="rounded-md bg-red-50 p-4 text-sm font-medium text-[var(--error)] ring-1 ring-inset ring-[var(--error)]/20">
+        <div className="rounded-md bg-error/10 p-4 text-sm font-medium text-error ring-1 ring-inset ring-[var(--error)]/20">
           {errorMsg}
         </div>
       )}
 
       {/* Filters Toolbar */}
-      <div className="flex flex-col justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[var(--line)] sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-border sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
           {(["all", "pending", "confirmed", "upcoming", "completed", "cancelled", "missed"] as StatusFilter[]).map((status) => (
             <button
@@ -122,8 +122,8 @@ export function DoctorAppointments() {
               onClick={() => setStatusFilter(status)}
               className={`rounded-lg px-5 py-2.5 text-sm font-bold capitalize transition-all ${
                 statusFilter === status
-                  ? "bg-[var(--ink)] text-white shadow-sm"
-                  : "bg-slate-50 text-[var(--muted)] hover:bg-slate-100 hover:text-[var(--ink)]"
+                  ? "bg-primary-dark text-white shadow-sm"
+                  : "bg-background text-text-secondary hover:bg-background hover:text-text-primary"
               }`}
             >
               {status}
@@ -142,33 +142,33 @@ export function DoctorAppointments() {
       </div>
 
       {/* Appointments List */}
-      <section className="rounded-3xl bg-white shadow-sm ring-1 ring-[var(--line)] overflow-hidden">
+      <section className="rounded-3xl bg-white shadow-sm ring-1 ring-border overflow-hidden">
         {filteredAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center">
-            <div className="grid size-16 place-items-center rounded-full bg-slate-50 text-[var(--muted)] ring-1 ring-inset ring-[var(--line)]">
+            <div className="grid size-16 place-items-center rounded-full bg-background text-text-secondary ring-1 ring-inset ring-border">
               <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="mt-5 text-base font-bold text-[var(--ink)] font-serif">No appointments found</h3>
-            <p className="mt-2 text-sm text-[var(--muted)]">Try adjusting your filters or search query.</p>
+            <h3 className="mt-5 text-base font-bold text-text-primary font-serif">No appointments found</h3>
+            <p className="mt-2 text-sm text-text-secondary">Try adjusting your filters or search query.</p>
           </div>
         ) : (
-          <div className="divide-y divide-[var(--line)]">
+          <div className="divide-y divide-border">
             {filteredAppointments.map((apt) => {
               const dateObj = new Date(apt.startsAt);
               const displayDate = dateObj.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
               const displayTime = dateObj.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit' });
               
               return (
-                <div key={apt.id} className="flex flex-col p-5 hover:bg-slate-50/50 sm:flex-row sm:items-center justify-between gap-6 transition-colors">
+                <div key={apt.id} className="flex flex-col p-5 hover:bg-background/50 sm:flex-row sm:items-center justify-between gap-6 transition-colors">
                   <div className="flex items-center gap-5">
-                    <div className="hidden sm:grid size-12 place-items-center rounded-2xl bg-[var(--brand)]/10 font-bold text-[var(--brand)] ring-1 ring-[var(--brand)]/20">
+                    <div className="hidden sm:grid size-12 place-items-center rounded-2xl bg-primary/10 font-bold text-primary ring-1 ring-primary/20">
                       {apt.patient.initials}
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-[var(--ink)]">{apt.patient.name}</h4>
-                      <p className="mt-1 flex items-center gap-4 text-sm font-medium text-[var(--muted)]">
+                      <h4 className="text-lg font-bold text-text-primary">{apt.patient.name}</h4>
+                      <p className="mt-1 flex items-center gap-4 text-sm font-medium text-text-secondary">
                         <span className="flex items-center gap-1.5">
                           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -188,12 +188,12 @@ export function DoctorAppointments() {
                   <div className="flex items-center justify-between gap-6 sm:flex-col sm:items-end sm:gap-2.5">
                     <AppointmentStatusBadge status={apt.status} />
                     <div className="flex flex-col items-end gap-2">
-                      <span className="text-sm font-semibold text-[var(--muted)] max-w-[240px] truncate" title={apt.reason}>
+                      <span className="text-sm font-semibold text-text-secondary max-w-[240px] truncate" title={apt.reason}>
                         {apt.reason || "General Consultation"}
                       </span>
                       <Link 
                         href={`/doctor/appointments/${apt.id}`}
-                        className="text-sm font-bold text-[var(--brand)] hover:text-[var(--brand-deep)] hover:underline"
+                        className="text-sm font-bold text-primary hover:text-primary-dark hover:underline"
                       >
                         View Details →
                       </Link>

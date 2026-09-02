@@ -130,15 +130,15 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+        <div className="rounded-xl bg-error/10 p-4 text-sm font-medium text-error ring-1 ring-inset ring-red-200" role="alert">
           {error}
         </div>
       )}
       
       {/* SECTION 1: Personal Info */}
       <section className="space-y-5">
-        <div className="border-b border-[var(--line)] pb-3">
-          <h3 className="text-lg font-bold text-[var(--ink)] font-serif">1. Personal Information</h3>
+        <div className="border-b border-border pb-3">
+          <h3 className="text-lg font-bold text-text-primary font-serif">1. Personal Information</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Input label="First Name" type="text" placeholder="Alex" value={firstName} onChange={(e) => setFirstName(e.target.value)} error={errors.firstName} disabled={isLoading} />
@@ -146,13 +146,13 @@ export function RegisterForm() {
           <Input label="Date of Birth" type="date" value={dob} onChange={(e) => setDob(e.target.value)} error={errors.dob} disabled={isLoading} />
           
           <div className="flex flex-col gap-2 w-full">
-            <label className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">Gender</label>
+            <label className="text-sm font-semibold uppercase tracking-wider text-text-secondary">Gender</label>
             <select 
               value={gender} 
               onChange={(e) => setGender(e.target.value)} 
               disabled={isLoading}
               className={`w-full rounded-xl border bg-white px-4 py-2.5 text-base font-medium shadow-sm outline-none transition-all disabled:opacity-50 ${
-                errors.gender ? "border-[var(--error)] text-[var(--error)]" : "border-[var(--line)] text-[var(--ink)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+                errors.gender ? "border-error text-error" : "border-border text-text-primary focus:border-primary focus:ring-2 focus:ring-primary/20"
               }`}
             >
               <option value="">Select Gender</option>
@@ -161,15 +161,15 @@ export function RegisterForm() {
               <option value="Other">Other</option>
               <option value="Prefer not to say">Prefer not to say</option>
             </select>
-            {errors.gender && <span className="text-xs font-bold text-[var(--error)] mt-0.5">{errors.gender}</span>}
+            {errors.gender && <span className="text-xs font-bold text-error mt-0.5">{errors.gender}</span>}
           </div>
         </div>
       </section>
 
       {/* SECTION 2: Contact Info */}
       <section className="space-y-5">
-        <div className="border-b border-[var(--line)] pb-3">
-          <h3 className="text-lg font-bold text-[var(--ink)] font-serif">2. Contact Information</h3>
+        <div className="border-b border-border pb-3">
+          <h3 className="text-lg font-bold text-text-primary font-serif">2. Contact Information</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Input label="Email Address" type="email" placeholder="alex@example.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} disabled={isLoading} />
@@ -186,10 +186,10 @@ export function RegisterForm() {
       </section>
 
       {/* SECTION 3: Optional Healthcare */}
-      <section className="space-y-5 rounded-2xl bg-stone-50 p-6 border border-[var(--line)]">
-        <div className="border-b border-[var(--line)] pb-3 flex justify-between items-end">
-          <h3 className="text-lg font-bold text-[var(--ink)] font-serif">Healthcare Profile</h3>
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Optional</span>
+      <section className="space-y-5 rounded-2xl bg-stone-50 p-6 border border-border">
+        <div className="border-b border-border pb-3 flex justify-between items-end">
+          <h3 className="text-lg font-bold text-text-primary font-serif">Healthcare Profile</h3>
+          <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">Optional</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Input label="Emergency Contact Name" type="text" placeholder="Jane Doe" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} disabled={isLoading} />
@@ -200,19 +200,19 @@ export function RegisterForm() {
 
       {/* SECTION 4: Security */}
       <section className="space-y-5">
-        <div className="border-b border-[var(--line)] pb-3">
-          <h3 className="text-lg font-bold text-[var(--ink)] font-serif">3. Account Security</h3>
+        <div className="border-b border-border pb-3">
+          <h3 className="text-lg font-bold text-text-primary font-serif">3. Account Security</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="relative">
             <Input label="Password" type={showPassword ? "text" : "password"} placeholder="????????" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} disabled={isLoading} />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className={`absolute right-3 text-xs font-bold text-[var(--brand)] hover:text-[var(--brand-deep)] ${errors.password ? 'top-8' : 'top-9'}`}>
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className={`absolute right-3 text-xs font-bold text-primary hover:text-primary-dark ${errors.password ? 'top-8' : 'top-9'}`}>
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
           <div className="relative">
             <Input label="Confirm Password" type={showConfirmPassword ? "text" : "password"} placeholder="????????" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={errors.confirmPassword} disabled={isLoading} />
-            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className={`absolute right-3 text-xs font-bold text-[var(--brand)] hover:text-[var(--brand-deep)] ${errors.confirmPassword ? 'top-8' : 'top-9'}`}>
+            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className={`absolute right-3 text-xs font-bold text-primary hover:text-primary-dark ${errors.confirmPassword ? 'top-8' : 'top-9'}`}>
               {showConfirmPassword ? "Hide" : "Show"}
             </button>
           </div>
@@ -220,34 +220,34 @@ export function RegisterForm() {
         
         {/* Password Strength */}
         {password && (
-          <div className="bg-stone-50 rounded-xl p-4 border border-[var(--line)]">
+          <div className="bg-stone-50 rounded-xl p-4 border border-border">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Password Strength</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">Password Strength</span>
               <span className={`text-xs font-bold ${
-                strengthScore <= 2 ? "text-[var(--error)]" :
-                strengthScore === 3 ? "text-amber-500" : "text-[var(--success)]"
+                strengthScore <= 2 ? "text-error" :
+                strengthScore === 3 ? "text-text-secondary" : "text-success"
               }`}>{strengthLabel}</span>
             </div>
             <div className="flex gap-2 h-1.5 mb-4">
-              <div className={`flex-1 rounded-full ${strengthScore >= 1 ? (strengthScore <= 2 ? "bg-[var(--error)]" : strengthScore === 3 ? "bg-amber-500" : "bg-[var(--success)]") : "bg-stone-200"}`}></div>
-              <div className={`flex-1 rounded-full ${strengthScore >= 2 ? (strengthScore <= 2 ? "bg-[var(--error)]" : strengthScore === 3 ? "bg-amber-500" : "bg-[var(--success)]") : "bg-stone-200"}`}></div>
-              <div className={`flex-1 rounded-full ${strengthScore >= 3 ? (strengthScore === 3 ? "bg-amber-500" : "bg-[var(--success)]") : "bg-stone-200"}`}></div>
-              <div className={`flex-1 rounded-full ${strengthScore >= 4 ? "bg-[var(--success)]" : "bg-stone-200"}`}></div>
+              <div className={`flex-1 rounded-full ${strengthScore >= 1 ? (strengthScore <= 2 ? "bg-error" : strengthScore === 3 ? "bg-background0" : "bg-success") : "bg-stone-200"}`}></div>
+              <div className={`flex-1 rounded-full ${strengthScore >= 2 ? (strengthScore <= 2 ? "bg-error" : strengthScore === 3 ? "bg-background0" : "bg-success") : "bg-stone-200"}`}></div>
+              <div className={`flex-1 rounded-full ${strengthScore >= 3 ? (strengthScore === 3 ? "bg-background0" : "bg-success") : "bg-stone-200"}`}></div>
+              <div className={`flex-1 rounded-full ${strengthScore >= 4 ? "bg-success" : "bg-stone-200"}`}></div>
             </div>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-[var(--muted)]">
-              <li className={`flex items-center gap-2 ${reqLength ? "text-[var(--success)]" : ""}`}>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-text-secondary">
+              <li className={`flex items-center gap-2 ${reqLength ? "text-success" : ""}`}>
                 {reqLength ? <svg className="size-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg> : <span className="size-4 rounded-full border border-current"></span>}
                 At least 8 characters
               </li>
-              <li className={`flex items-center gap-2 ${reqUpper ? "text-[var(--success)]" : ""}`}>
+              <li className={`flex items-center gap-2 ${reqUpper ? "text-success" : ""}`}>
                 {reqUpper ? <svg className="size-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg> : <span className="size-4 rounded-full border border-current"></span>}
                 One uppercase letter
               </li>
-              <li className={`flex items-center gap-2 ${reqLower ? "text-[var(--success)]" : ""}`}>
+              <li className={`flex items-center gap-2 ${reqLower ? "text-success" : ""}`}>
                 {reqLower ? <svg className="size-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg> : <span className="size-4 rounded-full border border-current"></span>}
                 One lowercase letter
               </li>
-              <li className={`flex items-center gap-2 ${reqNumber ? "text-[var(--success)]" : ""}`}>
+              <li className={`flex items-center gap-2 ${reqNumber ? "text-success" : ""}`}>
                 {reqNumber ? <svg className="size-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg> : <span className="size-4 rounded-full border border-current"></span>}
                 One number
               </li>
@@ -263,14 +263,14 @@ export function RegisterForm() {
             <div className="flex h-6 items-center">
               <input 
                 type="checkbox" 
-                className={`size-5 rounded border-gray-300 text-[var(--brand)] focus:ring-[var(--brand)] ${errors.agreed ? 'border-[var(--error)] ring-1 ring-[var(--error)]' : ''}`}
+                className={`size-5 rounded border-gray-300 text-primary focus:ring-primary ${errors.agreed ? 'border-error ring-1 ring-[var(--error)]' : ''}`}
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
                 disabled={isLoading}
               />
             </div>
-            <span className={`text-sm ${errors.agreed ? 'text-[var(--error)] font-medium' : 'text-[var(--muted)]'}`}>
-              I agree to the <Link href="#" className="font-semibold text-[var(--brand)] hover:underline">Terms of Service</Link> and <Link href="#" className="font-semibold text-[var(--brand)] hover:underline">Privacy Policy</Link>.
+            <span className={`text-sm ${errors.agreed ? 'text-error font-medium' : 'text-text-secondary'}`}>
+              I agree to the <Link href="#" className="font-semibold text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="font-semibold text-primary hover:underline">Privacy Policy</Link>.
             </span>
           </label>
         </div>
@@ -279,9 +279,9 @@ export function RegisterForm() {
           {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
         
-        <p className="text-center text-sm text-[var(--muted)] mt-2">
+        <p className="text-center text-sm text-text-secondary mt-2">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[var(--brand)] hover:underline transition-all">
+          <Link href="/login" className="font-semibold text-primary hover:underline transition-all">
             Sign in
           </Link>
         </p>

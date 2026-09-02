@@ -57,14 +57,14 @@ export function DoctorAppointmentDetails() {
   }, [appointmentId, router]);
 
   if (isLoading) {
-    return <div className="flex h-64 items-center justify-center text-[var(--muted)]">Loading details...</div>;
+    return <div className="flex h-64 items-center justify-center text-text-secondary">Loading details...</div>;
   }
 
   if (!appointment) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p className="text-[var(--muted)]">Appointment not found or unauthorized.</p>
-        <Link href="/doctor/appointments" className="text-sm font-bold text-[var(--brand)] hover:underline">
+        <p className="text-text-secondary">Appointment not found or unauthorized.</p>
+        <Link href="/doctor/appointments" className="text-sm font-bold text-primary hover:underline">
           Return to Dashboard
         </Link>
       </div>
@@ -83,16 +83,16 @@ export function DoctorAppointmentDetails() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       <div>
-        <Link href="/doctor/appointments" className="text-sm font-bold text-[var(--brand)] hover:underline">
+        <Link href="/doctor/appointments" className="text-sm font-bold text-primary hover:underline">
           &larr; Back to Appointments
         </Link>
       </div>
       
-      <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[var(--line)]">
-        <div className="flex items-center justify-between border-b border-[var(--line)] bg-slate-50/50 px-6 py-5 sm:px-8">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-border">
+        <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-5 sm:px-8">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--ink)] font-serif">Appointment Details</h1>
-            <p className="text-sm text-[var(--muted)] mt-1">ID: {appointment.id}</p>
+            <h1 className="text-2xl font-bold text-text-primary font-serif">Appointment Details</h1>
+            <p className="text-sm text-text-secondary mt-1">ID: {appointment.id}</p>
           </div>
           <AppointmentStatusBadge status={appointment.status} />
         </div>
@@ -100,12 +100,12 @@ export function DoctorAppointmentDetails() {
         <div className="px-6 py-6 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
           <dl className="space-y-4">
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Patient Name</dt>
-              <dd className="text-base font-bold text-[var(--ink)] mt-1">{appointment.patient.name}</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Patient Name</dt>
+              <dd className="text-base font-bold text-text-primary mt-1">{appointment.patient.name}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Date & Time</dt>
-              <dd className="text-base font-medium text-[var(--ink)] mt-1">
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Date & Time</dt>
+              <dd className="text-base font-medium text-text-primary mt-1">
                 {new Date(appointment.startsAt).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })}<br/>
                 {new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(appointment.startsAt))}
               </dd>
@@ -114,23 +114,23 @@ export function DoctorAppointmentDetails() {
           
           <dl className="space-y-4">
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Reason for Visit</dt>
-              <dd className="text-base font-medium text-[var(--ink)] mt-1">{appointment.reason || "General Consultation"}</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Reason for Visit</dt>
+              <dd className="text-base font-medium text-text-primary mt-1">{appointment.reason || "General Consultation"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Room</dt>
-              <dd className="text-base font-medium text-[var(--ink)] mt-1">{appointment.room || "TBD"}</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Room</dt>
+              <dd className="text-base font-medium text-text-primary mt-1">{appointment.room || "TBD"}</dd>
             </div>
           </dl>
         </div>
 
-        <div className="bg-slate-50 px-6 py-6 sm:px-8 border-t border-[var(--line)] flex flex-wrap gap-3 items-center">
+        <div className="bg-background px-6 py-6 sm:px-8 border-t border-border flex flex-wrap gap-3 items-center">
           {appointment.status === "pending" && (
             <>
-              <button onClick={() => handleStatusChange("confirmed")} className="rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white hover:bg-[var(--brand-deep)] transition-colors shadow-sm">
+              <button onClick={() => handleStatusChange("confirmed")} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-dark transition-colors shadow-sm">
                 Confirm Appointment
               </button>
-              <button onClick={() => handleStatusChange("cancelled")} className="rounded-xl bg-white border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-[var(--error)] hover:bg-red-50 transition-colors shadow-sm">
+              <button onClick={() => handleStatusChange("cancelled")} className="rounded-xl bg-white border border-border px-5 py-2.5 text-sm font-bold text-error hover:bg-error/10 transition-colors shadow-sm">
                 Decline
               </button>
             </>
@@ -138,19 +138,19 @@ export function DoctorAppointmentDetails() {
 
           {(appointment.status === "confirmed" || appointment.status === "upcoming") && (
             <>
-              <button onClick={() => handleStatusChange("completed")} className="rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white hover:bg-[var(--brand-deep)] transition-colors shadow-sm">
+              <button onClick={() => handleStatusChange("completed")} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-dark transition-colors shadow-sm">
                 Mark as Completed
               </button>
               {isPast ? (
-                <button onClick={() => handleStatusChange("missed")} className="rounded-xl bg-white border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-stone-600 hover:bg-stone-50 transition-colors shadow-sm">
+                <button onClick={() => handleStatusChange("missed")} className="rounded-xl bg-white border border-border px-5 py-2.5 text-sm font-bold text-stone-600 hover:bg-stone-50 transition-colors shadow-sm">
                   Mark as Missed
                 </button>
               ) : (
                 <>
-                  <button className="rounded-xl bg-white border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-[var(--ink)] hover:border-[var(--brand)] hover:text-[var(--brand)] transition-colors shadow-sm" onClick={() => toast.info("Drag and Drop in Calendar to Reschedule")}>
+                  <button className="rounded-xl bg-white border border-border px-5 py-2.5 text-sm font-bold text-text-primary hover:border-primary hover:text-primary transition-colors shadow-sm" onClick={() => toast.info("Drag and Drop in Calendar to Reschedule")}>
                     Reschedule (Use Calendar)
                   </button>
-                  <button onClick={() => handleStatusChange("cancelled")} className="rounded-xl bg-white border border-red-200 px-5 py-2.5 text-sm font-bold text-[var(--error)] hover:bg-red-50 transition-colors shadow-sm">
+                  <button onClick={() => handleStatusChange("cancelled")} className="rounded-xl bg-white border border-error/30 px-5 py-2.5 text-sm font-bold text-error hover:bg-error/10 transition-colors shadow-sm">
                     Cancel Appointment
                   </button>
                 </>
@@ -159,7 +159,7 @@ export function DoctorAppointmentDetails() {
           )}
 
           {(appointment.status === "completed" || appointment.status === "cancelled" || appointment.status === "missed") && (
-            <p className="text-sm font-medium text-[var(--muted)]">This appointment is closed and read-only.</p>
+            <p className="text-sm font-medium text-text-secondary">This appointment is closed and read-only.</p>
           )}
         </div>
       </div>
@@ -168,10 +168,10 @@ export function DoctorAppointmentDetails() {
       {appointment.status === "completed" && (
         <div className="space-y-6">
           {!prescription && !isPrescribing && (
-            <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm p-8 text-center flex flex-col items-center">
-              <h3 className="text-lg font-bold text-[var(--ink)] mb-2">No prescription has been created.</h3>
-              <p className="text-sm text-[var(--muted)] mb-6 max-w-md">Add a digital prescription including diagnosis and medicines for this completed appointment.</p>
-              <button onClick={() => setIsPrescribing(true)} className="rounded-xl bg-[var(--brand)] px-6 py-3 text-sm font-bold text-white hover:bg-[var(--brand-deep)] transition-colors shadow-sm">
+            <div className="bg-white rounded-2xl border border-border shadow-sm p-8 text-center flex flex-col items-center">
+              <h3 className="text-lg font-bold text-text-primary mb-2">No prescription has been created.</h3>
+              <p className="text-sm text-text-secondary mb-6 max-w-md">Add a digital prescription including diagnosis and medicines for this completed appointment.</p>
+              <button onClick={() => setIsPrescribing(true)} className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors shadow-sm">
                 Create Prescription
               </button>
             </div>

@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans text-[var(--ink)]">
+      <body className="min-h-full flex flex-col font-sans text-text-primary">
         <ToastProvider />
         <Navbar />
         {children}
