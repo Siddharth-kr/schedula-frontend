@@ -1,281 +1,341 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getDoctorSession, clearDoctorSession } from "@/lib/availability-store";
-import type { DoctorProfile } from "@/types/availability";
-import type { Appointment } from "@/types/appointment";
+import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay, parse, addMinutes } from "date-fns";
+import { View } from "react-big-calendar";
+import { getDoctorSession, getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable } from "@/lib/availability-store";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
-import { DashboardCalendar } from "./DashboardCalendar";
+import type { DoctorProfile, AvailabilitySlot } from "@/types/availability";
+import type { Appointment } from "@/types/appointment";
+import { DashboardCalendar, CalendarFilters as FilterType } from "./DashboardCalendar";
+import { MiniCalendar } from "./MiniCalendar";
+import { CalendarFilters } from "./CalendarFilters";
+import { toast } from "react-toastify";
 
 export function DoctorDashboard() {
   const router = useRouter();
   
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
-  const [todayMetrics, setTodayMetrics] = useState({
-    total: 0,
-    confirmed: 0,
-    cancelled: 0,
-    pending: 0,
+  const [date, setDate] = useState(new Date());
+  const [view, setView] = useState<View>("week");
+  const [filters, setFilters] = useState<FilterType>({
+    appointments: true,
+    available: true,
+    unavailable: true,
+    cancelled: true,
   });
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // 1. Authenticate doctor session
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  
+  // Modals state
+  const [addingSlot, setAddingSlot] = useState<{start: Date, end: Date} | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
+
+  const loadData = () => {
     const session = getDoctorSession();
     if (!session) {
       router.push("/doctor/login");
       return;
     }
-    async function fetchAppointments() {
-      if (!session) return;
-      setDoctor(session);
-      try {
-        const myAppointments = getAppointmentsForDoctor(session.id);
-        
-        // Compute today's metrics
-        const todayStr = new Date().toISOString().split("T")[0];
-        const todaysAppointments = myAppointments.filter((apt: Appointment) => apt.startsAt.startsWith(todayStr));
-        
-        setTodayMetrics({
-          total: todaysAppointments.length,
-          confirmed: todaysAppointments.filter((a: Appointment) => a.status === "confirmed").length,
-          cancelled: todaysAppointments.filter((a: Appointment) => a.status === "cancelled").length,
-          pending: todaysAppointments.filter((a: Appointment) => a.status === "pending").length,
-        });
-        
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
+    setDoctor(session);
+    setAppointments(getAppointmentsForDoctor(session.id));
+    setSlots(getSlotsForDoctor(session.id));
+  };
 
-    fetchAppointments();
-
+  useEffect(() => {
+    Promise.resolve().then(loadData);
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments") {
-        fetchAppointments();
-      }
+      if (e.key === "schedula_appointments" || e.key === "schedula_slots") loadData();
     };
-    const handleCustomChange = () => fetchAppointments();
-
+    const handleCustomChange = () => loadData();
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("schedula_appointments_updated", handleCustomChange);
-
+    window.addEventListener("schedula_slots_updated", handleCustomChange);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("schedula_appointments_updated", handleCustomChange);
+      window.removeEventListener("schedula_slots_updated", handleCustomChange);
     };
   }, [router]);
 
-  if (isLoading || !doctor) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="size-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--brand)]"></div>
-          <p className="text-sm font-medium text-[var(--muted)]">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleLogout = () => {
-    clearDoctorSession();
-    router.push("/doctor/login");
+  const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
+    if (action === "TODAY") {
+      setDate(new Date());
+      return;
+    }
+    const dir = action === "NEXT" ? 1 : -1;
+    if (view === "day") setDate(prev => dir > 0 ? addDays(prev, 1) : subDays(prev, 1));
+    else if (view === "week") setDate(prev => dir > 0 ? addWeeks(prev, 1) : subWeeks(prev, 1));
+    else setDate(prev => dir > 0 ? addMonths(prev, 1) : subMonths(prev, 1));
   };
 
+  const toolbarTitle = useMemo(() => {
+    if (view === "day") return format(date, "EEEE, MMMM d, yyyy");
+    if (view === "week") {
+      // Very simple approximation for week text
+      return format(date, "MMMM yyyy"); 
+    }
+    return format(date, "MMMM yyyy");
+  }, [date, view]);
+
+  const handleCreateSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addingSlot || !doctor) return;
+    const dateStr = format(addingSlot.start, "yyyy-MM-dd");
+    const startTime = format(addingSlot.start, "HH:mm");
+    const endTime = format(addingSlot.end, "HH:mm");
+    
+    // basic collision check
+    const collision = slots.find(s => s.date === dateStr && s.startTime === startTime);
+    if (collision) {
+      toast.error("A slot already exists here.");
+      return;
+    }
+    
+    addSlot(doctor.id, dateStr, startTime, endTime);
+    toast.success("Availability created.");
+    setAddingSlot(null);
+    loadData();
+  };
+
+  const handleDeleteSlot = () => {
+    if (!selectedSlot) return;
+    deleteSlot(selectedSlot.id);
+    toast.info("Slot removed.");
+    setSelectedSlot(null);
+    loadData();
+  };
+  
+  const handleMakeUnavailable = () => {
+    if (!selectedSlot) return;
+    markSlotUnavailable(selectedSlot.id);
+    toast.info("Slot marked unavailable.");
+    setSelectedSlot(null);
+    loadData();
+  };
+
+  if (!doctor) return null;
+
+  // Stats calculation
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const todaysApts = appointments.filter(a => a.startsAt.startsWith(todayStr));
+  const todaysCompleted = todaysApts.filter(a => a.status === "completed").length;
+  const todaysCancelled = todaysApts.filter(a => a.status === "cancelled").length;
+  const todaysAvailable = slots.filter(s => s.date === todayStr && !s.isBooked && !s.isUnavailable).length;
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-8 flex flex-col items-start justify-between gap-6 border-b border-[var(--line)] pb-8 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--ink)] font-serif">
-            Welcome, {doctor.name}
-          </h1>
-          <p className="mt-2.5 max-w-xl text-base text-[var(--muted)]">
-            Here is your schedule and practice overview.
-          </p>
+    <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-white">
+      
+      {/* LEFT SIDEBAR */}
+      <aside className="w-64 border-r border-[var(--line)] bg-white flex flex-col shrink-0 overflow-y-auto">
+        <div className="p-4 border-b border-[var(--line)]">
+          <button 
+            onClick={() => setAddingSlot({start: new Date(), end: addMinutes(new Date(), 30)})}
+            className="w-full rounded-xl bg-white border border-[var(--line)] px-4 py-3 text-sm font-bold text-[var(--ink)] shadow-sm hover:shadow hover:border-[var(--brand)] transition-all flex items-center justify-center gap-2"
+          >
+            <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Create
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="rounded-lg border border-[var(--line)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--ink)] shadow-sm transition-all hover:bg-slate-50 hover:text-[var(--error)] active:scale-[0.98]"
-        >
-          Sign out
-        </button>
-      </div>
+        <div className="p-4 pt-6 border-b border-[var(--line)]">
+          <MiniCalendar date={date} onChange={setDate} />
+        </div>
+        <div className="p-4 pt-6">
+          <CalendarFilters filters={filters} onChange={setFilters} />
+        </div>
+      </aside>
 
-      {/* 4-Card Summary */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Today's Bookings */}
-        <div className="flex flex-col rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-slate-600">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+      {/* MAIN CALENDAR AREA */}
+      <main className="flex-1 flex flex-col min-w-0 bg-white relative">
+        
+        {/* CUSTOM TOOLBAR */}
+        <header className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-[var(--line)]">
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => handleNavigate("TODAY")}
+              className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink)] hover:bg-slate-50 transition-colors"
+            >
+              Today
+            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => handleNavigate("PREV")} className="p-1.5 rounded-full hover:bg-slate-100 text-[var(--ink)] transition-colors">
+                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button onClick={() => handleNavigate("NEXT")} className="p-1.5 rounded-full hover:bg-slate-100 text-[var(--ink)] transition-colors">
+                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </button>
             </div>
-            <span className="text-sm font-semibold text-[var(--ink)]">Today&apos;s Bookings</span>
+            <h2 className="text-xl font-medium text-[var(--ink)] ml-2">{toolbarTitle}</h2>
           </div>
-          <div className="flex items-end justify-between">
-            <span className="font-serif text-3xl font-bold text-[var(--ink)]">{todayMetrics.total}</span>
-            <span className="mb-1 text-xs font-medium text-[var(--muted)]">appointments today</span>
-          </div>
-        </div>
-
-        {/* Confirmed */}
-        <div className="flex flex-col rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="grid size-8 place-items-center rounded-lg bg-emerald-50 text-emerald-600">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <span className="text-sm font-semibold text-[var(--ink)]">Confirmed</span>
-          </div>
-          <div className="flex items-end justify-between">
-            <span className="font-serif text-3xl font-bold text-[var(--ink)]">{todayMetrics.confirmed}</span>
-            <span className="mb-1 text-xs font-medium text-[var(--muted)]">confirmed today</span>
-          </div>
-        </div>
-
-        {/* Cancelled */}
-        <div className="flex flex-col rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="grid size-8 place-items-center rounded-lg bg-red-50 text-red-600">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </div>
-            <span className="text-sm font-semibold text-[var(--ink)]">Cancelled</span>
-          </div>
-          <div className="flex items-end justify-between">
-            <span className="font-serif text-3xl font-bold text-[var(--ink)]">{todayMetrics.cancelled}</span>
-            <span className="mb-1 text-xs font-medium text-[var(--muted)]">cancelled today</span>
-          </div>
-        </div>
-
-        {/* Pending */}
-        <div className="flex flex-col rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="grid size-8 place-items-center rounded-lg bg-[#3D8A7E]/10 text-[#3D8A7E]">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-            <span className="text-sm font-semibold text-[var(--ink)]">Pending</span>
-          </div>
-          <div className="flex items-end justify-between">
-            <span className="font-serif text-3xl font-bold text-[var(--ink)]">{todayMetrics.pending}</span>
-            <span className="mb-1 text-xs font-medium text-[var(--muted)]">awaiting confirmation</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main Column: Appointments */}
-        <div className="lg:col-span-2 space-y-6">
-          <DashboardCalendar />
-        </div>
-
-        {/* Right Column: Quick Actions & Profile */}
-        <div className="space-y-6">
-          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[var(--line)]">
-            <h2 className="border-b border-[var(--line)] bg-slate-50/50 px-5 py-4 font-semibold text-[var(--ink)]">Quick Actions</h2>
-            <div className="flex flex-col p-4 gap-2">
-              <Link
-                href="/doctor/profile"
-                className="group flex items-center justify-between rounded-xl px-4 py-2.5 transition-colors hover:bg-slate-50 hover:text-[var(--brand)]"
+          
+          <div className="flex items-center rounded-lg bg-slate-100 p-1">
+            {(["day", "week", "month"] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md capitalize transition-colors ${view === v ? "bg-white text-[var(--ink)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-[var(--ink)] ring-1 ring-[var(--line)] group-hover:bg-white group-hover:text-[var(--brand)] group-hover:shadow-sm">
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold">My Profile</span>
+                {v}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        {/* CALENDAR */}
+        <div className="flex-1 overflow-hidden relative">
+          <DashboardCalendar 
+            date={date} 
+            view={view} 
+            filters={filters}
+            onNavigate={setDate}
+            onView={setView}
+            onSelectEmptySlot={(start, end) => setAddingSlot({start, end})}
+            onSelectAvailableSlot={setSelectedSlot}
+          />
+        </div>
+
+        <div className="flex items-center gap-6 px-6 py-4 bg-slate-50 border-t border-[var(--line)] text-xs font-semibold text-[var(--muted)] shrink-0">
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-[var(--brand)]"></span> Appointments</div>
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-emerald-500"></span> Available Slots</div>
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-slate-400"></span> Unavailable</div>
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-red-500"></span> Cancelled / Missed</div>
+        </div>
+      </main>
+
+      {/* RIGHT SIDEBAR */}
+      <aside className="w-80 border-l border-[var(--line)] bg-slate-50 flex flex-col shrink-0 overflow-y-auto">
+        <div className="p-6 border-b border-[var(--line)]">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-full bg-[var(--brand)] text-lg font-bold text-white shadow-sm">
+              {doctor.name.replace("Dr. ", "").charAt(0)}
+            </div>
+            <div>
+              <p className="font-bold text-[var(--ink)] text-sm">{doctor.name}</p>
+              <p className="text-xs text-[var(--muted)]">{doctor.specialty}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-b border-[var(--line)] space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Today&apos;s Summary</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-white border border-[var(--line)] p-3 shadow-sm">
+              <p className="text-2xl font-bold text-[var(--ink)]">{todaysApts.length}</p>
+              <p className="text-[10px] uppercase font-bold text-[var(--muted)] mt-1">Appointments</p>
+            </div>
+            <div className="rounded-xl bg-white border border-[var(--line)] p-3 shadow-sm">
+              <p className="text-2xl font-bold text-[var(--brand)]">{todaysAvailable}</p>
+              <p className="text-[10px] uppercase font-bold text-[var(--muted)] mt-1">Available</p>
+            </div>
+            <div className="rounded-xl bg-white border border-[var(--line)] p-3 shadow-sm">
+              <p className="text-2xl font-bold text-[var(--ink)]">{todaysCompleted}</p>
+              <p className="text-[10px] uppercase font-bold text-[var(--muted)] mt-1">Completed</p>
+            </div>
+            <div className="rounded-xl bg-white border border-[var(--line)] p-3 shadow-sm">
+              <p className="text-2xl font-bold text-[var(--error)]">{todaysCancelled}</p>
+              <p className="text-[10px] uppercase font-bold text-[var(--muted)] mt-1">Cancelled</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-b border-[var(--line)] space-y-4">
+          <div className="flex justify-between items-end">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Upcoming Today</h3>
+            <Link href="/doctor/appointments" className="text-xs font-bold text-[var(--brand)] hover:underline">View All</Link>
+          </div>
+          <div className="space-y-3">
+            {todaysApts.filter(a => a.status === "confirmed" || a.status === "pending").length === 0 ? (
+              <p className="text-sm text-[var(--muted)] italic">No upcoming appointments today.</p>
+            ) : (
+              todaysApts
+                .filter(a => a.status === "confirmed" || a.status === "pending")
+                .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
+                .slice(0, 3)
+                .map(apt => (
+                  <Link key={apt.id} href={`/doctor/appointments/${apt.id}`} className="block rounded-xl bg-white border border-[var(--line)] p-3 shadow-sm hover:border-[var(--brand)] transition-colors">
+                    <p className="font-bold text-[var(--ink)] text-sm">{apt.patient.name}</p>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs font-medium text-[var(--brand)]">
+                        {new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(apt.startsAt))}
+                      </p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${apt.status === "confirmed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                        {apt.status}
+                      </span>
+                    </div>
+                  </Link>
+                ))
+            )}
+          </div>
+        </div>
+
+      </aside>
+
+      {/* Add Slot Modal */}
+      {addingSlot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-slate-50 border-b border-[var(--line)] px-5 py-4 flex justify-between items-center">
+              <h3 className="font-bold text-[var(--ink)]">Add Availability</h3>
+              <button onClick={() => setAddingSlot(null)} className="text-[var(--muted)] hover:text-[var(--ink)]">&times;</button>
+            </div>
+            <form onSubmit={handleCreateSlot} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">Date</label>
+                <input type="text" readOnly value={format(addingSlot.start, "MMM d, yyyy")} className="w-full rounded-lg border border-[var(--line)] bg-slate-50 px-3 py-2 text-sm text-[var(--ink)] font-medium outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--muted)] mb-1">Start Time</label>
+                  <input type="text" readOnly value={format(addingSlot.start, "HH:mm")} className="w-full rounded-lg border border-[var(--line)] bg-slate-50 px-3 py-2 text-sm text-[var(--ink)] font-medium outline-none" />
                 </div>
-                <svg className="size-4 text-[var(--muted)] group-hover:text-[var(--brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--muted)] mb-1">End Time</label>
+                  <input type="text" readOnly value={format(addingSlot.end, "HH:mm")} className="w-full rounded-lg border border-[var(--line)] bg-slate-50 px-3 py-2 text-sm text-[var(--ink)] font-medium outline-none" />
+                </div>
+              </div>
+              <p className="text-xs text-[var(--muted)] pt-2 border-t border-[var(--line)]">This will create a one-time available slot.</p>
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setAddingSlot(null)} className="flex-1 py-2 rounded-lg font-semibold text-sm border border-[var(--line)] text-[var(--ink)] hover:bg-slate-50">Cancel</button>
+                <button type="submit" className="flex-1 py-2 rounded-lg font-bold text-sm bg-[var(--brand)] text-white hover:bg-[var(--brand-deep)]">Save Slot</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Slot Modal */}
+      {selectedSlot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-slate-50 border-b border-[var(--line)] px-5 py-4 flex justify-between items-center">
+              <h3 className="font-bold text-[var(--ink)]">Available Slot</h3>
+              <button onClick={() => setSelectedSlot(null)} className="text-[var(--muted)] hover:text-[var(--ink)]">&times;</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-100 flex items-center gap-3">
+                <div className="size-2 rounded-full bg-emerald-500"></div>
+                <div>
+                  <p className="text-sm font-bold text-emerald-900">{format(parse(selectedSlot.date, "yyyy-MM-dd", new Date()), "MMM d, yyyy")}</p>
+                  <p className="text-xs font-medium text-emerald-700">{selectedSlot.startTime} – {selectedSlot.endTime}</p>
+                </div>
+              </div>
               
-              <Link
-                href="/doctor/availability"
-                className="group flex items-center justify-between rounded-xl px-4 py-2.5 transition-colors hover:bg-slate-50 hover:text-[var(--brand)]"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-[var(--ink)] ring-1 ring-[var(--line)] group-hover:bg-white group-hover:text-[var(--brand)] group-hover:shadow-sm">
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold">Availability</span>
-                </div>
-                <svg className="size-4 text-[var(--muted)] group-hover:text-[var(--brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              
-              <Link
-                href="/doctor/appointments"
-                className="group flex items-center justify-between rounded-xl px-4 py-2.5 transition-colors hover:bg-slate-50 hover:text-[var(--brand)]"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-[var(--ink)] ring-1 ring-[var(--line)] group-hover:bg-white group-hover:text-[var(--brand)] group-hover:shadow-sm">
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold">All Appointments</span>
-                </div>
-                <svg className="size-4 text-[var(--muted)] group-hover:text-[var(--brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              <Link
-                href="/doctor/availability"
-                className="group flex items-center justify-between rounded-xl px-4 py-2.5 transition-colors hover:bg-slate-50 hover:text-[var(--brand)]"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-[var(--ink)] ring-1 ring-[var(--line)] group-hover:bg-white group-hover:text-[var(--brand)] group-hover:shadow-sm">
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold">Manage Availability</span>
-                </div>
-                <svg className="size-4 text-[var(--muted)] group-hover:text-[var(--brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          </section>
-
-          {/* Profile Snapshot Card */}
-          <section className="rounded-2xl bg-[var(--ink)] p-6 text-white shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 opacity-10">
-              <svg className="size-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-slate-200">Practice Snapshot</h3>
-            <div className="mt-5 flex items-center gap-4 relative z-10">
-              <div className="grid size-14 place-items-center rounded-full bg-white/10 font-serif text-xl font-bold text-white ring-1 ring-white/20">
-                {doctor.name.replace("Dr. ", "").charAt(0)}
-              </div>
-              <div>
-                <p className="font-semibold text-white text-lg">{doctor.name}</p>
-                <p className="text-sm font-medium text-[var(--brand)] brightness-125">{doctor.specialty}</p>
+              <div className="flex flex-col gap-2 pt-2">
+                <button onClick={handleMakeUnavailable} className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors">
+                  Mark as Unavailable
+                </button>
+                <button onClick={handleDeleteSlot} className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                  Delete Slot
+                </button>
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-5 relative z-10">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Experience</p>
-                <p className="mt-1 font-bold text-lg">{doctor.experienceYears} Years</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Consultation Fee</p>
-                <p className="mt-1 font-bold text-lg">${doctor.consultationFee}</p>
-              </div>
-            </div>
-          </section>
+          </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 }
