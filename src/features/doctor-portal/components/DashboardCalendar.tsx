@@ -272,6 +272,7 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
         views={["day", "week", "month"]}
         eventPropGetter={eventPropGetter as any /* eslint-disable-line @typescript-eslint/no-explicit-any */}
         onEventDrop={onEventDrop}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         draggableAccessor={(e: any) => {
           const ev = e as CalendarEvent;
           if (ev.type !== "appointment") return false;
