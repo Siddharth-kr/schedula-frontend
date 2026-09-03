@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { Doctor } from "@/types/doctor";
 import { getAvailableSlotsForDoctor } from "@/lib/availability-store";
