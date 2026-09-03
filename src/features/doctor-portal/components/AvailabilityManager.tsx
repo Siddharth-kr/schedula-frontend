@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, parse, addMinutes } from "date-fns";
 import { View } from "react-big-calendar";
-import { getDoctorSession, getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable } from "@/lib/availability-store";
+import { getDoctorSession, getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable, addRule } from "@/lib/availability-store";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { DoctorProfile, AvailabilitySlot } from "@/types/availability";
 import type { Appointment } from "@/types/appointment";
@@ -30,7 +30,11 @@ export function AvailabilityManager() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   
   // Modals state
-  const [addingSlot, setAddingSlot] = useState<{start: Date, end: Date} | null>(null);
+  const [type, setType] = useState<"one-time" | "recurring">("one-time");
+  const [addDate, setAddDate] = useState("");
+  const [addStartTime, setAddStartTime] = useState("");
+  const [addEndTime, setAddEndTime] = useState("");
+  const [addDayOfWeek, setAddDayOfWeek] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
 
   const loadData = () => {
@@ -82,21 +86,16 @@ export function AvailabilityManager() {
 
   const handleCreateSlot = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addingSlot || !doctor) return;
-    const dateStr = format(addingSlot.start, "yyyy-MM-dd");
-    const startTime = format(addingSlot.start, "HH:mm");
-    const endTime = format(addingSlot.end, "HH:mm");
+    if (!doctor) return;
     
-    // basic collision check
-    const collision = slots.find(s => s.date === dateStr && s.startTime === startTime);
-    if (collision) {
-      toast.error("A slot already exists here.");
-      return;
+    if (type === "one-time") {
+        addSlot(doctor.id, addDate, addStartTime, addEndTime);
+        toast.success("Availability created.");
+    } else {
+        addRule(doctor.id, addDayOfWeek, addStartTime, addEndTime);
+        toast.success("Recurring availability rule created.");
     }
-    
-    addSlot(doctor.id, dateStr, startTime, endTime);
-    toast.success("Availability created.");
-    setAddingSlot(null);
+    setAddDate("");
     loadData();
   };
 
@@ -132,7 +131,7 @@ export function AvailabilityManager() {
       <aside className="w-64 border-r border-border bg-white flex flex-col shrink-0 overflow-y-auto">
         <div className="p-4 border-b border-border">
           <button 
-            onClick={() => setAddingSlot({start: new Date(), end: addMinutes(new Date(), 30)})}
+            onClick={() => { setAddDate(format(new Date(), 'yyyy-MM-dd')); setAddStartTime(format(new Date(), 'HH:mm')); setAddEndTime(format(addMinutes(new Date(), 30), 'HH:mm')); setType('one-time'); }}
             className="w-full rounded-xl bg-white border border-border px-4 py-3 text-sm font-bold text-text-primary shadow-sm hover:shadow hover:border-primary transition-all flex items-center justify-center gap-2"
           >
             <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -191,7 +190,7 @@ export function AvailabilityManager() {
             filters={filters}
             onNavigate={setDate}
             onView={setView}
-            onSelectEmptySlot={(start, end) => setAddingSlot({start, end})}
+            onSelectEmptySlot={(start, end) => { setAddDate(format(start, 'yyyy-MM-dd')); setAddStartTime(format(start, 'HH:mm')); setAddEndTime(format(end, 'HH:mm')); setType('one-time'); }}
             onSelectAvailableSlot={setSelectedSlot}
           />
         </div>
@@ -205,32 +204,56 @@ export function AvailabilityManager() {
       </main>
 
       {/* Add Slot Modal */}
-      {addingSlot && (
+      {addDate !== "" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-dark/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-background border-b border-border px-5 py-4 flex justify-between items-center">
-              <h3 className="font-bold text-text-primary">Add Availability</h3>
-              <button onClick={() => setAddingSlot(null)} className="text-text-secondary hover:text-text-primary">&times;</button>
+              <h3 className="font-bold text-text-primary">Create Availability</h3>
+              <button onClick={() => setAddDate("")} className="text-text-secondary hover:text-text-primary">&times;</button>
             </div>
             <form onSubmit={handleCreateSlot} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1">Date</label>
-                <input type="text" readOnly value={format(addingSlot.start, "MMM d, yyyy")} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" />
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Type</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm text-text-primary"><input type="radio" checked={type === "one-time"} onChange={() => setType("one-time")} /> One-time</label>
+                  <label className="flex items-center gap-2 text-sm text-text-primary"><input type="radio" checked={type === "recurring"} onChange={() => setType("recurring")} /> Recurring</label>
+                </div>
               </div>
+              
+              {type === "one-time" ? (
+                  <div>
+                    <label className="block text-xs font-semibold text-text-secondary mb-1">Date</label>
+                    <input type="date" value={addDate} onChange={(e) => setAddDate(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" required />
+                  </div>
+              ) : (
+                  <div>
+                    <label className="block text-xs font-semibold text-text-secondary mb-1">Day of Week</label>
+                    <select value={addDayOfWeek} onChange={(e) => setAddDayOfWeek(Number(e.target.value))} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" required>
+                      <option value={1}>Monday</option>
+                      <option value={2}>Tuesday</option>
+                      <option value={3}>Wednesday</option>
+                      <option value={4}>Thursday</option>
+                      <option value={5}>Friday</option>
+                      <option value={6}>Saturday</option>
+                      <option value={0}>Sunday</option>
+                    </select>
+                  </div>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary mb-1">Start Time</label>
-                  <input type="text" readOnly value={format(addingSlot.start, "HH:mm")} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" />
+                  <input type="time" value={addStartTime} onChange={(e) => setAddStartTime(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" required />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary mb-1">End Time</label>
-                  <input type="text" readOnly value={format(addingSlot.end, "HH:mm")} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" />
+                  <input type="time" value={addEndTime} onChange={(e) => setAddEndTime(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" required />
                 </div>
               </div>
-              <p className="text-xs text-text-secondary pt-2 border-t border-border">This will create a one-time available slot.</p>
+              
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setAddingSlot(null)} className="flex-1 py-2 rounded-lg font-semibold text-sm border border-border text-text-primary hover:bg-background">Cancel</button>
-                <button type="submit" className="flex-1 py-2 rounded-lg font-bold text-sm bg-primary text-white hover:bg-primary-dark">Save Slot</button>
+                <button type="button" onClick={() => setAddDate("")} className="flex-1 py-2 rounded-lg font-semibold text-sm border border-border text-text-primary hover:bg-background">Cancel</button>
+                <button type="submit" className="flex-1 py-2 rounded-lg font-bold text-sm bg-primary text-white hover:bg-primary-dark">Save</button>
               </div>
             </form>
           </div>
@@ -242,7 +265,7 @@ export function AvailabilityManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-dark/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-background border-b border-border px-5 py-4 flex justify-between items-center">
-              <h3 className="font-bold text-text-primary">Available Slot</h3>
+              <h3 className="font-bold text-text-primary">Edit Availability</h3>
               <button onClick={() => setSelectedSlot(null)} className="text-text-secondary hover:text-text-primary">&times;</button>
             </div>
             <div className="p-5 space-y-4">
@@ -250,16 +273,19 @@ export function AvailabilityManager() {
                 <div className="size-2 rounded-full bg-success"></div>
                 <div>
                   <p className="text-sm font-bold text-success">{format(parse(selectedSlot.date, "yyyy-MM-dd", new Date()), "MMM d, yyyy")}</p>
-                  <p className="text-xs font-medium text-success">{selectedSlot.startTime} – {selectedSlot.endTime}</p>
+                  <p className="text-xs font-medium text-success">{selectedSlot.startTime} - {selectedSlot.endTime}</p>
                 </div>
               </div>
               
               <div className="flex flex-col gap-2 pt-2">
-                <button onClick={handleMakeUnavailable} className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-background transition-colors">
+                <button onClick={() => setSelectedSlot(null)} className="w-full text-center px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-colors">
+                  Save
+                </button>
+                <button onClick={handleMakeUnavailable} className="w-full text-center px-4 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-background border border-border transition-colors">
                   Mark as Unavailable
                 </button>
-                <button onClick={handleDeleteSlot} className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-error hover:bg-error/10 transition-colors">
-                  Delete Slot
+                <button onClick={handleDeleteSlot} className="w-full text-center px-4 py-2.5 rounded-lg text-sm font-medium text-error hover:bg-error/10 border border-transparent transition-colors">
+                  Delete
                 </button>
               </div>
             </div>

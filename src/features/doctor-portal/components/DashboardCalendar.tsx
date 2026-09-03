@@ -71,29 +71,71 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
 
     const newEvents: CalendarEvent[] = [];
 
-    // Map unavailable slots
-    docSlots.filter(s => s.isUnavailable).forEach(s => {
+    // Group contiguous unavailable slots
+    const unavailableSlots = docSlots.filter(s => s.isUnavailable);
+    unavailableSlots.sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let currentUnav: any = null;
+    unavailableSlots.forEach(s => {
+      if (!currentUnav) {
+        currentUnav = { ...s };
+      } else if (currentUnav.date === s.date && currentUnav.endTime === s.startTime) {
+        currentUnav.endTime = s.endTime;
+      } else {
+        newEvents.push({
+          title: "Unavailable",
+          start: new Date(`${currentUnav.date}T${currentUnav.startTime}:00`),
+          end: new Date(`${currentUnav.date}T${currentUnav.endTime}:00`),
+          type: "unavailable",
+          resourceId: currentUnav.id,
+          data: currentUnav
+        });
+        currentUnav = { ...s };
+      }
+    });
+    if (currentUnav) {
       newEvents.push({
         title: "Unavailable",
-        start: new Date(`${s.date}T${s.startTime}:00`),
-        end: new Date(`${s.date}T${s.endTime}:00`),
+        start: new Date(`${currentUnav.date}T${currentUnav.startTime}:00`),
+        end: new Date(`${currentUnav.date}T${currentUnav.endTime}:00`),
         type: "unavailable",
-        resourceId: s.id,
-        data: s
+        resourceId: currentUnav.id,
+        data: currentUnav
       });
-    });
+    }
 
-    // Map available slots
-    docSlots.filter(s => !s.isBooked && !s.isUnavailable).forEach(s => {
+    // Group contiguous available slots
+    const availableSlots = docSlots.filter(s => !s.isBooked && !s.isUnavailable);
+    availableSlots.sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let currentAv: any = null;
+    availableSlots.forEach(s => {
+      if (!currentAv) {
+        currentAv = { ...s };
+      } else if (currentAv.date === s.date && currentAv.endTime === s.startTime) {
+        currentAv.endTime = s.endTime;
+      } else {
+        newEvents.push({
+          title: "Available",
+          start: new Date(`${currentAv.date}T${currentAv.startTime}:00`),
+          end: new Date(`${currentAv.date}T${currentAv.endTime}:00`),
+          type: "available",
+          resourceId: currentAv.id,
+          data: currentAv
+        });
+        currentAv = { ...s };
+      }
+    });
+    if (currentAv) {
       newEvents.push({
         title: "Available",
-        start: new Date(`${s.date}T${s.startTime}:00`),
-        end: new Date(`${s.date}T${s.endTime}:00`),
+        start: new Date(`${currentAv.date}T${currentAv.startTime}:00`),
+        end: new Date(`${currentAv.date}T${currentAv.endTime}:00`),
         type: "available",
-        resourceId: s.id,
-        data: s
+        resourceId: currentAv.id,
+        data: currentAv
       });
-    });
+    }
 
     // Map appointments
     docAppointments.forEach(apt => {
@@ -144,40 +186,40 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
   }, [allEvents, filters]);
 
   const eventPropGetter = (event: CalendarEvent) => {
-    let backgroundColor = "#3174ad";
+    let backgroundColor = "#2D6CDF";
     let border = "none";
     let color = "white";
 
     if (event.type === "unavailable") {
-      backgroundColor = "#f1f5f9"; // gray-100
-      color = "#64748b"; // gray-500
-      border = "1px solid #cbd5e1";
+      backgroundColor = "#F7F9FC"; // background
+      color = "#64748B"; // secondary text
+      border = "1px dashed #E2E8F0"; // border
     } else if (event.type === "available") {
-      backgroundColor = "#ecfdf5"; // emerald-50
-      color = "#059669"; // emerald-600
-      border = "1px solid #6ee7b7";
+      backgroundColor = "#2F8F6F1A"; // success light
+      color = "#2F8F6F"; // success
+      border = "1px solid #2F8F6F4D";
     } else if (event.type === "appointment") {
       const apt = event.data as Appointment;
       if (apt.status === "cancelled") {
-        backgroundColor = "#fee2e2"; // red-100
-        color = "#b91c1c"; // red-700
-        border = "1px solid #fecaca";
-      } else if (apt.status === "missed") {
-        backgroundColor = "#ffedd5"; // orange-100
-        color = "#c2410c"; // orange-700
-        border = "1px solid #fed7aa";
-      } else if (apt.status === "completed") {
-        backgroundColor = "#f3f4f6"; // gray-100
-        color = "#374151"; // gray-700
-        border = "1px solid #e5e7eb";
-      } else if (apt.status === "pending") {
-        backgroundColor = "#fffbeb"; // amber-50
-        color = "#b45309"; // amber-700
-        border = "1px solid #fde68a";
-      } else {
-        backgroundColor = "var(--color-primary)";
+        backgroundColor = "#DC4C3E"; // error
         color = "white";
-        border = "1px solid var(--color-primary-dark)";
+        border = "none";
+      } else if (apt.status === "missed") {
+        backgroundColor = "#DC4C3E1A"; // error light
+        color = "#DC4C3E";
+        border = "1px solid #DC4C3E4D";
+      } else if (apt.status === "completed") {
+        backgroundColor = "#F7F9FC"; // background
+        color = "#64748B"; // secondary text
+        border = "1px solid #E2E8F0"; // border
+      } else if (apt.status === "pending") {
+        backgroundColor = "#2D6CDF"; // primary
+        color = "white";
+        border = "none";
+      } else if (apt.status === "confirmed") {
+        backgroundColor = "#2F8F6F"; // success
+        color = "white";
+        border = "none";
       }
     }
     return { style: { backgroundColor, color, border, borderRadius: "4px", fontWeight: "600", fontSize: "0.75rem", padding: "2px 4px" } };
@@ -237,30 +279,33 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
 
   if (!doctor) return null;
 
+  const normalEvents = filteredEvents.filter(e => e.type === "appointment");
+  const bgEvents = filteredEvents.filter(e => e.type !== "appointment");
+
   return (
     <div className="h-full w-full bg-white relative">
       <style>{`
-        .rbc-calendar { font-family: var(--font-inter), sans-serif; border: none; }
-        .rbc-time-view { border: none; }
-        .rbc-time-header { border-bottom: 1px solid var(--color-border); }
-        .rbc-time-content { border-top: none; }
-        .rbc-day-bg + .rbc-day-bg { border-left: 1px solid var(--color-border); }
-        .rbc-timeslot-group { border-bottom: 1px solid var(--color-border); min-height: 48px; }
-        .rbc-time-slot { border-top: 1px solid #f1f5f9; }
-        .rbc-time-gutter .rbc-timeslot-group { border-bottom: none; border-right: 1px solid var(--color-border); }
-        .rbc-header { padding: 12px 0; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: var(--color-text-secondary); border-bottom: none; border-left: 1px solid var(--color-border); }
-        .rbc-header + .rbc-header { border-left: 1px solid var(--color-border); }
-        .rbc-allday-cell { display: none; }
-        .rbc-time-view .rbc-header { border-bottom: none; }
-        .rbc-today { background-color: #f8fafc; }
+        .rbc-calendar { font-family: inherit; }
+        .rbc-time-view { border-color: #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; }
+        .rbc-time-header { border-bottom: 1px solid #e2e8f0; }
+        .rbc-time-header-content { border-left: 1px solid #e2e8f0; }
+        .rbc-header { padding: 12px 4px; font-weight: 700; color: #1e293b; font-size: 0.875rem; border-bottom: none; text-transform: uppercase; letter-spacing: 0.05em; }
+        .rbc-day-bg { border-left: 1px solid #e2e8f0; }
+        .rbc-timeslot-group { border-bottom: 1px solid #e2e8f0; min-height: 48px; }
+        .rbc-time-gutter .rbc-timeslot-group { border-bottom: none; }
+        .rbc-label { font-size: 0.75rem; color: #64748b; font-weight: 600; padding: 0 8px; }
         .rbc-event { transition: opacity 0.2s; border-radius: 4px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
         .rbc-event:hover { opacity: 0.9; }
         .rbc-current-time-indicator { background-color: #ef4444; height: 2px; }
         .rbc-current-time-indicator::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; position: absolute; left: -4px; top: -3px; }
+        
+        .rbc-background-event { transition: opacity 0.2s; border-radius: 4px; box-shadow: none; pointer-events: auto !important; cursor: pointer; }
+        .rbc-background-event:hover { opacity: 0.9; }
       `}</style>
       <DnDCalendar
         localizer={localizer}
-        events={filteredEvents}
+        events={normalEvents}
+        backgroundEvents={bgEvents}
         startAccessor={(e) => (e as CalendarEvent).start as Date}
         endAccessor={(e) => (e as CalendarEvent).end as Date}
         style={{ height: "100%", width: "100%" }}
