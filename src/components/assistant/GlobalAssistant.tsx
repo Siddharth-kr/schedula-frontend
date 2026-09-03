@@ -2,18 +2,11 @@
 
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { processAssistantQuery, AssistantResponse, AssistantAction } from "@/lib/assistant-engine";
+import { processAssistantQuery, AssistantResponse, AssistantAction, ChatMessage } from "@/lib/assistant-engine";
 import { getDoctorSession } from "@/lib/availability-store";
 import { rescheduleAppointment } from "@/lib/appointment-store";
 import { toast } from "react-toastify";
 import Link from "next/link";
-
-type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-  actions?: AssistantAction[];
-};
 
 export function GlobalAssistant() {
   const pathname = usePathname();
@@ -67,7 +60,7 @@ export function GlobalAssistant() {
     setLoading(true);
 
     try {
-      const res = await processAssistantQuery(userMsg.text, role as "patient" | "doctor", userId);
+      const res = await processAssistantQuery(userMsg.text, role as "patient" | "doctor", userId, messages);
       const assistantMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
