@@ -18,7 +18,7 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Steps
+  // Steps: 1: Patient, 2: Medical, 3: Visit, 4: Appointment, 5: Review
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form State
@@ -29,20 +29,29 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
   });
 
   const [medicalInfo, setMedicalInfo] = useState({
-    reason: "", symptoms: "", symptomsStarted: "", severity: "Mild",
-    medicalConditions: "", surgeries: "", allergies: "", medications: "",
-    consultedBefore: "No", previousDiagnosis: "", additionalInfo: ""
+    allergies: "", hasAllergies: "No",
+    medicalConditions: "", hasConditions: "No",
+    medications: "", hasMedications: "No",
+    surgeries: "", hasSurgeries: "No"
+  });
+
+  const [visitInfo, setVisitInfo] = useState({
+    reason: "", reasonOther: "",
+    symptoms: "", symptomsStarted: "", severity: "",
+    consultedBefore: "No", previousDiagnosis: "", additionalReportInfo: ""
   });
 
   const [appointmentInfo, setAppointmentInfo] = useState({
-    date: "", timeSlotId: "", type: "Video Consultation", reason: "General Consultation", reasonOther: "",
-    preferredCommunication: "Email", extraNotes: ""
+    date: "", timeSlotId: "", type: "",
+    additionalInfo: "",
+    preferredCommunication: "Email",
+    reminderAppointment: true, reminderConfirmation: true, reminderRescheduling: true
   });
 
-  const [confirmCheckbox, setConfirmCheckbox] = useState(false);
+  const [confirmCheckbox1, setConfirmCheckbox1] = useState(false);
+  const [confirmCheckbox2, setConfirmCheckbox2] = useState(false);
 
   useEffect(() => {
-    // Load pre-filled data if available
     const userStr = localStorage.getItem("mock_user");
     if (userStr) {
       try {
@@ -52,10 +61,8 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
       } catch {}
     }
 
-    // Load doctor's availability
     const slots = getAvailableSlotsForDoctor(doctor.id);
     const validSlots = slots.filter(s => {
-      // Only include slots that are not in the past
       const slotDate = new Date(`${s.date}T${s.startTime}`);
       return slotDate > new Date() && !s.isBooked && !s.isUnavailable;
     });
@@ -77,26 +84,30 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
     return availableSlots.find(s => s.id === appointmentInfo.timeSlotId);
   }, [appointmentInfo.timeSlotId, availableSlots]);
 
-  // Validation functions
+  // Validation
   const validateStep1 = () => {
     if (!patientInfo.fullName) return "Full Name is required.";
     if (!patientInfo.dob) return "Date of Birth is required.";
     if (new Date(patientInfo.dob) > new Date()) return "Date of Birth cannot be in the future.";
+    if (!patientInfo.gender) return "Gender is required.";
     if (!patientInfo.phone || patientInfo.phone.length < 5) return "Valid phone number is required.";
     if (!patientInfo.email || !patientInfo.email.includes("@")) return "Valid email is required.";
     return null;
   };
 
-  const validateStep2 = () => {
-    if (!medicalInfo.reason) return "Reason for visit is required.";
-    if (!medicalInfo.symptoms) return "Symptoms / Description is required.";
+  const validateStep2 = () => null; // all optional or have defaults
+
+  const validateStep3 = () => {
+    if (!visitInfo.reason) return "Reason for visit is required.";
+    if (visitInfo.reason === "Other" && !visitInfo.reasonOther) return "Please specify the reason for visit.";
+    if (!visitInfo.symptoms) return "Symptoms description is required.";
     return null;
   };
 
-  const validateStep3 = () => {
-    if (!appointmentInfo.date) return "Please select an appointment date.";
-    if (!appointmentInfo.timeSlotId) return "Please select an appointment time.";
-    if (!appointmentInfo.type) return "Please select an appointment type.";
+  const validateStep4 = () => {
+    if (!appointmentInfo.type) return "Appointment Type is required.";
+    if (!appointmentInfo.date) return "Appointment Date is required.";
+    if (!appointmentInfo.timeSlotId) return "Appointment Time is required.";
     return null;
   };
 
@@ -106,6 +117,7 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
     if (currentStep === 1) err = validateStep1();
     if (currentStep === 2) err = validateStep2();
     if (currentStep === 3) err = validateStep3();
+    if (currentStep === 4) err = validateStep4();
 
     if (err) {
       setError(err);
@@ -113,7 +125,7 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
       return;
     }
 
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(c => c + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -129,11 +141,11 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentStep !== 4) return;
+    if (currentStep !== 5) return;
     setError(null);
 
-    if (!confirmCheckbox) {
-      setError("Please confirm that the information is accurate.");
+    if (!confirmCheckbox1 || !confirmCheckbox2) {
+      setError("Please accept the required consent checkboxes before confirming.");
       return;
     }
 
@@ -142,50 +154,55 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
       return;
     }
 
-    // Refresh availability store to ensure it hasn't been booked just now
     const currentSlots = getAvailableSlotsForDoctor(doctor.id);
     const stillAvailable = currentSlots.find(s => s.id === selectedSlot.id && !s.isBooked && !s.isUnavailable);
     
     if (!stillAvailable) {
-      setError("This time slot is no longer available. Please select another available time.");
+      setError("This appointment slot is no longer available. Please select another available time.");
       setAvailableSlots(currentSlots.filter(s => new Date(`${s.date}T${s.startTime}`) > new Date() && !s.isBooked && !s.isUnavailable));
       setAppointmentInfo(prev => ({...prev, timeSlotId: ""}));
-      setCurrentStep(3); // go back to select time
+      setCurrentStep(4);
       return;
     }
 
     setIsLoading(true);
     try {
-      // Mark slot as booked
       markSlotBooked(selectedSlot.id);
 
-      // Create appointment
+      const finalReason = visitInfo.reason === "Other" ? visitInfo.reasonOther : visitInfo.reason;
+
       const payload = {
         patient: { name: patientInfo.fullName, age: new Date().getFullYear() - new Date(patientInfo.dob).getFullYear() },
         doctorId: doctor.id,
         clinician: doctor.name,
         specialty: doctor.specialty,
         startsAt: `${selectedSlot.date}T${selectedSlot.startTime}`,
-        reason: appointmentInfo.reason === "Other" ? appointmentInfo.reasonOther : appointmentInfo.reason,
-        durationMinutes: 30, // Default duration
+        reason: finalReason,
+        durationMinutes: 30,
         patientInfo,
-        medicalInfo,
+        medicalInfo: {
+          allergies: medicalInfo.hasAllergies === "Yes" ? medicalInfo.allergies : "No known allergies",
+          medicalConditions: medicalInfo.hasConditions === "Yes" ? medicalInfo.medicalConditions : "None",
+          medications: medicalInfo.hasMedications === "Yes" ? medicalInfo.medications : "None",
+          surgeries: medicalInfo.hasSurgeries === "Yes" ? medicalInfo.surgeries : "None",
+          symptoms: visitInfo.symptoms,
+          symptomsStarted: visitInfo.symptomsStarted,
+          severity: visitInfo.severity,
+          consultedBefore: visitInfo.consultedBefore,
+          previousDiagnosis: visitInfo.previousDiagnosis,
+          additionalInfo: appointmentInfo.additionalInfo,
+          additionalReportInfo: visitInfo.additionalReportInfo
+        },
         appointmentType: appointmentInfo.type,
-        preferredCommunication: appointmentInfo.preferredCommunication,
-        extraNotes: appointmentInfo.extraNotes
+        preferredCommunication: appointmentInfo.preferredCommunication
       };
 
       const apt = await createAppointment(payload);
-      
-      toast.success("Appointment Confirmed!");
       router.push(`/confirmation/${apt.id}`);
-
     } catch (err: unknown) {
-      // Rollback slot
       freeSlot(selectedSlot.id);
       toast.error("Unable to book the appointment.");
-      if (err instanceof Error) setError(err.message);
-    } finally {
+      setError(err instanceof Error ? err.message : "Unable to book the appointment.");
       setIsLoading(false);
     }
   };
@@ -193,66 +210,93 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
   if (!isLoaded) {
     return (
       <div className="flex h-40 items-center justify-center">
-        <div className="size-6 animate-spin rounded-full border-2 border-[var(--color-text-secondary)] border-t-[var(--color-primary)]"></div>
+        <div className="size-6 animate-spin rounded-full border-2 border-border border-t-primary"></div>
+        <span className="ml-3 text-text-secondary font-medium">Loading available appointment times...</span>
       </div>
     );
   }
 
+  const stepTitles = ["Patient", "Medical", "Visit", "Appointment", "Review"];
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl mx-auto">
-      {/* Left Column: Summary */}
+      {/* Left Column: Summary & Progress */}
       <div className="w-full lg:w-1/3">
-        <div className="sticky top-24 rounded-3xl border border-border bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold font-serif text-text-primary mb-6">Booking Details</h3>
-          
-          <div className="flex items-center gap-4 mb-6">
-            <div className="size-14 rounded-full bg-primary/10 text-primary grid place-items-center font-bold text-xl uppercase ring-1 ring-primary/20 shrink-0">
-              {doctor.name.split(" ").map(n => n[0]).join("").substring(0,2)}
+        <div className="sticky top-24 space-y-6">
+          <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold font-serif text-text-primary mb-2">Book an Appointment</h3>
+            <p className="text-xs text-text-secondary mb-6">Please provide some information to help your doctor prepare for your visit.</p>
+            
+            <div className="flex items-center gap-4 mb-6">
+              <div className="size-14 rounded-full bg-primary/10 text-primary grid place-items-center font-bold text-xl uppercase ring-1 ring-primary/20 shrink-0">
+                {doctor.name.split(" ").map(n => n[0]).join("").substring(0,2)}
+              </div>
+              <div>
+                <h4 className="font-bold text-text-primary">Dr. {doctor.name}</h4>
+                <p className="text-sm text-primary font-medium">{doctor.specialty}</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold text-text-primary">Dr. {doctor.name}</h4>
-              <p className="text-sm text-primary font-medium">{doctor.specialty}</p>
+            
+            <div className="space-y-4 text-sm pb-4 border-b border-border">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Experience</span>
+                <span className="font-semibold text-text-primary">{doctor.experience || "10+"} years</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Consultation Fee</span>
+                <span className="font-bold text-text-primary">₹{doctor.consultationFee}</span>
+              </div>
+            </div>
+
+            {(appointmentInfo.date || selectedSlot || appointmentInfo.type) && (
+              <div className="space-y-4 text-sm pt-4">
+                {appointmentInfo.date && (
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Selected Date</span>
+                    <span className="font-bold text-text-primary">
+                      {new Date(appointmentInfo.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+                {selectedSlot && (
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Selected Time</span>
+                    <span className="font-bold text-text-primary">{selectedSlot.startTime}</span>
+                  </div>
+                )}
+                {appointmentInfo.type && (
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Appointment Type</span>
+                    <span className="font-bold text-text-primary">{appointmentInfo.type}</span>
+                  </div>
+                )}
+                
+                <div className="pt-2 flex gap-3 text-xs font-bold text-primary">
+                  <button type="button" onClick={() => setCurrentStep(4)} className="hover:underline">Change Date & Time</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Progress Indicator */}
+          <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">Progress</h4>
+            <div className="space-y-4">
+              {stepTitles.map((title, idx) => {
+                const stepNum = idx + 1;
+                const isActive = currentStep === stepNum;
+                const isPast = currentStep > stepNum;
+                return (
+                  <div key={title} className={`flex items-center gap-3 ${isActive ? 'text-primary' : isPast ? 'text-text-primary' : 'text-text-secondary/50'}`}>
+                    <div className={`size-6 rounded-full flex items-center justify-center text-xs font-bold ${isActive ? 'bg-primary text-white' : isPast ? 'bg-primary/20 text-primary' : 'bg-background text-text-secondary/50'}`}>
+                      {isPast ? '✓' : `0${stepNum}`}
+                    </div>
+                    <span className={`text-sm font-bold ${isActive ? '' : 'font-medium'}`}>{title}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          
-          <div className="space-y-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-text-secondary">Consultation Fee</span>
-              <span className="font-bold text-text-primary">${doctor.consultationFee}</span>
-            </div>
-            {appointmentInfo.date && (
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Date</span>
-                <span className="font-bold text-text-primary">
-                  {new Date(appointmentInfo.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                </span>
-              </div>
-            )}
-            {selectedSlot && (
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Time</span>
-                <span className="font-bold text-text-primary">{selectedSlot.startTime}</span>
-              </div>
-            )}
-            {appointmentInfo.type && (
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Type</span>
-                <span className="font-bold text-text-primary">{appointmentInfo.type}</span>
-              </div>
-            )}
-          </div>
-          
-          {currentStep > 1 && (
-             <div className="mt-6 pt-6 border-t border-border">
-                <div className="flex justify-between items-center mb-2">
-                   <span className="text-sm font-bold text-text-secondary uppercase">Progress</span>
-                   <span className="text-sm font-bold text-primary">Step {currentStep} of 4</span>
-                </div>
-                <div className="h-2 w-full bg-background rounded-full overflow-hidden">
-                   <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(currentStep / 4) * 100}%` }}></div>
-                </div>
-             </div>
-          )}
         </div>
       </div>
 
@@ -267,18 +311,19 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
 
           {/* STEP 1: Patient Information */}
           {currentStep === 1 && (
-            <section className="rounded-3xl border border-border bg-white p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4">
-              <h3 className="mb-6 text-xl font-bold text-text-primary font-serif">1. Patient Information</h3>
+            <section className="rounded-3xl border border-border bg-white p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+              <h3 className="text-2xl font-bold text-text-primary font-serif mb-2">1. Patient Information</h3>
+              <p className="text-sm text-text-secondary mb-8">Tell us a little about yourself.</p>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Personal Details</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Personal Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Input label="Full Name *" placeholder="John Doe" value={patientInfo.fullName} onChange={e => setPatientInfo({...patientInfo, fullName: e.target.value})} />
                     <Input label="Date of Birth *" type="date" value={patientInfo.dob} onChange={e => setPatientInfo({...patientInfo, dob: e.target.value})} />
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-text-secondary">Gender</label>
-                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none" value={patientInfo.gender} onChange={e => setPatientInfo({...patientInfo, gender: e.target.value})}>
+                      <label className="text-sm font-semibold text-text-secondary">Gender *</label>
+                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary transition-colors" value={patientInfo.gender} onChange={e => setPatientInfo({...patientInfo, gender: e.target.value})}>
                         <option value="">Select...</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -290,19 +335,19 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Contact Details</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Contact Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Input label="Phone Number *" type="tel" placeholder="+1 234 567 890" value={patientInfo.phone} onChange={e => setPatientInfo({...patientInfo, phone: e.target.value})} />
                     <Input label="Email Address *" type="email" placeholder="john@example.com" value={patientInfo.email} onChange={e => setPatientInfo({...patientInfo, email: e.target.value})} />
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Address (Optional)</h4>
-                  <div className="grid grid-cols-1 gap-4">
-                    <Input label="Address" placeholder="123 Main St" value={patientInfo.address} onChange={e => setPatientInfo({...patientInfo, address: e.target.value})} />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Address <span className="text-text-secondary/50 normal-case font-medium tracking-normal">(Optional)</span></h4>
+                  <div className="grid grid-cols-1 gap-5 mb-5">
+                    <Input label="Address Line" placeholder="123 Main St" value={patientInfo.address} onChange={e => setPatientInfo({...patientInfo, address: e.target.value})} />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <Input label="City" placeholder="New York" value={patientInfo.city} onChange={e => setPatientInfo({...patientInfo, city: e.target.value})} />
                     <Input label="State" placeholder="NY" value={patientInfo.state} onChange={e => setPatientInfo({...patientInfo, state: e.target.value})} />
                     <Input label="Postal Code" placeholder="10001" value={patientInfo.pincode} onChange={e => setPatientInfo({...patientInfo, pincode: e.target.value})} />
@@ -310,11 +355,11 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Emergency Contact (Optional)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input label="Name" placeholder="Jane Doe" value={patientInfo.emergencyContactName} onChange={e => setPatientInfo({...patientInfo, emergencyContactName: e.target.value})} />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Emergency Contact <span className="text-text-secondary/50 normal-case font-medium tracking-normal">(Optional)</span></h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <Input label="Emergency Contact Name" placeholder="Jane Doe" value={patientInfo.emergencyContactName} onChange={e => setPatientInfo({...patientInfo, emergencyContactName: e.target.value})} />
                     <Input label="Relationship" placeholder="Spouse" value={patientInfo.emergencyContactRelation} onChange={e => setPatientInfo({...patientInfo, emergencyContactRelation: e.target.value})} />
-                    <Input label="Phone" type="tel" placeholder="+1 987 654 321" value={patientInfo.emergencyContactPhone} onChange={e => setPatientInfo({...patientInfo, emergencyContactPhone: e.target.value})} />
+                    <Input label="Emergency Contact Phone" type="tel" placeholder="+1 987 654 321" value={patientInfo.emergencyContactPhone} onChange={e => setPatientInfo({...patientInfo, emergencyContactPhone: e.target.value})} />
                   </div>
                 </div>
               </div>
@@ -323,63 +368,173 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
 
           {/* STEP 2: Medical Information */}
           {currentStep === 2 && (
-            <section className="rounded-3xl border border-border bg-white p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4">
-              <h3 className="mb-6 text-xl font-bold text-text-primary font-serif">2. Medical Information</h3>
+            <section className="rounded-3xl border border-border bg-white p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+              <h3 className="text-2xl font-bold text-text-primary font-serif mb-2">2. Medical Information</h3>
+              <p className="text-sm text-text-secondary mb-8">This information helps your doctor better understand your health history.</p>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Current Health Information</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Allergies</h4>
                   <div className="space-y-4">
-                    <Input label="Reason for Visit *" placeholder="E.g., Annual Checkup, Back Pain" value={medicalInfo.reason} onChange={e => setMedicalInfo({...medicalInfo, reason: e.target.value})} />
-                    
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-text-secondary">Symptoms / Description *</label>
-                      <textarea className="w-full rounded-xl border border-border px-4 py-3 outline-none min-h-[100px]" placeholder="Please describe your symptoms..." value={medicalInfo.symptoms} onChange={e => setMedicalInfo({...medicalInfo, symptoms: e.target.value})}></textarea>
+                      <label className="text-sm font-semibold text-text-secondary">Do you have any known allergies?</label>
+                      <select className="w-full md:w-1/2 rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary" value={medicalInfo.hasAllergies} onChange={e => setMedicalInfo({...medicalInfo, hasAllergies: e.target.value})}>
+                        <option value="No">No known allergies</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                    {medicalInfo.hasAllergies === "Yes" && (
+                      <Input label="Please list your allergies" placeholder="Penicillin, peanuts, pollen..." value={medicalInfo.allergies} onChange={e => setMedicalInfo({...medicalInfo, allergies: e.target.value})} />
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Medical Conditions</h4>
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-text-secondary">Do you currently have any medical conditions?</label>
+                      <select className="w-full md:w-1/2 rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary" value={medicalInfo.hasConditions} onChange={e => setMedicalInfo({...medicalInfo, hasConditions: e.target.value})}>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                    {medicalInfo.hasConditions === "Yes" && (
+                      <Input label="Please list your medical conditions" placeholder="Diabetes, hypertension, asthma..." value={medicalInfo.medicalConditions} onChange={e => setMedicalInfo({...medicalInfo, medicalConditions: e.target.value})} />
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Current Medications</h4>
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-text-secondary">Are you currently taking any medications?</label>
+                      <select className="w-full md:w-1/2 rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary" value={medicalInfo.hasMedications} onChange={e => setMedicalInfo({...medicalInfo, hasMedications: e.target.value})}>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                    {medicalInfo.hasMedications === "Yes" && (
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-text-secondary">Medications details</label>
+                        <textarea className="w-full rounded-xl border border-border px-4 py-3 outline-none min-h-[100px] focus:border-primary" placeholder="E.g., Metformin - 500mg - Twice daily" value={medicalInfo.medications} onChange={e => setMedicalInfo({...medicalInfo, medications: e.target.value})}></textarea>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Previous Surgeries</h4>
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-text-secondary">Have you had any previous surgeries?</label>
+                      <select className="w-full md:w-1/2 rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary" value={medicalInfo.hasSurgeries} onChange={e => setMedicalInfo({...medicalInfo, hasSurgeries: e.target.value})}>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                    {medicalInfo.hasSurgeries === "Yes" && (
+                      <Input label="Please provide details" placeholder="Appendectomy (2015)..." value={medicalInfo.surgeries} onChange={e => setMedicalInfo({...medicalInfo, surgeries: e.target.value})} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* STEP 3: Visit Information */}
+          {currentStep === 3 && (
+            <section className="rounded-3xl border border-border bg-white p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+              <h3 className="text-2xl font-bold text-text-primary font-serif mb-8">3. Visit Information</h3>
+              
+              <div className="space-y-8">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Reason for Visit</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-text-secondary">Reason for Visit *</label>
+                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary transition-colors" value={visitInfo.reason} onChange={e => setVisitInfo({...visitInfo, reason: e.target.value})}>
+                        <option value="">Select...</option>
+                        <option value="General Consultation">General Consultation</option>
+                        <option value="New Symptoms">New Symptoms</option>
+                        <option value="Follow-up">Follow-up</option>
+                        <option value="Routine Check-up">Routine Check-up</option>
+                        <option value="Prescription Follow-up">Prescription Follow-up</option>
+                        <option value="Second Opinion">Second Opinion</option>
+                        <option value="Test/Report Review">Test/Report Review</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    {visitInfo.reason === "Other" && (
+                      <Input label="Please specify *" placeholder="Describe reason..." value={visitInfo.reasonOther} onChange={e => setVisitInfo({...visitInfo, reasonOther: e.target.value})} />
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Symptoms</h4>
+                  <div className="space-y-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-text-secondary">Symptoms / Main Concern *</label>
+                      <textarea className="w-full rounded-xl border border-border px-4 py-3 outline-none min-h-[120px] focus:border-primary" placeholder="Describe what you're experiencing, including when it started and anything that makes it better or worse." value={visitInfo.symptoms} onChange={e => setVisitInfo({...visitInfo, symptoms: e.target.value})}></textarea>
+                      <p className="text-xs text-text-secondary mt-1">This is patient-provided information only and not a diagnosis system.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input label="When did the symptoms start?" placeholder="E.g., 2 days ago" value={medicalInfo.symptomsStarted} onChange={e => setMedicalInfo({...medicalInfo, symptomsStarted: e.target.value})} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-text-secondary">When did the symptoms start?</label>
+                        <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none focus:border-primary" value={visitInfo.symptomsStarted} onChange={e => setVisitInfo({...visitInfo, symptomsStarted: e.target.value})}>
+                          <option value="">Select...</option>
+                          <option value="Today">Today</option>
+                          <option value="1–3 days ago">1–3 days ago</option>
+                          <option value="4–7 days ago">4–7 days ago</option>
+                          <option value="1–4 weeks ago">1–4 weeks ago</option>
+                          <option value="More than a month ago">More than a month ago</option>
+                          <option value="Not applicable">Not applicable</option>
+                        </select>
+                      </div>
                       
                       <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-text-secondary">Severity</label>
-                        <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none" value={medicalInfo.severity} onChange={e => setMedicalInfo({...medicalInfo, severity: e.target.value})}>
-                          <option value="Mild">Mild</option>
-                          <option value="Moderate">Moderate</option>
-                          <option value="Severe">Severe</option>
-                        </select>
+                        <label className="text-sm font-semibold text-text-secondary">How would you describe the severity?</label>
+                        <div className="flex gap-4 mt-2">
+                          {["Mild", "Moderate", "Severe"].map(sev => (
+                            <label key={sev} className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="severity" value={sev} className="text-primary focus:ring-primary" checked={visitInfo.severity === sev} onChange={e => setVisitInfo({...visitInfo, severity: e.target.value})} />
+                              <span className="text-sm font-medium">{sev}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Medical History (Optional)</h4>
-                  <div className="space-y-4">
-                    <Input label="Existing Medical Conditions" placeholder="E.g., Diabetes, Hypertension" value={medicalInfo.medicalConditions} onChange={e => setMedicalInfo({...medicalInfo, medicalConditions: e.target.value})} />
-                    <Input label="Allergies" placeholder="E.g., Penicillin, Peanuts" value={medicalInfo.allergies} onChange={e => setMedicalInfo({...medicalInfo, allergies: e.target.value})} />
-                    <Input label="Current Medications" placeholder="E.g., Aspirin 81mg" value={medicalInfo.medications} onChange={e => setMedicalInfo({...medicalInfo, medications: e.target.value})} />
-                    <Input label="Previous Surgeries" placeholder="E.g., Appendectomy (2015)" value={medicalInfo.surgeries} onChange={e => setMedicalInfo({...medicalInfo, surgeries: e.target.value})} />
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Previous Consultations</h4>
-                  <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Previous Consultation</h4>
+                  <div className="space-y-5">
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-text-secondary">Have you consulted a doctor for this issue before?</label>
-                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none" value={medicalInfo.consultedBefore} onChange={e => setMedicalInfo({...medicalInfo, consultedBefore: e.target.value})}>
-                        <option value="No">No</option>
-                        <option value="Yes">Yes</option>
-                      </select>
+                      <label className="text-sm font-semibold text-text-secondary">Have you consulted a doctor about this problem before?</label>
+                      <div className="flex gap-4 mt-1">
+                        {["No", "Yes"].map(opt => (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="consulted" value={opt} className="text-primary focus:ring-primary" checked={visitInfo.consultedBefore === opt} onChange={e => setVisitInfo({...visitInfo, consultedBefore: e.target.value})} />
+                            <span className="text-sm font-medium">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
 
-                    {medicalInfo.consultedBefore === "Yes" && (
-                      <Input label="Previous diagnosis / treatment" placeholder="What did the doctor say?" value={medicalInfo.previousDiagnosis} onChange={e => setMedicalInfo({...medicalInfo, previousDiagnosis: e.target.value})} />
+                    {visitInfo.consultedBefore === "Yes" && (
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-text-secondary">Previous diagnosis or treatment</label>
+                        <textarea className="w-full rounded-xl border border-border px-4 py-3 outline-none min-h-[80px] focus:border-primary" placeholder="What was discussed or prescribed?" value={visitInfo.previousDiagnosis} onChange={e => setVisitInfo({...visitInfo, previousDiagnosis: e.target.value})}></textarea>
+                      </div>
                     )}
-
-                    <div className="flex flex-col gap-2 mt-4">
-                      <label className="text-sm font-semibold text-text-secondary">Additional information for the doctor</label>
-                      <textarea className="w-full rounded-xl border border-border px-4 py-3 outline-none min-h-[80px]" placeholder="Anything else?" value={medicalInfo.additionalInfo} onChange={e => setMedicalInfo({...medicalInfo, additionalInfo: e.target.value})}></textarea>
+                    
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-text-secondary">Additional report information <span className="text-text-secondary/50 font-normal">(Optional)</span></label>
+                      <Input placeholder="E.g., I have blood test results from last week" value={visitInfo.additionalReportInfo} onChange={e => setVisitInfo({...visitInfo, additionalReportInfo: e.target.value})} />
                     </div>
                   </div>
                 </div>
@@ -387,62 +542,45 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
             </section>
           )}
 
-          {/* STEP 3: Appointment Details */}
-          {currentStep === 3 && (
-            <section className="rounded-3xl border border-border bg-white p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4">
-              <h3 className="mb-6 text-xl font-bold text-text-primary font-serif">3. Appointment Details</h3>
+          {/* STEP 4: Appointment Details */}
+          {currentStep === 4 && (
+            <section className="rounded-3xl border border-border bg-white p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+              <h3 className="text-2xl font-bold text-text-primary font-serif mb-8">4. Appointment Details</h3>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Type & Reason</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-text-secondary">Appointment Type *</label>
-                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none" value={appointmentInfo.type} onChange={e => setAppointmentInfo({...appointmentInfo, type: e.target.value})}>
-                        <option value="Video Consultation">Video Consultation</option>
-                        <option value="In-Person Consultation">In-Person Consultation</option>
-                      </select>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-text-secondary">Reason for Appointment *</label>
-                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none" value={appointmentInfo.reason} onChange={e => setAppointmentInfo({...appointmentInfo, reason: e.target.value})}>
-                        <option value="General Consultation">General Consultation</option>
-                        <option value="Follow-up">Follow-up</option>
-                        <option value="New Symptoms">New Symptoms</option>
-                        <option value="Routine Check-up">Routine Check-up</option>
-                        <option value="Prescription Follow-up">Prescription Follow-up</option>
-                        <option value="Second Opinion">Second Opinion</option>
-                        <option value="Other">Other</option>
-                      </select>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Consultation Type</h4>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-text-secondary">Appointment Type *</label>
+                    <div className="flex flex-wrap gap-4 mt-1">
+                      {["In-Person Consultation", "Video Consultation"].map(opt => (
+                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="appttype" value={opt} className="text-primary focus:ring-primary" checked={appointmentInfo.type === opt} onChange={e => setAppointmentInfo({...appointmentInfo, type: e.target.value})} />
+                          <span className="text-sm font-medium">{opt}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                  
-                  {appointmentInfo.reason === "Other" && (
-                    <div className="mt-4">
-                      <Input label="Please describe the reason *" placeholder="Describe..." value={appointmentInfo.reasonOther} onChange={e => setAppointmentInfo({...appointmentInfo, reasonOther: e.target.value})} />
-                    </div>
-                  )}
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Schedule</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Schedule</h4>
                   
                   {availableSlots.length === 0 ? (
-                    <div className="rounded-2xl bg-error/10 p-6 text-center ring-1 ring-inset ring-[var(--error)]/20">
-                      <p className="text-sm font-bold text-error">No available appointments</p>
-                      <p className="text-sm text-text-secondary mt-1">This doctor currently has no open availability.</p>
+                    <div className="rounded-2xl bg-error/10 p-6 text-center ring-1 ring-inset ring-error/20">
+                      <p className="text-sm font-bold text-error">No appointment slots are available for this date.</p>
+                      <p className="text-sm text-text-secondary mt-1">Please check back later or select another doctor.</p>
                     </div>
                   ) : (
                     <>
-                      <div className="flex flex-col gap-2 w-full mb-4">
-                        <label className="text-sm font-semibold text-text-secondary">Date *</label>
+                      <div className="flex flex-col gap-2 w-full md:w-1/2 mb-6">
+                        <label className="text-sm font-semibold text-text-secondary">Appointment Date *</label>
                         <select
                           value={appointmentInfo.date}
                           onChange={(e) => {
                              setAppointmentInfo({...appointmentInfo, date: e.target.value, timeSlotId: ""});
                           }}
-                          className="w-full rounded-xl border border-border bg-white px-4 py-3 font-medium outline-none"
+                          className="w-full rounded-xl border border-border bg-white px-4 py-3 font-medium outline-none focus:border-primary"
                         >
                           <option value="" disabled>Select a date...</option>
                           {availableDates.map(d => (
@@ -454,9 +592,9 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
                       </div>
                       
                       {appointmentInfo.date && (
-                        <div className="flex flex-col gap-2 w-full mt-4 animate-in fade-in">
-                          <label className="text-sm font-semibold text-text-secondary">Time *</label>
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <div className="flex flex-col gap-3 w-full animate-in fade-in">
+                          <label className="text-sm font-semibold text-text-secondary">Appointment Time *</label>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             {slotsForDate.map((slot) => {
                               const isSelected = appointmentInfo.timeSlotId === slot.id;
                               return (
@@ -480,86 +618,208 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
                     </>
                   )}
                 </div>
-                
+
                 <div>
-                   <h4 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">Preferences</h4>
-                   <div className="flex flex-col gap-2 mb-4">
-                      <label className="text-sm font-semibold text-text-secondary">Preferred Communication Method</label>
-                      <select className="w-full rounded-xl border border-border bg-white px-4 py-3 outline-none" value={appointmentInfo.preferredCommunication} onChange={e => setAppointmentInfo({...appointmentInfo, preferredCommunication: e.target.value})}>
-                        <option value="Phone">Phone</option>
-                        <option value="Email">Email</option>
-                        <option value="In-app notification">In-app notification</option>
-                      </select>
-                    </div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Additional Information</h4>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-text-secondary">Is there anything else you&apos;d like the doctor to know before your appointment? <span className="font-normal text-text-secondary/50">(Optional)</span></label>
+                    <textarea className="w-full rounded-xl border border-border px-4 py-3 outline-none min-h-[80px] focus:border-primary" placeholder="Examples: Symptoms become worse at night. I prefer discussing this privately." value={appointmentInfo.additionalInfo} onChange={e => setAppointmentInfo({...appointmentInfo, additionalInfo: e.target.value})}></textarea>
+                  </div>
+                </div>
+
+                <div>
+                   <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Communication Preferences</h4>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-text-secondary">Preferred contact method</label>
+                        <div className="flex flex-col gap-3 mt-1">
+                          {["Phone", "Email", "In-app notifications"].map(opt => (
+                            <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="contactpref" value={opt} className="text-primary focus:ring-primary" checked={appointmentInfo.preferredCommunication === opt} onChange={e => setAppointmentInfo({...appointmentInfo, preferredCommunication: e.target.value})} />
+                              <span className="text-sm font-medium">{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-text-secondary">Reminder preference</label>
+                        <div className="flex flex-col gap-3 mt-1">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input type="checkbox" className="size-4 rounded border-border text-primary focus:ring-primary" checked={appointmentInfo.reminderAppointment} onChange={e => setAppointmentInfo({...appointmentInfo, reminderAppointment: e.target.checked})} />
+                              <span className="text-sm font-medium">Appointment reminder</span>
+                            </label>
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input type="checkbox" className="size-4 rounded border-border text-primary focus:ring-primary" checked={appointmentInfo.reminderConfirmation} onChange={e => setAppointmentInfo({...appointmentInfo, reminderConfirmation: e.target.checked})} />
+                              <span className="text-sm font-medium">Confirmation notification</span>
+                            </label>
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input type="checkbox" className="size-4 rounded border-border text-primary focus:ring-primary" checked={appointmentInfo.reminderRescheduling} onChange={e => setAppointmentInfo({...appointmentInfo, reminderRescheduling: e.target.checked})} />
+                              <span className="text-sm font-medium">Rescheduling notification</span>
+                            </label>
+                        </div>
+                      </div>
+                   </div>
                 </div>
               </div>
             </section>
           )}
 
-          {/* STEP 4: Review & Confirm */}
-          {currentStep === 4 && (
+          {/* STEP 5: Review & Confirm */}
+          {currentStep === 5 && (
             <section className="rounded-3xl border border-border bg-white shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4">
-              <div className="bg-primary/5 p-6 border-b border-border">
-                <h3 className="text-xl font-bold text-text-primary font-serif">4. Review & Confirm</h3>
-                <p className="text-sm text-text-secondary mt-1">Please review your details before confirming.</p>
+              <div className="bg-primary/5 p-8 border-b border-border">
+                <h3 className="text-2xl font-bold text-text-primary font-serif">Review Your Appointment</h3>
               </div>
               
-              <div className="p-6 space-y-6">
+              <div className="p-8 space-y-8">
                  {/* Summary items */}
-                 <div className="flex justify-between items-start border-b border-border pb-4">
-                    <div>
-                       <h4 className="font-bold text-text-primary mb-2">Patient Details</h4>
-                       <p className="text-sm text-text-secondary">{patientInfo.fullName}, {patientInfo.gender}</p>
-                       <p className="text-sm text-text-secondary">{patientInfo.phone} | {patientInfo.email}</p>
+                 <div className="flex justify-between items-start border-b border-border pb-6">
+                    <div className="w-full">
+                       <div className="flex justify-between items-center mb-4">
+                         <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">Patient Information</h4>
+                         <button type="button" onClick={() => setCurrentStep(1)} className="text-xs font-bold text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full">Edit</button>
+                       </div>
+                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                         <div>
+                           <p className="text-xs text-text-secondary">Name</p>
+                           <p className="text-sm font-medium text-text-primary">{patientInfo.fullName}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">DOB</p>
+                           <p className="text-sm font-medium text-text-primary">{patientInfo.dob}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Gender</p>
+                           <p className="text-sm font-medium text-text-primary">{patientInfo.gender}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Contact</p>
+                           <p className="text-sm font-medium text-text-primary">{patientInfo.phone}</p>
+                         </div>
+                       </div>
                     </div>
-                    <button type="button" onClick={() => setCurrentStep(1)} className="text-xs font-bold text-primary hover:underline">Edit</button>
                  </div>
                  
-                 <div className="flex justify-between items-start border-b border-border pb-4">
-                    <div>
-                       <h4 className="font-bold text-text-primary mb-2">Medical Info</h4>
-                       <p className="text-sm text-text-secondary"><span className="font-semibold">Reason:</span> {medicalInfo.reason}</p>
-                       <p className="text-sm text-text-secondary"><span className="font-semibold">Symptoms:</span> {medicalInfo.symptoms}</p>
-                       {medicalInfo.allergies && <p className="text-sm text-text-secondary"><span className="font-semibold">Allergies:</span> {medicalInfo.allergies}</p>}
+                 <div className="flex justify-between items-start border-b border-border pb-6">
+                    <div className="w-full">
+                       <div className="flex justify-between items-center mb-4">
+                         <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">Medical Information</h4>
+                         <button type="button" onClick={() => setCurrentStep(2)} className="text-xs font-bold text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full">Edit</button>
+                       </div>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <div>
+                           <p className="text-xs text-text-secondary">Allergies</p>
+                           <p className="text-sm font-medium text-text-primary">{medicalInfo.hasAllergies === "Yes" ? medicalInfo.allergies : "No known allergies"}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Medical Conditions</p>
+                           <p className="text-sm font-medium text-text-primary">{medicalInfo.hasConditions === "Yes" ? medicalInfo.medicalConditions : "None"}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Current Medications</p>
+                           <p className="text-sm font-medium text-text-primary">{medicalInfo.hasMedications === "Yes" ? medicalInfo.medications : "None"}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Previous Surgeries</p>
+                           <p className="text-sm font-medium text-text-primary">{medicalInfo.hasSurgeries === "Yes" ? medicalInfo.surgeries : "None"}</p>
+                         </div>
+                       </div>
                     </div>
-                    <button type="button" onClick={() => setCurrentStep(2)} className="text-xs font-bold text-primary hover:underline">Edit</button>
+                 </div>
+
+                 <div className="flex justify-between items-start border-b border-border pb-6">
+                    <div className="w-full">
+                       <div className="flex justify-between items-center mb-4">
+                         <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">Visit Information</h4>
+                         <button type="button" onClick={() => setCurrentStep(3)} className="text-xs font-bold text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full">Edit</button>
+                       </div>
+                       <div className="space-y-4">
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                           <div>
+                             <p className="text-xs text-text-secondary">Reason for Visit</p>
+                             <p className="text-sm font-medium text-text-primary">{visitInfo.reason === "Other" ? visitInfo.reasonOther : visitInfo.reason}</p>
+                           </div>
+                           <div>
+                             <p className="text-xs text-text-secondary">Symptom Duration</p>
+                             <p className="text-sm font-medium text-text-primary">{visitInfo.symptomsStarted || "N/A"}</p>
+                           </div>
+                           <div>
+                             <p className="text-xs text-text-secondary">Severity</p>
+                             <p className="text-sm font-medium text-text-primary">{visitInfo.severity || "N/A"}</p>
+                           </div>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Symptoms</p>
+                           <p className="text-sm font-medium text-text-primary">{visitInfo.symptoms}</p>
+                         </div>
+                       </div>
+                    </div>
                  </div>
                  
-                 <div className="flex justify-between items-start border-b border-border pb-4">
-                    <div>
-                       <h4 className="font-bold text-text-primary mb-2">Appointment</h4>
-                       <p className="text-sm text-text-secondary"><span className="font-semibold">Date:</span> {appointmentInfo.date}</p>
-                       <p className="text-sm text-text-secondary"><span className="font-semibold">Time:</span> {selectedSlot?.startTime}</p>
-                       <p className="text-sm text-text-secondary"><span className="font-semibold">Type:</span> {appointmentInfo.type}</p>
+                 <div className="flex justify-between items-start border-b border-border pb-6">
+                    <div className="w-full">
+                       <div className="flex justify-between items-center mb-4">
+                         <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">Appointment Details</h4>
+                         <button type="button" onClick={() => setCurrentStep(4)} className="text-xs font-bold text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full">Edit</button>
+                       </div>
+                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                         <div>
+                           <p className="text-xs text-text-secondary">Date</p>
+                           <p className="text-sm font-medium text-text-primary">{appointmentInfo.date}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Time</p>
+                           <p className="text-sm font-medium text-text-primary">{selectedSlot?.startTime}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary">Type</p>
+                           <p className="text-sm font-medium text-text-primary">{appointmentInfo.type}</p>
+                         </div>
+                       </div>
+                       {appointmentInfo.additionalInfo && (
+                         <div className="mt-4">
+                           <p className="text-xs text-text-secondary">Additional Information</p>
+                           <p className="text-sm font-medium text-text-primary">{appointmentInfo.additionalInfo}</p>
+                         </div>
+                       )}
                     </div>
-                    <button type="button" onClick={() => setCurrentStep(3)} className="text-xs font-bold text-primary hover:underline">Edit</button>
                  </div>
-                 
-                 <div className="bg-background rounded-xl p-4 mt-6">
-                    <p className="text-sm text-text-secondary mb-3">By confirming this appointment, you agree that the information provided will be shared with the selected doctor for the purpose of this consultation.</p>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                       <input type="checkbox" className="size-5 rounded border-border text-primary focus:ring-primary" checked={confirmCheckbox} onChange={e => setConfirmCheckbox(e.target.checked)} />
-                       <span className="text-sm font-bold text-text-primary">I confirm that the information provided is accurate.</span>
-                    </label>
+
+                 {/* Consent Section */}
+                 <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-4">Before you confirm</h4>
+                    <div className="bg-background rounded-2xl p-5 space-y-4">
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input type="checkbox" className="mt-0.5 size-5 rounded border-border text-primary focus:ring-primary shrink-0" checked={confirmCheckbox1} onChange={e => setConfirmCheckbox1(e.target.checked)} />
+                          <span className="text-sm font-medium text-text-primary leading-tight">I confirm that the information I provided is accurate.</span>
+                        </label>
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input type="checkbox" className="mt-0.5 size-5 rounded border-border text-primary focus:ring-primary shrink-0" checked={confirmCheckbox2} onChange={e => setConfirmCheckbox2(e.target.checked)} />
+                          <span className="text-sm font-medium text-text-primary leading-tight">I understand that the information provided will be shared with the selected doctor for the purpose of my appointment.</span>
+                        </label>
+                    </div>
                  </div>
               </div>
             </section>
           )}
 
           {/* Controls */}
-          <div className="flex justify-between items-center mt-4">
-            <Button type="button" variant="outline" onClick={handleBack} disabled={currentStep === 1 || isLoading} className="w-32">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-2">
+            <Button type="button" variant="outline" onClick={handleBack} disabled={currentStep === 1 || isLoading} className="w-full sm:w-32 py-3.5">
               Back
             </Button>
             
-            {currentStep < 4 ? (
-              <Button type="button" onClick={handleNext} className="w-32">
+            {currentStep < 5 ? (
+              <Button type="button" onClick={handleNext} className="w-full sm:w-32 py-3.5">
                 Continue
               </Button>
             ) : (
-              <Button type="submit" className="w-48" disabled={!confirmCheckbox || isLoading} isLoading={isLoading}>
-                Confirm Appointment
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <span className="text-sm font-medium text-text-secondary hidden sm:inline-block">Appointment Fee: <span className="font-bold text-text-primary">₹{doctor.consultationFee}</span></span>
+                <Button type="submit" className="w-full sm:w-56 py-3.5" disabled={!confirmCheckbox1 || !confirmCheckbox2 || isLoading} isLoading={isLoading}>
+                  {isLoading ? 'Confirming...' : 'Confirm Appointment'}
+                </Button>
+              </div>
             )}
           </div>
           
