@@ -1,35 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  getDoctorSession, 
-  getSlotsForDoctor, 
-  getRulesForDoctor,
-  addRule, 
-  deleteRule, 
-  addSlot, 
-  markSlotUnavailable,
-  freeSlot
-} from "@/lib/availability-store";
-import type { DoctorProfile, AvailabilitySlot, RecurringRule } from "@/types/availability";
+import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, parse, addMinutes } from "date-fns";
+import { View } from "react-big-calendar";
+import { getDoctorSession, getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable } from "@/lib/availability-store";
+import { getAppointmentsForDoctor } from "@/lib/appointment-store";
+import type { DoctorProfile, AvailabilitySlot } from "@/types/availability";
+import type { Appointment } from "@/types/appointment";
+import { DashboardCalendar, CalendarFilters as FilterType } from "./DashboardCalendar";
+import { MiniCalendar } from "./MiniCalendar";
+import { CalendarFilters } from "./CalendarFilters";
 import { toast } from "react-toastify";
-import { format, parse } from "date-fns";
-
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function AvailabilityManager() {
   const router = useRouter();
-  const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
-  const [rules, setRules] = useState<RecurringRule[]>([]);
   
-  const [isCreating, setIsCreating] = useState(false);
-  const [type, setType] = useState<"recurring" | "one-time" | "unavailable">("recurring");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("17:00");
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
+  const [date, setDate] = useState(new Date());
+  const [view, setView] = useState<View>("week");
+  const [filters, setFilters] = useState<FilterType>({
+    appointments: true,
+    available: true,
+    unavailable: true,
+    cancelled: true,
+  });
+
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  
+  // Modals state
+  const [addingSlot, setAddingSlot] = useState<{start: Date, end: Date} | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
 
   const loadData = () => {
     const session = getDoctorSession();
@@ -38,217 +40,233 @@ export function AvailabilityManager() {
       return;
     }
     setDoctor(session);
+    setAppointments(getAppointmentsForDoctor(session.id));
     setSlots(getSlotsForDoctor(session.id));
-    setRules(getRulesForDoctor(session.id));
   };
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      loadData();
-    });
+    Promise.resolve().then(loadData);
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_slots" || e.key === "schedula_rules") loadData();
+      if (e.key === "schedula_appointments" || e.key === "schedula_slots") loadData();
     };
     const handleCustomChange = () => loadData();
     window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("schedula_appointments_updated", handleCustomChange);
     window.addEventListener("schedula_slots_updated", handleCustomChange);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("schedula_appointments_updated", handleCustomChange);
       window.removeEventListener("schedula_slots_updated", handleCustomChange);
     };
   }, [router]);
 
+  const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
+    if (action === "TODAY") {
+      setDate(new Date());
+      return;
+    }
+    const dir = action === "NEXT" ? 1 : -1;
+    if (view === "day") setDate(prev => dir > 0 ? addDays(prev, 1) : subDays(prev, 1));
+    else if (view === "week") setDate(prev => dir > 0 ? addWeeks(prev, 1) : subWeeks(prev, 1));
+    else setDate(prev => dir > 0 ? addMonths(prev, 1) : subMonths(prev, 1));
+  };
+
+  const toolbarTitle = useMemo(() => {
+    if (view === "day") return format(date, "EEEE, MMMM d, yyyy");
+    if (view === "week") {
+      // Very simple approximation for week text
+      return format(date, "MMMM yyyy"); 
+    }
+    return format(date, "MMMM yyyy");
+  }, [date, view]);
+
+  const handleCreateSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addingSlot || !doctor) return;
+    const dateStr = format(addingSlot.start, "yyyy-MM-dd");
+    const startTime = format(addingSlot.start, "HH:mm");
+    const endTime = format(addingSlot.end, "HH:mm");
+    
+    // basic collision check
+    const collision = slots.find(s => s.date === dateStr && s.startTime === startTime);
+    if (collision) {
+      toast.error("A slot already exists here.");
+      return;
+    }
+    
+    addSlot(doctor.id, dateStr, startTime, endTime);
+    toast.success("Availability created.");
+    setAddingSlot(null);
+    loadData();
+  };
+
+  const handleDeleteSlot = () => {
+    if (!selectedSlot) return;
+    deleteSlot(selectedSlot.id);
+    toast.info("Slot removed.");
+    setSelectedSlot(null);
+    loadData();
+  };
+  
+  const handleMakeUnavailable = () => {
+    if (!selectedSlot) return;
+    markSlotUnavailable(selectedSlot.id);
+    toast.info("Slot marked unavailable.");
+    setSelectedSlot(null);
+    loadData();
+  };
+
   if (!doctor) return null;
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (type === "recurring") {
-        if (selectedDays.length === 0) throw new Error("Please select at least one day.");
-        selectedDays.forEach(day => {
-          addRule(doctor.id, day, startTime, endTime);
-        });
-        toast.success("Recurring schedule created successfully.");
-      } else if (type === "one-time") {
-        if (!date) throw new Error("Date is required.");
-        addSlot(doctor.id, date, startTime, endTime);
-        toast.success("One-time availability created successfully.");
-      } else if (type === "unavailable") {
-        if (!date) throw new Error("Date is required.");
-        const newSlot = addSlot(doctor.id, date, startTime, endTime);
-        markSlotUnavailable(newSlot.id);
-        toast.success("Time marked as unavailable.");
-      }
-      setIsCreating(false);
-      setSelectedDays([]);
-      setDate("");
-      loadData();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to create schedule.");
-    }
-  };
-
-  const handleDeleteRule = (id: string) => {
-    deleteRule(id);
-    toast.success("Recurring schedule removed.");
-    loadData();
-  };
-
-  const handleDeleteSlot = (id: string) => {
-    freeSlot(id);
-    toast.success("Availability removed successfully.");
-    loadData();
-  };
-
-  const formatTime = (time24: string) => {
-    try {
-      return format(parse(time24, "HH:mm", new Date()), "hh:mm a");
-    } catch {
-      return time24;
-    }
-  };
-
-  const toggleDay = (dayIndex: number) => {
-    setSelectedDays(prev => 
-      prev.includes(dayIndex) ? prev.filter(d => d !== dayIndex) : [...prev, dayIndex]
-    );
-  };
-
-  const oneTimeSlots = slots.filter(s => !s.isUnavailable); // Note: generated slots from rules are also here in the DB.
-  // To avoid showing rule-generated slots as "one-time" in this list, we can group them or just list them.
-  // Actually, since rules materialize slots up to 14 days, listing them all is noisy. Let's list only the slots that were added manually. Wait, there's no flag for "rule-generated".
-  // We can just list all slots grouped by date for "One-time" if they don't match a rule day. Or just list upcoming slots briefly.
-  // For clarity, let's group all upcoming available slots by date, and show "Unavailable" slots below.
-  
-  const upcomingAvailable = slots.filter(s => !s.isUnavailable && !s.isBooked && s.date >= new Date().toISOString().split("T")[0]);
-  const upcomingUnavailable = slots.filter(s => s.isUnavailable && s.date >= new Date().toISOString().split("T")[0]);
+  // Stats calculation
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const todaysApts = appointments.filter(a => a.startsAt.startsWith(todayStr));
+  const todaysCompleted = todaysApts.filter(a => a.status === "completed").length;
+  const todaysCancelled = todaysApts.filter(a => a.status === "cancelled").length;
+  const todaysAvailable = slots.filter(s => s.date === todayStr && !s.isBooked && !s.isUnavailable).length;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary">Doctor Availability</h1>
-          <p className="mt-2 text-sm text-text-secondary">Manage your recurring schedule and exceptions.</p>
+    <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-white">
+      
+      {/* LEFT SIDEBAR */}
+      <aside className="w-64 border-r border-border bg-white flex flex-col shrink-0 overflow-y-auto">
+        <div className="p-4 border-b border-border">
+          <button 
+            onClick={() => setAddingSlot({start: new Date(), end: addMinutes(new Date(), 30)})}
+            className="w-full rounded-xl bg-white border border-border px-4 py-3 text-sm font-bold text-text-primary shadow-sm hover:shadow hover:border-primary transition-all flex items-center justify-center gap-2"
+          >
+            <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Create
+          </button>
         </div>
-        <button onClick={() => setIsCreating(!isCreating)} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark">
-          {isCreating ? "Cancel" : "+ Create Availability"}
-        </button>
-      </div>
+        <div className="p-4 pt-6 border-b border-border">
+          <MiniCalendar date={date} onChange={setDate} />
+        </div>
+        <div className="p-4 pt-6">
+          <CalendarFilters filters={filters} onChange={setFilters} />
+        </div>
+      </aside>
 
-      {isCreating && (
-        <form onSubmit={handleCreate} className="rounded-2xl border border-border bg-white p-6 shadow-sm">
-          <div className="mb-6 flex gap-4 border-b border-border pb-4">
-            {(["recurring", "one-time", "unavailable"] as const).map(t => (
-              <label key={t} className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={type === t} onChange={() => setType(t)} className="text-primary focus:ring-primary" />
-                <span className="text-sm font-medium capitalize">{t.replace("-", " ")}</span>
-              </label>
+      {/* MAIN CALENDAR AREA */}
+      <main className="flex-1 flex flex-col min-w-0 bg-white relative">
+        
+        {/* CUSTOM TOOLBAR */}
+        <header className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-border">
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => handleNavigate("TODAY")}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text-primary hover:bg-background transition-colors"
+            >
+              Today
+            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => handleNavigate("PREV")} className="p-1.5 rounded-full hover:bg-background text-text-primary transition-colors">
+                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button onClick={() => handleNavigate("NEXT")} className="p-1.5 rounded-full hover:bg-background text-text-primary transition-colors">
+                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+            <h2 className="text-xl font-medium text-text-primary ml-2">{toolbarTitle}</h2>
+          </div>
+          
+          <div className="flex items-center rounded-lg bg-background p-1">
+            {(["day", "week", "month"] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md capitalize transition-colors ${view === v ? "bg-white text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
+              >
+                {v}
+              </button>
             ))}
           </div>
+        </header>
 
-          <div className="grid grid-cols-2 gap-6">
-            {type === "recurring" ? (
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-text-primary mb-2">Select Days</label>
-                <div className="flex flex-wrap gap-2">
-                  {DAYS.map((d, i) => (
-                    <button 
-                      type="button" 
-                      key={i} 
-                      onClick={() => toggleDay(i)}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-colors ${selectedDays.includes(i) ? 'bg-primary border-primary text-white' : 'bg-white border-border text-text-secondary hover:border-primary hover:text-primary'}`}
-                    >
-                      {d}
-                    </button>
-                  ))}
+        {/* CALENDAR */}
+        <div className="flex-1 overflow-hidden relative">
+          <DashboardCalendar 
+            date={date} 
+            view={view} 
+            filters={filters}
+            onNavigate={setDate}
+            onView={setView}
+            onSelectEmptySlot={(start, end) => setAddingSlot({start, end})}
+            onSelectAvailableSlot={setSelectedSlot}
+          />
+        </div>
+
+        <div className="flex items-center gap-6 px-6 py-4 bg-background border-t border-border text-xs font-semibold text-text-secondary shrink-0">
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-primary"></span> Appointments</div>
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-success"></span> Available Slots</div>
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-text-secondary"></span> Unavailable</div>
+          <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-error"></span> Cancelled / Missed</div>
+        </div>
+      </main>
+
+      {/* Add Slot Modal */}
+      {addingSlot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-dark/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-background border-b border-border px-5 py-4 flex justify-between items-center">
+              <h3 className="font-bold text-text-primary">Add Availability</h3>
+              <button onClick={() => setAddingSlot(null)} className="text-text-secondary hover:text-text-primary">&times;</button>
+            </div>
+            <form onSubmit={handleCreateSlot} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Date</label>
+                <input type="text" readOnly value={format(addingSlot.start, "MMM d, yyyy")} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-text-secondary mb-1">Start Time</label>
+                  <input type="text" readOnly value={format(addingSlot.start, "HH:mm")} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-text-secondary mb-1">End Time</label>
+                  <input type="text" readOnly value={format(addingSlot.end, "HH:mm")} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary font-medium outline-none" />
                 </div>
               </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Date</label>
-                <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none bg-background" />
+              <p className="text-xs text-text-secondary pt-2 border-t border-border">This will create a one-time available slot.</p>
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setAddingSlot(null)} className="flex-1 py-2 rounded-lg font-semibold text-sm border border-border text-text-primary hover:bg-background">Cancel</button>
+                <button type="submit" className="flex-1 py-2 rounded-lg font-bold text-sm bg-primary text-white hover:bg-primary-dark">Save Slot</button>
               </div>
-            )}
-            
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Start Time</label>
-              <input type="time" required value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none bg-background" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">End Time</label>
-              <input type="time" required value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none bg-background" />
-            </div>
+            </form>
           </div>
-          <div className="mt-6 flex justify-end">
-            <button type="submit" className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-dark">
-              {type === 'unavailable' ? 'Mark Unavailable' : 'Create Schedule'}
-            </button>
-          </div>
-        </form>
+        </div>
       )}
 
-      <div className="space-y-6">
-        {/* Recurring Rules Section */}
-        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-border bg-background/50 px-6 py-4">
-            <h2 className="font-semibold text-text-primary">Recurring Schedule</h2>
-          </div>
-          <ul className="divide-y divide-border">
-            {rules.length === 0 && <li className="p-6 text-sm text-text-secondary">No recurring schedules set.</li>}
-            {rules.map(rule => (
-              <li key={rule.id} className="flex items-center justify-between px-6 py-4 hover:bg-background transition-colors">
+      {/* Selected Slot Modal */}
+      {selectedSlot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-dark/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-background border-b border-border px-5 py-4 flex justify-between items-center">
+              <h3 className="font-bold text-text-primary">Available Slot</h3>
+              <button onClick={() => setSelectedSlot(null)} className="text-text-secondary hover:text-text-primary">&times;</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-success/10 rounded-lg p-3 border border-emerald-100 flex items-center gap-3">
+                <div className="size-2 rounded-full bg-success"></div>
                 <div>
-                  <span className="font-bold text-text-primary w-24 inline-block">{DAYS[rule.dayOfWeek]}</span>
-                  <span className="ml-4 text-sm font-medium text-text-secondary">{formatTime(rule.startTime)} - {formatTime(rule.endTime)}</span>
+                  <p className="text-sm font-bold text-success">{format(parse(selectedSlot.date, "yyyy-MM-dd", new Date()), "MMM d, yyyy")}</p>
+                  <p className="text-xs font-medium text-success">{selectedSlot.startTime} – {selectedSlot.endTime}</p>
                 </div>
-                <button onClick={() => handleDeleteRule(rule.id)} className="text-sm font-bold text-error hover:underline">Remove</button>
-              </li>
-            ))}
-          </ul>
-        </section>
+              </div>
+              
+              <div className="flex flex-col gap-2 pt-2">
+                <button onClick={handleMakeUnavailable} className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-background transition-colors">
+                  Mark as Unavailable
+                </button>
+                <button onClick={handleDeleteSlot} className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-error hover:bg-error/10 transition-colors">
+                  Delete Slot
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-        {/* Unavailable Section */}
-        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-border bg-background/50 px-6 py-4">
-            <h2 className="font-semibold text-text-primary">Unavailable / Time Off</h2>
-          </div>
-          <ul className="divide-y divide-border">
-            {upcomingUnavailable.length === 0 && <li className="p-6 text-sm text-text-secondary">No upcoming time off set.</li>}
-            {upcomingUnavailable.map(slot => (
-              <li key={slot.id} className="flex items-center justify-between px-6 py-4 hover:bg-background transition-colors">
-                <div>
-                  <span className="font-bold text-text-primary w-28 inline-block">{format(parse(slot.date, "yyyy-MM-dd", new Date()), "dd MMM yyyy")}</span>
-                  <span className="ml-4 text-sm font-medium text-text-secondary">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-                  <span className="ml-4 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-error">Unavailable</span>
-                </div>
-                <button onClick={() => handleDeleteSlot(slot.id)} className="text-sm font-bold text-text-primary hover:text-primary hover:underline">Restore</button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Individual Availability Section */}
-        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-border bg-background/50 px-6 py-4 flex justify-between items-center">
-            <h2 className="font-semibold text-text-primary">Upcoming Available Slots</h2>
-            <span className="text-xs text-text-secondary">{upcomingAvailable.length} slots found</span>
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            <ul className="divide-y divide-border">
-              {upcomingAvailable.length === 0 && <li className="p-6 text-sm text-text-secondary">No upcoming availability.</li>}
-              {upcomingAvailable.map(slot => (
-                <li key={slot.id} className="flex items-center justify-between px-6 py-3 hover:bg-background transition-colors">
-                  <div>
-                    <span className="font-semibold text-text-primary text-sm w-28 inline-block">{format(parse(slot.date, "yyyy-MM-dd", new Date()), "dd MMM yyyy")}</span>
-                    <span className="ml-4 text-sm font-medium text-text-secondary">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-                  </div>
-                  <button onClick={() => handleDeleteSlot(slot.id)} className="text-sm font-bold text-error hover:underline">Remove</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      </div>
     </div>
   );
 }
