@@ -8,6 +8,7 @@ import type { DoctorProfile } from "@/types/availability";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
+import { DoctorSidebar } from "@/components/layout/DoctorSidebar";
 
 type StatusFilter = "all" | "pending" | "confirmed" | "upcoming" | "completed" | "cancelled" | "missed";
 type SortMode = "newest" | "earliest";
@@ -250,41 +251,33 @@ export function DoctorAppointments() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
 
-      {/* LEFT SIDEBAR */}
-      <aside className="hidden xl:flex flex-col w-[220px] shrink-0 border-r border-border bg-white py-6 px-3">
-        <nav className="space-y-1 flex-1">
-          {sidebarItems.map(item => (
-            <button
-              key={item.value}
-              onClick={() => { setStatusFilter(item.value); setCurrentPage(1); }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-                statusFilter === item.value
-                  ? "bg-primary/10 text-primary font-semibold"
-                  : "text-text-secondary hover:bg-stone-50 hover:text-text-primary"
-              }`}
-            >
-              <svg className="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} /></svg>
-              <span className="flex-1 text-left truncate">{item.label}</span>
-              {item.count !== undefined && item.count > 0 && (
-                <span className={`text-[11px] font-bold tabular-nums ${statusFilter === item.value ? "text-primary" : "text-text-secondary/60"}`}>{item.count}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-        <div className="mt-auto pt-6 border-t border-border mx-1">
-          <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
-            <h4 className="text-xs font-bold text-text-primary mb-1">Need Help?</h4>
-            <p className="text-[11px] text-text-secondary mb-3 leading-relaxed">Visit our help center or contact support.</p>
-            <button className="w-full text-xs font-semibold text-primary bg-white border border-border rounded-lg py-2 hover:border-primary/40 transition-colors">
-              Get Support
-            </button>
-          </div>
-        </div>
-      </aside>
+      <DoctorSidebar />
 
       {/* MAIN CONTENT */}
       <div className="flex-1 min-w-0 bg-[#F7F9FC] overflow-y-auto">
         <div className="px-5 lg:px-8 py-6 lg:py-8">
+
+          {/* HORIZONTAL FILTERS TABS */}
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-4 mb-2">
+            {sidebarItems.map(item => (
+              <button
+                key={item.value}
+                onClick={() => { setStatusFilter(item.value); setCurrentPage(1); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors border ${
+                  statusFilter === item.value
+                    ? "bg-[#F1F5FF] text-[#2D6CDF] border-[#2D6CDF]/30"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                }`}
+              >
+                {item.label}
+                {item.count !== undefined && item.count > 0 && (
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] tabular-nums ${statusFilter === item.value ? "bg-[#2D6CDF] text-white" : "bg-slate-100 text-slate-500"}`}>
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
 
           {/* HEADER */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">

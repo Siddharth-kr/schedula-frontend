@@ -6,6 +6,7 @@ import { getDoctorSession, setDoctorSession, updateDoctor, getAvailableSlotsForD
 import type { DoctorProfile } from "@/types/availability";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { DoctorSidebar } from "@/components/layout/DoctorSidebar";
 import { toast } from "react-toastify";
 
 export function DoctorProfileForm() {
@@ -155,7 +156,10 @@ export function DoctorProfileForm() {
   const initials = doctor.name.replace("Dr. ", "").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 py-8 lg:py-12 bg-[#F7F9FC] min-h-[calc(100vh-4rem)]">
+    <div className="flex min-h-[calc(100vh-4rem)] bg-[#F7F9FC]">
+      <DoctorSidebar />
+      <div className="flex-1 min-w-0">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       
       {/* HEADER CARD */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-border shadow-sm mb-8 flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between relative overflow-hidden">
@@ -497,6 +501,8 @@ export function DoctorProfileForm() {
             
           </form>
         </div>
+      </div>
+      </div>
       </div>
     </div>
   );

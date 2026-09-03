@@ -10,6 +10,7 @@ import type { Appointment } from "@/types/appointment";
 import { getUserNotifications } from "@/lib/notification-store";
 import type { AppNotification, NotificationType } from "@/lib/notification-store";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
+import { DoctorSidebar } from "@/components/layout/DoctorSidebar";
 
 export function DoctorDashboard() {
   const router = useRouter();
@@ -162,49 +163,11 @@ export function DoctorDashboard() {
     );
   }
 
-  const sidebarItems = [
-    { label: "Dashboard", href: "/doctor/dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    { label: "Appointments", href: "/doctor/appointments", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-    { label: "Availability", href: "/doctor/availability", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-    { label: "Profile", href: "/doctor/profile", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
-  ];
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] bg-[#F7F9FC]">
       
-      {/* SIDEBAR NAVIGATION */}
-      <aside className="hidden xl:flex flex-col w-[220px] shrink-0 border-r border-border bg-white py-6 px-3">
-        <nav className="space-y-1 flex-1">
-          {sidebarItems.map(item => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-text-secondary hover:bg-stone-50 hover:text-text-primary"
-                }`}
-              >
-                <svg className="size-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mt-auto pt-6 border-t border-border mx-1">
-          <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
-            <h4 className="text-xs font-bold text-text-primary mb-1">Need Help?</h4>
-            <p className="text-[11px] text-text-secondary mb-3 leading-relaxed">Our support team is here to help you anytime.</p>
-            <button className="w-full text-xs font-semibold text-primary bg-white border border-border rounded-lg py-2 hover:border-primary/40 transition-colors">
-              Contact Support
-            </button>
-          </div>
-        </div>
-      </aside>
+      <DoctorSidebar />
 
       {/* MAIN CONTENT */}
       <main className="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
