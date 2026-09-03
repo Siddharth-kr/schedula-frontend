@@ -92,6 +92,7 @@ export default function LandingPage() {
             </div>
             <input 
               type="text" 
+              suppressHydrationWarning
               placeholder="Search doctors, specialties, or conditions..." 
               className="w-full pl-12 pr-4 py-4 bg-transparent text-base focus:outline-none placeholder:text-text-secondary font-medium"
             />
@@ -103,6 +104,7 @@ export default function LandingPage() {
             </div>
             <input 
               type="text" 
+              suppressHydrationWarning
               placeholder="All Locations" 
               disabled
               className="w-full pl-12 pr-4 py-4 bg-transparent text-base cursor-not-allowed font-medium"
