@@ -8,7 +8,6 @@ import type { DoctorProfile } from "@/types/availability";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
-import { DoctorSidebar } from "@/components/layout/DoctorSidebar";
 
 type StatusFilter = "all" | "pending" | "confirmed" | "upcoming" | "completed" | "cancelled" | "missed";
 type SortMode = "newest" | "earliest";
@@ -249,13 +248,13 @@ export function DoctorAppointments() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
-
-      <DoctorSidebar />
-
+    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F9FC]">
       {/* MAIN CONTENT */}
-      <div className="flex-1 min-w-0 bg-[#F7F9FC] overflow-y-auto">
-        <div className="px-5 lg:px-8 py-6 lg:py-8">
+      <div className="mx-auto max-w-[1440px] flex">
+        
+        {/* CENTER COLUMN (LIST) */}
+        <div className="flex-1 min-w-0 overflow-y-auto border-r border-[#E2E8F0]">
+          <div className="px-5 lg:px-8 py-6 lg:py-8">
 
           {/* HORIZONTAL FILTERS TABS */}
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-4 mb-2">
@@ -624,6 +623,7 @@ export function DoctorAppointments() {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
+      </div>
     </div>
   );
 }

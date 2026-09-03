@@ -10,7 +10,6 @@ import type { Appointment } from "@/types/appointment";
 import { getUserNotifications } from "@/lib/notification-store";
 import type { AppNotification, NotificationType } from "@/lib/notification-store";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
-import { DoctorSidebar } from "@/components/layout/DoctorSidebar";
 
 export function DoctorDashboard() {
   const router = useRouter();
@@ -165,12 +164,9 @@ export function DoctorDashboard() {
 
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] bg-[#F7F9FC]">
-      
-      <DoctorSidebar />
-
+    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F9FC]">
       {/* MAIN CONTENT */}
-      <main className="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 py-8">
         
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">

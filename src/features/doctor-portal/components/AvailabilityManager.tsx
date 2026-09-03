@@ -11,7 +11,6 @@ import type { Appointment } from "@/types/appointment";
 import { DashboardCalendar, CalendarFilters as FilterType } from "./DashboardCalendar";
 import { MiniCalendar } from "./MiniCalendar";
 import { CalendarFilters } from "./CalendarFilters";
-import { DoctorSidebar } from "@/components/layout/DoctorSidebar";
 import { toast } from "react-toastify";
 
 export function AvailabilityManager() {
@@ -126,9 +125,7 @@ export function AvailabilityManager() {
   const todaysAvailable = slots.filter(s => s.date === todayStr && !s.isBooked && !s.isUnavailable).length;
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] bg-[#F7F9FC]">
-      <DoctorSidebar />
-      <div className="flex-1 flex h-[calc(100vh-4rem)] min-w-0 overflow-hidden bg-white">
+    <div className="flex min-h-[calc(100vh-4rem)] w-full min-w-0 overflow-hidden bg-[#F7F9FC]">
         
         {/* LEFT SIDEBAR */}
       <aside className="w-64 border-r border-border bg-white flex flex-col shrink-0 overflow-y-auto">
@@ -296,7 +293,6 @@ export function AvailabilityManager() {
         </div>
       )}
 
-    </div>
     </div>
   );
 }
