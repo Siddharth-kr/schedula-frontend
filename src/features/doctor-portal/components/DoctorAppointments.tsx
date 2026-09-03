@@ -170,6 +170,7 @@ export function DoctorAppointments() {
 
   // Reset page on filter change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [statusFilter, searchQuery, sortMode]);
 
