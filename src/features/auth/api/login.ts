@@ -17,6 +17,7 @@ export async function loginWithEmail(email: string, password: string): Promise<U
   // we'll just save the user object in localStorage for simplicity
   if (typeof window !== "undefined") {
     localStorage.setItem("mock_user", JSON.stringify(body.data));
+    localStorage.removeItem("schedula_doctor_user"); // Clear stale doctor session
   }
 
   return body.data;

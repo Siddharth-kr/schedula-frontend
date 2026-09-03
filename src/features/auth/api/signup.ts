@@ -15,6 +15,7 @@ export async function signupWithEmail(name: string, email: string, password: str
 
   if (typeof window !== "undefined") {
     localStorage.setItem("mock_user", JSON.stringify(body.data));
+    localStorage.removeItem("schedula_doctor_user");
   }
 
   return body.data;

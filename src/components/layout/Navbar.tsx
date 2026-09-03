@@ -84,9 +84,11 @@ export function Navbar() {
   const handleLogout = () => {
     if (role === "doctor") {
       clearDoctorSession();
+      localStorage.removeItem("mock_user");
       router.push("/doctor/login");
     } else {
       localStorage.removeItem("mock_user");
+      clearDoctorSession();
       router.push("/");
     }
   };

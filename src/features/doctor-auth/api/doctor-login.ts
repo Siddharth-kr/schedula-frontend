@@ -13,6 +13,9 @@ export async function doctorLogin(email: string, password: string): Promise<Doct
 
   // Set the mock session in localStorage
   setDoctorSession(doctor);
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("mock_user"); // Clear stale patient session
+  }
 
   return doctor;
 }
