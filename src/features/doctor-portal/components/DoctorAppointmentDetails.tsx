@@ -124,6 +124,61 @@ export function DoctorAppointmentDetails() {
           </dl>
         </div>
 
+        {/* Patient Intake Information */}
+        {(appointment.medicalInfo || appointment.patientInfo) && (
+          <div className="px-6 py-6 sm:px-8 border-t border-border bg-background/30">
+            <h3 className="text-lg font-bold text-text-primary font-serif mb-4">Patient Intake Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {appointment.medicalInfo && (
+                <dl className="space-y-4">
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Symptoms</dt>
+                    <dd className="text-sm text-text-primary mt-1 whitespace-pre-line">{appointment.medicalInfo.symptoms || "N/A"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Medical History</dt>
+                    <dd className="text-sm text-text-primary mt-1">
+                      <span className="font-semibold block">Conditions:</span> {appointment.medicalInfo.medicalConditions || "None"}
+                      <span className="font-semibold block mt-1">Allergies:</span> {appointment.medicalInfo.allergies || "None"}
+                      <span className="font-semibold block mt-1">Medications:</span> {appointment.medicalInfo.medications || "None"}
+                    </dd>
+                  </div>
+                  {appointment.medicalInfo.additionalInfo && (
+                     <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Additional Info</dt>
+                      <dd className="text-sm text-text-primary mt-1 whitespace-pre-line">{appointment.medicalInfo.additionalInfo}</dd>
+                    </div>
+                  )}
+                </dl>
+              )}
+
+              {appointment.patientInfo && (
+                <dl className="space-y-4">
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Contact & Demographics</dt>
+                    <dd className="text-sm text-text-primary mt-1">
+                      <span className="font-semibold block">Phone:</span> {appointment.patientInfo.phone || "N/A"}
+                      <span className="font-semibold block mt-1">Email:</span> {appointment.patientInfo.email || "N/A"}
+                      <span className="font-semibold block mt-1">DOB:</span> {appointment.patientInfo.dob || "N/A"}
+                      <span className="font-semibold block mt-1">Gender:</span> {appointment.patientInfo.gender || "N/A"}
+                    </dd>
+                  </div>
+                  {(appointment.patientInfo.emergencyContactName) && (
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Emergency Contact</dt>
+                      <dd className="text-sm text-text-primary mt-1">
+                        {appointment.patientInfo.emergencyContactName} ({appointment.patientInfo.emergencyContactRelation})<br/>
+                        {appointment.patientInfo.emergencyContactPhone}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="bg-background px-6 py-6 sm:px-8 border-t border-border flex flex-wrap gap-3 items-center">
           {appointment.status === "pending" && (
             <>

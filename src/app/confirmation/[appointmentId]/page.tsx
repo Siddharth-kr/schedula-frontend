@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { getAppointment } from "@/features/appointments/api/get-appointment";
 import { addReview } from "@/lib/appointment-store";
 import type { Appointment } from "@/types/appointment";
@@ -96,6 +95,14 @@ export default function ConfirmationPage() {
                     </span>
                   </dd>
                 </div>
+                <div className="flex justify-between border-b border-border pb-5">
+                  <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Type</dt>
+                  <dd className="font-bold text-text-primary text-right text-base">{appointment.appointmentType || "Consultation"}</dd>
+                </div>
+                <div className="flex justify-between border-b border-border pb-5">
+                  <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Appointment ID</dt>
+                  <dd className="font-mono text-sm text-text-secondary text-right">{appointment.id}</dd>
+                </div>
                 <div className="flex justify-between items-center">
                   <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Status</dt>
                   <dd>
@@ -161,20 +168,12 @@ export default function ConfirmationPage() {
               )}
             </div>
             
-            <div className="bg-background/80 px-6 py-8 sm:flex sm:flex-row-reverse sm:gap-4 sm:px-10 border-t border-border">
-              <Link 
-                href="/doctors"
-                className="block w-full sm:w-auto text-center"
-              >
-                <Button variant="accent">
-                  {appointment.status === 'completed' ? 'Rebook Appointment' : 'Book Another'}
-                </Button>
+            <div className="bg-background/80 px-6 py-8 flex flex-col sm:flex-row gap-4 sm:justify-end border-t border-border">
+              <Link href="/" className="block w-full rounded-xl border border-border bg-white px-5 py-3.5 text-sm font-bold text-text-primary shadow-sm transition-all hover:border-primary hover:text-primary active:scale-[0.98] sm:w-auto text-center">
+                Back to Dashboard
               </Link>
-              <Link 
-                href="/appointments"
-                className="mt-3 block w-full rounded-xl border border-border bg-white px-5 py-3.5 text-sm font-bold text-text-primary shadow-sm transition-all hover:border-primary hover:text-primary active:scale-[0.98] sm:mt-0 sm:w-auto text-center"
-              >
-                My Appointments
+              <Link href="/appointments" className="block w-full rounded-xl border border-border bg-white px-5 py-3.5 text-sm font-bold text-text-primary shadow-sm transition-all hover:border-primary hover:text-primary active:scale-[0.98] sm:w-auto text-center">
+                View My Appointments
               </Link>
             </div>
           </div>

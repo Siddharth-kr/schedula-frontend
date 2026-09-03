@@ -19,4 +19,32 @@ export type Appointment = {
   room: string;
   prescription?: Prescription;
   review?: { rating: number; text?: string };
+  // New intake fields
+  patientInfo?: {
+    dob?: string;
+    gender?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    emergencyContactName?: string;
+    emergencyContactRelation?: string;
+    emergencyContactPhone?: string;
+  };
+  medicalInfo?: {
+    symptoms?: string;
+    symptomsStarted?: string;
+    severity?: string;
+    medicalConditions?: string;
+    surgeries?: string;
+    allergies?: string;
+    medications?: string;
+    consultedBefore?: string;
+    previousDiagnosis?: string;
+    additionalInfo?: string;
+  };
+  appointmentType?: string;
+  preferredCommunication?: string;
 };
