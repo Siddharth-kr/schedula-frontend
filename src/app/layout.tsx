@@ -14,6 +14,7 @@ const fraunces = Fraunces({
 
 import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { GlobalAssistant } from "@/components/assistant/GlobalAssistant";
 
 export const metadata: Metadata = {
   title: "Schedula | Appointment operations starter",
@@ -30,10 +31,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans text-text-primary">
+      <body className="min-h-full flex flex-col font-sans text-text-primary bg-background">
         <ToastProvider />
         <Navbar />
         {children}
+        <GlobalAssistant />
       </body>
     </html>
   );
