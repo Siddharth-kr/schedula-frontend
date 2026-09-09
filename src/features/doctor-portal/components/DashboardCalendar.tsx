@@ -9,8 +9,9 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 import { getSlotsForDoctor, markSlotBooked, freeSlot } from "@/lib/availability-store";
-import { getAppointmentsForDoctor, rescheduleAppointment } from "@/lib/appointment-store";
+import { rescheduleAppointment } from "@/lib/appointment-store";
 import { useAuthStore } from "@/store/authStore";
+import { useAppointmentStore } from "@/store/appointmentStore";
 import type { Appointment } from "@/types/appointment";
 import type { AvailabilitySlot, DoctorProfile } from "@/types/availability";
 import { toast } from "react-toastify";
@@ -52,6 +53,7 @@ interface Props {
 export function DashboardCalendar({ date, view, filters, onNavigate, onView, onSelectEmptySlot, onSelectAvailableSlot }: Props) {
   const router = useRouter();
   const { doctor: session } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
@@ -62,13 +64,8 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
     setDoctor(session);
   }, [session]);
 
-  const loadData = useCallback(() => {
-    if (!session) return;
-    
-    const docSlots = getSlotsForDoctor(session.id);
-    const docAppointments = getAppointmentsForDoctor(session.id);
-    setSlots(docSlots);
-
+  // Build calendar events from Zustand appointments + legacy slot data
+  const buildEvents = useCallback((docSlots: AvailabilitySlot[], docAppointments: Appointment[]) => {
     const newEvents: CalendarEvent[] = [];
 
     // Group contiguous unavailable slots
@@ -152,25 +149,32 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
     });
 
     setAllEvents(newEvents);
-  }, [session]);
+  }, []);
 
+  // React to Zustand appointment changes + slot changes
   useEffect(() => {
-    Promise.resolve().then(loadData);
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments" || e.key === "schedula_slots") loadData();
+    if (!session) return;
+    const docSlots = getSlotsForDoctor(session.id);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSlots(docSlots);
+    const docAppointments = allAppointments.filter(a => a.doctorId === session.id);
+    buildEvents(docSlots, docAppointments);
+  }, [session, allAppointments, buildEvents]);
+
+  // Slot-only sync (availability not yet in Zustand)
+  useEffect(() => {
+    if (!session) return;
+    const syncSlots = () => {
+      const docSlots = getSlotsForDoctor(session.id);
+      setSlots(docSlots);
+      const docAppointments = allAppointments.filter(a => a.doctorId === session.id);
+      buildEvents(docSlots, docAppointments);
     };
-    const handleCustomChange = () => loadData();
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("schedula_appointments_updated", handleCustomChange);
-    window.addEventListener("schedula_slots_updated", handleCustomChange);
-
+    window.addEventListener("schedula_slots_updated", syncSlots);
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("schedula_appointments_updated", handleCustomChange);
-      window.removeEventListener("schedula_slots_updated", handleCustomChange);
+      window.removeEventListener("schedula_slots_updated", syncSlots);
     };
-  }, [loadData]);
+  }, [session, allAppointments, buildEvents]);
 
   const filteredEvents = useMemo(() => {
     return allEvents.filter(ev => {
@@ -270,7 +274,13 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
       markSlotBooked(targetSlot.id, apt.id);
       rescheduleAppointment(apt.id, dateStr, timeStr);
       toast.success("Appointment rescheduled successfully.");
-      loadData();
+      // Slots need manual refresh (not yet in Zustand); appointments are reactive
+      if (session) {
+        const docSlots = getSlotsForDoctor(session.id);
+        setSlots(docSlots);
+        const docAppointments = allAppointments.filter(a => a.doctorId === session.id);
+        buildEvents(docSlots, docAppointments);
+      }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to reschedule.");

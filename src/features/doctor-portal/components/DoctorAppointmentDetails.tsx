@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getAppointmentById, updateAppointmentStatus } from "@/lib/appointment-store";
+import { updateAppointmentStatus } from "@/lib/appointment-store";
 import { useAuthStore } from "@/store/authStore";
+import { useAppointmentStore } from "@/store/appointmentStore";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
@@ -25,37 +26,36 @@ export function DoctorAppointmentDetails() {
   const [isEditing, setIsEditing] = useState(false);
 
   const { doctor: session } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
 
-  const loadData = () => {
+  // React to Zustand appointment changes
+  useEffect(() => {
     if (!session) {
       router.push("/doctor/login");
       return;
     }
     if (appointmentId) {
-      const apt = getAppointmentById(appointmentId);
+      const apt = allAppointments.find(a => a.id === appointmentId);
       if (apt && apt.clinician === session.name) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAppointment(apt);
         setPrescription(getPrescriptionByAppointmentId(apt.id) || null);
       }
     }
     setIsLoading(false);
-  };
+  }, [session, allAppointments, appointmentId, router]);
 
+  // Prescription sync (not yet in Zustand)
   useEffect(() => {
-    Promise.resolve().then(loadData);
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments" || e.key === "schedula_prescriptions") loadData();
+    if (!appointmentId) return;
+    const syncPrescription = () => {
+      setPrescription(getPrescriptionByAppointmentId(appointmentId) || null);
     };
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("schedula_appointments_updated", loadData);
-    window.addEventListener("schedula_prescriptions_updated", loadData);
+    window.addEventListener("schedula_prescriptions_updated", syncPrescription);
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("schedula_appointments_updated", loadData);
-      window.removeEventListener("schedula_prescriptions_updated", loadData);
+      window.removeEventListener("schedula_prescriptions_updated", syncPrescription);
     };
-  }, [session, appointmentId, router]);
+  }, [appointmentId]);
 
   if (isLoading) {
     return <div className="flex h-64 items-center justify-center text-text-secondary">Loading details...</div>;

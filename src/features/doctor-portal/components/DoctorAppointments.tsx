@@ -4,8 +4,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
+import { useAppointmentStore } from "@/store/appointmentStore";
 import type { DoctorProfile } from "@/types/availability";
-import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 
@@ -60,43 +60,20 @@ export function DoctorAppointments() {
   const [calYear, setCalYear] = useState(now.getFullYear());
 
   const { doctor: session } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
 
   useEffect(() => {
-    function loadData() {
-      if (!session) {
-        router.push("/doctor/login");
-        return;
-      }
-      setDoctor(session);
-      fetchAppointments(session);
+    if (!session) {
+      router.push("/doctor/login");
+      return;
     }
-    
-    async function fetchAppointments(doc: DoctorProfile) {
-      try {
-        const apts = getAppointmentsForDoctor(doc.id);
-        apts.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
-        setAppointments(apts);
-        setIsLoading(false);
-      } catch (err) {
-        setErrorMsg("Failed to load appointments");
-        setIsLoading(false);
-      }
-    }
-
-    loadData();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments") loadData();
-    };
-    const handleCustomChange = () => loadData();
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("schedula_appointments_updated", handleCustomChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("schedula_appointments_updated", handleCustomChange);
-    };
-  }, [session, router]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDoctor(session);
+    const apts = allAppointments.filter(a => a.doctorId === session.id);
+    apts.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+    setAppointments(apts);
+    setIsLoading(false);
+  }, [session, allAppointments, router]);
 
   // Metrics
   const metrics = useMemo(() => {

@@ -6,7 +6,7 @@ import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, par
 import { View } from "react-big-calendar";
 import { getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable, addRule } from "@/lib/availability-store";
 import { useAuthStore } from "@/store/authStore";
-import { getAppointmentsForDoctor } from "@/lib/appointment-store";
+import { useAppointmentStore } from "@/store/appointmentStore";
 import type { DoctorProfile, AvailabilitySlot } from "@/types/availability";
 import type { Appointment } from "@/types/appointment";
 import { DashboardCalendar, CalendarFilters as FilterType } from "./DashboardCalendar";
@@ -39,32 +39,31 @@ export function AvailabilityManager() {
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
 
   const { doctor: session } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
 
-  const loadData = () => {
+  // React to Zustand appointment changes
+  useEffect(() => {
     if (!session) {
       router.push("/doctor/login");
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDoctor(session);
-    setAppointments(getAppointmentsForDoctor(session.id));
+    setAppointments(allAppointments.filter(a => a.doctorId === session.id));
     setSlots(getSlotsForDoctor(session.id));
-  };
+  }, [session, allAppointments, router]);
 
+  // Slot-only sync (availability not yet in Zustand)
   useEffect(() => {
-    Promise.resolve().then(loadData);
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments" || e.key === "schedula_slots") loadData();
+    if (!session) return;
+    const syncSlots = () => {
+      setSlots(getSlotsForDoctor(session.id));
     };
-    const handleCustomChange = () => loadData();
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("schedula_appointments_updated", handleCustomChange);
-    window.addEventListener("schedula_slots_updated", handleCustomChange);
+    window.addEventListener("schedula_slots_updated", syncSlots);
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("schedula_appointments_updated", handleCustomChange);
-      window.removeEventListener("schedula_slots_updated", handleCustomChange);
+      window.removeEventListener("schedula_slots_updated", syncSlots);
     };
-  }, [session, router]);
+  }, [session]);
 
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
     if (action === "TODAY") {
@@ -86,6 +85,10 @@ export function AvailabilityManager() {
     return format(date, "MMMM yyyy");
   }, [date, view]);
 
+  const refreshSlots = () => {
+    if (doctor) setSlots(getSlotsForDoctor(doctor.id));
+  };
+
   const handleCreateSlot = (e: React.FormEvent) => {
     e.preventDefault();
     if (!doctor) return;
@@ -98,7 +101,7 @@ export function AvailabilityManager() {
         toast.success("Recurring availability rule created.");
     }
     setAddDate("");
-    loadData();
+    refreshSlots();
   };
 
   const handleDeleteSlot = () => {
@@ -106,7 +109,7 @@ export function AvailabilityManager() {
     deleteSlot(selectedSlot.id);
     toast.info("Slot removed.");
     setSelectedSlot(null);
-    loadData();
+    refreshSlots();
   };
   
   const handleMakeUnavailable = () => {
@@ -114,7 +117,7 @@ export function AvailabilityManager() {
     markSlotUnavailable(selectedSlot.id);
     toast.info("Slot marked unavailable.");
     setSelectedSlot(null);
-    loadData();
+    refreshSlots();
   };
 
   if (!doctor) return null;

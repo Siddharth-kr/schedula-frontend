@@ -6,11 +6,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import type { Appointment } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
-import { getAppointmentsForPatient } from "@/lib/appointment-store";
 import { getPrescriptionsForPatient } from "@/lib/prescription-store";
 import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
 import { format, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
+import { useAppointmentStore } from "@/store/appointmentStore";
 
 export default function PrescriptionsTimelinePage() {
   const router = useRouter();
@@ -24,35 +24,35 @@ export default function PrescriptionsTimelinePage() {
   const [filter, setFilter] = useState<"all" | "prescriptions">("all");
 
   const { patient } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
 
   useEffect(() => {
-    const fetchData = () => {
-      try {
-        if (!patient || patient.role !== "patient") {
-          router.push("/login");
-          return;
-        }
-        setPatientName(patient.name);
+    if (!patient || patient.role !== "patient") {
+      router.push("/login");
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPatientName(patient.name);
 
-        const patientAppointments = getAppointmentsForPatient(patient.name);
-        setAppointments(patientAppointments);
+    const patientAppointments = allAppointments.filter(a => a.patient.name === patient.name);
+    setAppointments(patientAppointments);
 
-        const patientPrescriptions = getPrescriptionsForPatient(patient.name);
-        setPrescriptions(patientPrescriptions);
+    const patientPrescriptions = getPrescriptionsForPatient(patient.name);
+    setPrescriptions(patientPrescriptions);
+    setIsLoading(false);
+  }, [patient, allAppointments, router]);
 
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
+  // Keep prescription sync via legacy events (prescription store not yet migrated)
+  useEffect(() => {
+    if (!patient) return;
+    const syncPrescriptions = () => {
+      setPrescriptions(getPrescriptionsForPatient(patient.name));
     };
-    
-    fetchData();
-    window.addEventListener("schedula_auth_change", fetchData);
+    window.addEventListener("schedula_prescriptions_updated", syncPrescriptions);
     return () => {
-      window.removeEventListener("schedula_auth_change", fetchData);
+      window.removeEventListener("schedula_prescriptions_updated", syncPrescriptions);
     };
-  }, [router]);
+  }, [patient]);
 
   const timelineItems = useMemo(() => {
     const items: Array<{

@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { getPrescriptionsForDoctor } from "@/lib/prescription-store";
-import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Prescription } from "@/types/prescription";
 import { useAuthStore } from "@/store/authStore";
 import { format, parseISO } from "date-fns";
@@ -18,7 +17,7 @@ export function DoctorPrescriptionDashboard() {
 
   const { doctor: session } = useAuthStore();
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     if (!session) {
       router.push("/doctor/login");
       return;
@@ -29,7 +28,7 @@ export function DoctorPrescriptionDashboard() {
     myPrescriptions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     setPrescriptions(myPrescriptions);
     setIsLoading(false);
-  };
+  }, [session, router]);
 
   useEffect(() => {
     Promise.resolve().then(loadData);
@@ -43,7 +42,7 @@ export function DoctorPrescriptionDashboard() {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("schedula_prescriptions_updated", loadData);
     };
-  }, [session, router]);
+  }, [loadData]);
 
   const filtered = prescriptions.filter(p => 
     p.patientId.toLowerCase().includes(search.toLowerCase()) || 

@@ -5,12 +5,12 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
 import type { DoctorProfile } from "@/types/availability";
-import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment } from "@/types/appointment";
 import { getUserNotifications } from "@/lib/notification-store";
 import type { AppNotification, NotificationType } from "@/lib/notification-store";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 import { useAuthStore } from "@/store/authStore";
+import { useAppointmentStore } from "@/store/appointmentStore";
 
 export function DoctorDashboard() {
   const router = useRouter();
@@ -22,38 +22,33 @@ export function DoctorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { doctor: session } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
 
   useEffect(() => {
-    function fetchData() {
-      if (!session) {
-        router.push("/doctor/login");
-        return;
-      }
-      const myAppointments = getAppointmentsForDoctor(session.id);
-      const myNotifications = getUserNotifications(session.id);
-      
-      setDoctor(session);
-      setAppointments(myAppointments);
-      setNotifications(myNotifications);
-      setIsLoading(false);
+    if (!session) {
+      router.push("/doctor/login");
+      return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDoctor(session);
+    const myAppointments = allAppointments.filter(a => a.doctorId === session.id);
+    setAppointments(myAppointments);
+    const myNotifications = getUserNotifications(session.id);
+    setNotifications(myNotifications);
+    setIsLoading(false);
+  }, [session, allAppointments, router]);
 
-    fetchData();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments" || e.key === "schedula_notifications") fetchData();
+  // Notification sync (not yet migrated to Zustand)
+  useEffect(() => {
+    if (!session) return;
+    const syncNotifications = () => {
+      setNotifications(getUserNotifications(session.id));
     };
-    const handleCustomChange = () => fetchData();
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("schedula_appointments_updated", handleCustomChange);
-    window.addEventListener("schedula_notifications_updated", handleCustomChange);
+    window.addEventListener("schedula_notifications_updated", syncNotifications);
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("schedula_appointments_updated", handleCustomChange);
-      window.removeEventListener("schedula_notifications_updated", handleCustomChange);
+      window.removeEventListener("schedula_notifications_updated", syncNotifications);
     };
-  }, [session, router]);
+  }, [session]);
 
   // Derived Metrics
   const metrics = useMemo(() => {
