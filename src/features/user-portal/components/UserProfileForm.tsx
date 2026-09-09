@@ -10,6 +10,7 @@ import type { UserProfile } from "@/types/user-profile";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useAuthStore } from "@/store/authStore";
 
 export function UserProfileForm() {
   const router = useRouter();
@@ -44,38 +45,44 @@ export function UserProfileForm() {
   const [newSurgYear, setNewSurgYear] = useState("");
   const [newSurgNotes, setNewSurgNotes] = useState("");
 
-  useEffect(() => {
-    const userStr = localStorage.getItem("mock_user");
-    if (!userStr) {
-      router.push("/login");
-      return;
-    }
-    const user = JSON.parse(userStr);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUserId(user.name);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUserEmail(user.email || "");
-    
-    // Stats
-    const apts = getAppointmentsForPatient(user.name);
-    setCompletedAppointments(apts.filter(a => a.status === "completed").length);
-    setTotalPrescriptions(getPrescriptionsForPatient(user.name).length);
+  const { patient } = useAuthStore();
 
-    // Profile Data
-    const existing = getUserProfile(user.name);
-    if (existing) {
-      setProfile({
-        ...existing,
-        medicalConditions: existing.medicalConditions || [],
-        allergies: existing.allergies || [],
-        currentMedications: existing.currentMedications || [],
-        previousSurgeries: existing.previousSurgeries || []
-      });
-    } else {
-      setProfile(p => ({ ...p, fullName: user.name, email: user.email }));
-    }
-    
-    setIsLoading(false);
+  useEffect(() => {
+    const fetchData = () => {
+      if (!patient) {
+        router.push("/login");
+        return;
+      }
+      setUserId(patient.name);
+      setUserEmail(patient.email || "");
+      
+      // Stats
+      const apts = getAppointmentsForPatient(patient.name);
+      setCompletedAppointments(apts.filter(a => a.status === "completed").length);
+      setTotalPrescriptions(getPrescriptionsForPatient(patient.name).length);
+
+      // Profile Data
+      const existing = getUserProfile(patient.name);
+      if (existing) {
+        setProfile({
+          ...existing,
+          medicalConditions: existing.medicalConditions || [],
+          allergies: existing.allergies || [],
+          currentMedications: existing.currentMedications || [],
+          previousSurgeries: existing.previousSurgeries || []
+        });
+      } else {
+        setProfile(prev => ({ ...prev, fullName: patient.name, email: patient.email || "" }));
+      }
+      setIsLoading(false);
+    };
+
+    fetchData();
+
+    window.addEventListener("schedula_auth_change", fetchData);
+    return () => {
+      window.removeEventListener("schedula_auth_change", fetchData);
+    };
   }, [router]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -131,6 +138,16 @@ export function UserProfileForm() {
       arr.splice(index, 1);
       return { ...prev, previousSurgeries: arr };
     });
+  };
+
+  const handleNotificationToggle = (key: 'whatsapp' | 'sms' | 'inApp') => {
+    setProfile(prev => ({
+      ...prev,
+      notificationPreferences: {
+        ...(prev.notificationPreferences || { whatsapp: false, sms: false, inApp: true }),
+        [key]: !(prev.notificationPreferences?.[key] ?? (key === 'inApp'))
+      }
+    }));
   };
 
   const getBMI = () => {
@@ -667,6 +684,64 @@ export function UserProfileForm() {
                         </div>
                       </div>
                       
+                      <div className="pt-6 border-t border-border">
+                        <h4 className="text-sm font-bold text-text-primary mb-4">Notification Preferences</h4>
+                        <p className="text-sm text-text-secondary mb-4">Choose how you want to receive appointment reminders and updates.</p>
+                        <div className="space-y-3">
+                          <label className="flex items-center justify-between p-4 rounded-xl border border-border bg-white cursor-pointer hover:border-primary transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="size-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.666.598 1.216.771 1.388.857.173.086.275.072.376-.043.101-.115.433-.505.549-.683.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.289.129.332.202.043.073.043.423-.101.827z"/></svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-text-primary">WhatsApp Messages</p>
+                                <p className="text-xs text-text-secondary">Get reminders via WhatsApp</p>
+                              </div>
+                            </div>
+                            <input 
+                              type="checkbox" 
+                              checked={profile.notificationPreferences?.whatsapp || false} 
+                              onChange={() => handleNotificationToggle('whatsapp')}
+                              className="size-5 accent-primary" 
+                            />
+                          </label>
+                          <label className="flex items-center justify-between p-4 rounded-xl border border-border bg-white cursor-pointer hover:border-primary transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="size-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-text-primary">SMS Text Messages</p>
+                                <p className="text-xs text-text-secondary">Get standard SMS reminders</p>
+                              </div>
+                            </div>
+                            <input 
+                              type="checkbox" 
+                              checked={profile.notificationPreferences?.sms || false} 
+                              onChange={() => handleNotificationToggle('sms')}
+                              className="size-5 accent-primary" 
+                            />
+                          </label>
+                          <label className="flex items-center justify-between p-4 rounded-xl border border-border bg-white cursor-pointer hover:border-primary transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-text-primary">In-App Notifications</p>
+                                <p className="text-xs text-text-secondary">Alerts inside Schedula portal</p>
+                              </div>
+                            </div>
+                            <input 
+                              type="checkbox" 
+                              checked={profile.notificationPreferences?.inApp ?? true} 
+                              onChange={() => handleNotificationToggle('inApp')}
+                              className="size-5 accent-primary" 
+                            />
+                          </label>
+                        </div>
+                      </div>
+
                       <div className="pt-6 border-t border-border">
                         <h4 className="text-sm font-bold text-text-primary mb-4">Security Actions</h4>
                         <Button type="button" variant="outline">Change Password</Button>

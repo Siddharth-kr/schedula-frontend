@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getDoctorSession } from "@/lib/availability-store";
 import { getAppointmentById, updateAppointmentStatus } from "@/lib/appointment-store";
+import { useAuthStore } from "@/store/authStore";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
@@ -24,8 +24,9 @@ export function DoctorAppointmentDetails() {
   const [isPrescribing, setIsPrescribing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const { doctor: session } = useAuthStore();
+
   const loadData = () => {
-    const session = getDoctorSession();
     if (!session) {
       router.push("/doctor/login");
       return;
@@ -54,7 +55,7 @@ export function DoctorAppointmentDetails() {
       window.removeEventListener("schedula_appointments_updated", loadData);
       window.removeEventListener("schedula_prescriptions_updated", loadData);
     };
-  }, [appointmentId, router]);
+  }, [session, appointmentId, router]);
 
   if (isLoading) {
     return <div className="flex h-64 items-center justify-center text-text-secondary">Loading details...</div>;

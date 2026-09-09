@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { getDoctorSession, setDoctorSession, updateDoctor, getAvailableSlotsForDoctor } from "@/lib/availability-store";
+import { setDoctorSession, updateDoctor, getAvailableSlotsForDoctor } from "@/lib/availability-store";
+import { useAuthStore } from "@/store/authStore";
 import type { DoctorProfile } from "@/types/availability";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -51,36 +52,41 @@ export function DoctorProfileForm() {
     });
   };
 
-  useEffect(() => {
-    const session = getDoctorSession();
-    if (!session) {
-      router.push("/doctor/login");
-      return;
-    }
-    
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDoctor(session);
-    populateForm(session);
+  const { doctor: session, loadSession } = useAuthStore();
 
-    try {
-      const slots = getAvailableSlotsForDoctor(session.id);
-      const today = new Date().toISOString().split("T")[0];
-      const activeSlots = slots.filter(s => !s.isBooked).sort((a, b) => a.date.localeCompare(b.date));
-      if (activeSlots.length > 0) {
-        if (activeSlots[0].date === today) {
-          setTodayAvailable(true);
-          setNextAvailableStr(`Today · ${activeSlots[0].startTime}`);
+  useEffect(() => {
+    const loadData = () => {
+      if (!session) {
+        router.push("/doctor/login");
+        return;
+      }
+      
+      setDoctor(session);
+      populateForm(session);
+
+      try {
+        const slots = getAvailableSlotsForDoctor(session.id);
+        const today = new Date().toISOString().split("T")[0];
+        const activeSlots = slots.filter(s => !s.isBooked).sort((a, b) => a.date.localeCompare(b.date));
+        if (activeSlots.length > 0) {
+          if (activeSlots[0].date === today) {
+            setTodayAvailable(true);
+            setNextAvailableStr("Available Today");
+          } else {
+            setTodayAvailable(false);
+            setNextAvailableStr(`Next: ${new Date(activeSlots[0].date).toLocaleDateString()}`);
+          }
         } else {
           setTodayAvailable(false);
-          setNextAvailableStr(`${activeSlots[0].date} · ${activeSlots[0].startTime}`);
+          setNextAvailableStr("No upcoming slots");
         }
-      } else {
-        setNextAvailableStr("No upcoming slots");
+      } catch {
+        setNextAvailableStr("Unknown");
       }
-    } catch (e) {
-      setNextAvailableStr("Check calendar");
-    }
-  }, [router]);
+    };
+
+    loadData();
+  }, [session, router]);
 
   const profileCompletion = useMemo(() => {
     const fields = [

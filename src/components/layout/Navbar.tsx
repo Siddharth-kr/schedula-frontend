@@ -3,40 +3,23 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { getDoctorSession, clearDoctorSession } from "@/lib/availability-store";
 import { NotificationBell } from "./NotificationBell";
+import { useAuthStore } from "@/store/authStore";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [role, setRole] = useState<"public" | "patient" | "doctor">("public");
-  const [userId, setUserId] = useState<string | null>(null);
+  const { patient, doctor, logoutPatient, logoutDoctor } = useAuthStore();
 
-  // Re-evaluate session whenever pathname changes (cheap and effective for mock frontend auth)
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      const doctorSession = getDoctorSession();
-      if (doctorSession) {
-        setRole("doctor");
-        setUserId(doctorSession.name);
-        return;
-      }
-
-      try {
-        const patientSession = localStorage.getItem("mock_user");
-        if (patientSession) {
-          setRole("patient");
-          setUserId(JSON.parse(patientSession).name);
-          return;
-        }
-      } catch {}
-
-      setRole("public");
-      setUserId(null);
-    });
-  }, [pathname]);
+  const isDoctorRoute = pathname === "/doctor" || pathname.startsWith("/doctor/");
+  
+  const role: "public" | "patient" | "doctor" = isDoctorRoute
+    ? (doctor ? "doctor" : "public")
+    : (patient ? "patient" : (doctor ? "doctor" : "public"));
+    
+  const userId = role === "patient" ? patient?.name : (role === "doctor" ? doctor?.name : null);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -66,8 +49,8 @@ export function Navbar() {
   const doctorLinks = [
     { href: "/doctor/dashboard", label: "Dashboard" },
     { href: "/doctor/appointments", label: "Appointments" },
-    { href: "/doctor/availability", label: "Availability" },
     { href: "/doctor/profile", label: "Profile" },
+    { href: "/doctor/revenue", label: "Revenue" },
   ];
 
   const patientLinks = [
@@ -75,6 +58,7 @@ export function Navbar() {
     { href: "/doctors", label: "Find Doctors" },
     ...(role === "patient" ? [
       { href: "/appointments", label: "Appointments" },
+      { href: "/prescriptions", label: "Prescriptions" },
       { href: "/profile", label: "Profile" }
     ] : []),
   ];
@@ -83,12 +67,12 @@ export function Navbar() {
 
   const handleLogout = () => {
     if (role === "doctor") {
-      clearDoctorSession();
-      localStorage.removeItem("mock_user");
+      logoutDoctor();
+      logoutPatient(); // Just in case, clean everything
       router.push("/doctor/login");
     } else {
-      localStorage.removeItem("mock_user");
-      clearDoctorSession();
+      logoutPatient();
+      logoutDoctor();
       router.push("/");
     }
   };

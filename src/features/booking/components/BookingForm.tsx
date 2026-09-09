@@ -9,6 +9,7 @@ import { createAppointment } from "@/features/appointments/api/create-appointmen
 import { getAvailableSlotsForDoctor, markSlotBooked, freeSlot } from "@/lib/availability-store";
 import type { AvailabilitySlot } from "@/types/availability";
 import { toast } from "react-toastify";
+import { useAuthStore } from "@/store/authStore";
 
 export function BookingForm({ doctor }: { doctor: Doctor }) {
   const router = useRouter();
@@ -51,13 +52,23 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
   const [confirmCheckbox1, setConfirmCheckbox1] = useState(false);
   const [confirmCheckbox2, setConfirmCheckbox2] = useState(false);
 
+  const { patient } = useAuthStore();
+
   useEffect(() => {
-    const userStr = localStorage.getItem("mock_user");
-    if (userStr) {
+    if (patient) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPatientInfo(prev => ({ ...prev, fullName: patient.name, email: patient.email }));
+    }
+
+    const preselectedStr = sessionStorage.getItem("preselected_slot");
+    if (preselectedStr) {
       try {
-        const u = JSON.parse(userStr);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPatientInfo(prev => ({ ...prev, fullName: u.name, email: u.email }));
+        const p = JSON.parse(preselectedStr);
+        if (p.doctorId === doctor.id) {
+          setAppointmentInfo(prev => ({ ...prev, date: p.date, timeSlotId: p.slotId }));
+          setCurrentStep(4);
+        }
+        sessionStorage.removeItem("preselected_slot");
       } catch {}
     }
 

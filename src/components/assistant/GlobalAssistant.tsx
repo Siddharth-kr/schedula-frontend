@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { processAssistantQuery, AssistantResponse, AssistantAction, ChatMessage } from "@/lib/assistant-engine";
-import { getDoctorSession } from "@/lib/availability-store";
+import { useAuthStore } from "@/store/authStore";
 import { rescheduleAppointment } from "@/lib/appointment-store";
 import { toast } from "react-toastify";
 import Link from "next/link";
@@ -13,40 +13,76 @@ export function GlobalAssistant() {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [role, setRole] = useState<"public" | "patient" | "doctor">("public");
-  const [userId, setUserId] = useState<string | null>(null);
+  const { patient, doctor } = useAuthStore();
+  const isDoctorRoute = pathname === "/doctor" || pathname.startsWith("/doctor/");
+
+  const role: "public" | "patient" | "doctor" = isDoctorRoute
+    ? (doctor ? "doctor" : "public")
+    : (patient ? "patient" : (doctor ? "doctor" : "public"));
+    
+  const userId = role === "patient" ? patient?.name : (role === "doctor" ? doctor?.id : null);
   
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, _setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Handle re-hydration of isolated context
   useEffect(() => {
-    const docSession = getDoctorSession();
-    if (docSession) {
-      setTimeout(() => {
-        setRole("doctor");
-        setUserId(docSession.id);
-      }, 0);
-    } else {
-      const patientSession = localStorage.getItem("mock_user");
-      if (patientSession) {
-        setTimeout(() => {
-          setRole("patient");
-          const user = JSON.parse(patientSession);
-          setUserId(user.name);
-        }, 0);
+    if (role !== "public" && userId) {
+      const key = `schedula_ai_${role}_${userId}`;
+      const stored = sessionStorage.getItem(key);
+      if (stored) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        _setMessages(JSON.parse(stored));
       } else {
-        setTimeout(() => setRole("public"), 0);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        _setMessages([]);
       }
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      _setMessages([]);
     }
-  }, [pathname, isOpen]);
+  }, [role, userId]);
+
+  // Wrapper for setting messages and saving context
+  const setMessages = (setter: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+    _setMessages(prev => {
+      const next = typeof setter === "function" ? setter(prev) : setter;
+      if (role !== "public" && userId) {
+        sessionStorage.setItem(`schedula_ai_${role}_${userId}`, JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen]);
+
+  // Handle scroll detection to avoid overlapping static footers/action areas
+  useEffect(() => {
+    const handleScroll = () => {
+      // If viewport bottom is within 160px of document bottom, we are at the footer
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.documentElement.scrollHeight - 160;
+      setIsNearBottom(scrollPosition >= threshold);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    // Initial check + delayed check for dynamic content load
+    handleScroll();
+    const timeout = setTimeout(handleScroll, 500);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeout);
+    };
+  }, [pathname]);
 
   if (role === "public") return null;
 
@@ -60,7 +96,7 @@ export function GlobalAssistant() {
     setLoading(true);
 
     try {
-      const res = await processAssistantQuery(userMsg.text, role as "patient" | "doctor", userId, messages);
+      const res = await processAssistantQuery(userMsg.text, role as "patient" | "doctor", userId, [...messages, userMsg]);
       const assistantMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -99,7 +135,7 @@ export function GlobalAssistant() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-8 right-8 z-40 flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] ring-4 ring-primary/20 transition-all hover:bg-primary-dark hover:scale-105 active:scale-95 hover:shadow-[0_8px_30px_rgb(45,108,223,0.3)] ${isOpen ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}
+        className={`fixed right-6 sm:right-8 z-40 flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-bold text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] ring-4 ring-primary/20 transition-all duration-300 hover:bg-primary-dark hover:scale-105 active:scale-95 hover:shadow-[0_8px_30px_rgb(45,108,223,0.3)] ${isOpen ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'} ${isNearBottom && !isOpen ? 'bottom-[140px] sm:bottom-[120px]' : 'bottom-6 sm:bottom-8'}`}
       >
         <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />

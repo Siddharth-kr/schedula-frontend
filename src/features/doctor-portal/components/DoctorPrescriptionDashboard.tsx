@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getDoctorSession } from "@/lib/availability-store";
+
 import { getPrescriptionsForDoctor } from "@/lib/prescription-store";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Prescription } from "@/types/prescription";
+import { useAuthStore } from "@/store/authStore";
 import { format, parseISO } from "date-fns";
 
 export function DoctorPrescriptionDashboard() {
@@ -15,8 +16,9 @@ export function DoctorPrescriptionDashboard() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  const { doctor: session } = useAuthStore();
+
   const loadData = () => {
-    const session = getDoctorSession();
     if (!session) {
       router.push("/doctor/login");
       return;
@@ -41,7 +43,7 @@ export function DoctorPrescriptionDashboard() {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("schedula_prescriptions_updated", loadData);
     };
-  }, [router]);
+  }, [session, router]);
 
   const filtered = prescriptions.filter(p => 
     p.patientId.toLowerCase().includes(search.toLowerCase()) || 

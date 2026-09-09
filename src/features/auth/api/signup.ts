@@ -1,5 +1,7 @@
 import type { User } from "@/types/user";
 
+import { useAuthStore } from "@/store/authStore";
+
 export async function signupWithEmail(name: string, email: string, password: string): Promise<User> {
   const response = await fetch("/api/auth/signup", {
     method: "POST",
@@ -13,10 +15,7 @@ export async function signupWithEmail(name: string, email: string, password: str
     throw new Error(body.error || "Failed to sign up");
   }
 
-  if (typeof window !== "undefined") {
-    localStorage.setItem("mock_user", JSON.stringify(body.data));
-    localStorage.removeItem("schedula_doctor_user");
-  }
+  useAuthStore.getState().loginPatient(body.data);
 
   return body.data;
 }

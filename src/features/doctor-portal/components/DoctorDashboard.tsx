@@ -3,13 +3,14 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { getDoctorSession } from "@/lib/availability-store";
+
 import type { DoctorProfile } from "@/types/availability";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment } from "@/types/appointment";
 import { getUserNotifications } from "@/lib/notification-store";
 import type { AppNotification, NotificationType } from "@/lib/notification-store";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
+import { useAuthStore } from "@/store/authStore";
 
 export function DoctorDashboard() {
   const router = useRouter();
@@ -20,16 +21,16 @@ export function DoctorDashboard() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const session = getDoctorSession();
-    if (!session) {
-      router.push("/doctor/login");
-      return;
-    }
+  const { doctor: session } = useAuthStore();
 
+  useEffect(() => {
     function fetchData() {
-      const myAppointments = getAppointmentsForDoctor(session!.id);
-      const myNotifications = getUserNotifications(session!.id);
+      if (!session) {
+        router.push("/doctor/login");
+        return;
+      }
+      const myAppointments = getAppointmentsForDoctor(session.id);
+      const myNotifications = getUserNotifications(session.id);
       
       setDoctor(session);
       setAppointments(myAppointments);
@@ -52,7 +53,7 @@ export function DoctorDashboard() {
       window.removeEventListener("schedula_appointments_updated", handleCustomChange);
       window.removeEventListener("schedula_notifications_updated", handleCustomChange);
     };
-  }, [router]);
+  }, [session, router]);
 
   // Derived Metrics
   const metrics = useMemo(() => {
@@ -232,9 +233,15 @@ export function DoctorDashboard() {
                   <svg className="size-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   <h2 className="text-base font-bold text-text-primary">Today&apos;s Schedule</h2>
                 </div>
-                <Link href="/doctor/appointments" className="text-[13px] font-semibold text-primary hover:underline">
-                  View full schedule
-                </Link>
+                <div className="flex items-center gap-4">
+                  <Link href="/doctor/availability" className="text-[13px] font-semibold text-text-primary bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 border border-border">
+                    <svg className="size-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Manage Availability
+                  </Link>
+                  <Link href="/doctor/appointments" className="text-[13px] font-semibold text-primary hover:underline">
+                    View all
+                  </Link>
+                </div>
               </div>
               
               <div className="flex-1 p-2">

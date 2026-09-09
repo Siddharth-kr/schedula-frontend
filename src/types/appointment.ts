@@ -47,4 +47,7 @@ export type Appointment = {
   };
   appointmentType?: string;
   preferredCommunication?: string;
+  consultationFee?: number;
+  paymentStatus?: "pending" | "paid" | "failed" | "refunded";
+  paymentId?: string;
 };

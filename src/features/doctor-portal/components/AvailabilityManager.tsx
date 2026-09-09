@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, parse, addMinutes } from "date-fns";
 import { View } from "react-big-calendar";
-import { getDoctorSession, getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable, addRule } from "@/lib/availability-store";
+import { getSlotsForDoctor, addSlot, deleteSlot, markSlotUnavailable, addRule } from "@/lib/availability-store";
+import { useAuthStore } from "@/store/authStore";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { DoctorProfile, AvailabilitySlot } from "@/types/availability";
 import type { Appointment } from "@/types/appointment";
@@ -37,8 +38,9 @@ export function AvailabilityManager() {
   const [addDayOfWeek, setAddDayOfWeek] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
 
+  const { doctor: session } = useAuthStore();
+
   const loadData = () => {
-    const session = getDoctorSession();
     if (!session) {
       router.push("/doctor/login");
       return;
@@ -62,7 +64,7 @@ export function AvailabilityManager() {
       window.removeEventListener("schedula_appointments_updated", handleCustomChange);
       window.removeEventListener("schedula_slots_updated", handleCustomChange);
     };
-  }, [router]);
+  }, [session, router]);
 
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
     if (action === "TODAY") {
