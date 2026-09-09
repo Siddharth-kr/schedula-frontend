@@ -13,6 +13,8 @@ import { UserPrescription } from "@/features/user-portal/components/UserPrescrip
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/store/authStore";
 import { useAppointmentStore } from "@/store/appointmentStore";
+import { getAllSlots, freeSlot } from "@/lib/availability-store";
+import { addNotification } from "@/lib/notification-store";
 
 type FilterStatus = "all" | AppointmentStatus;
 
@@ -29,6 +31,65 @@ export default function PatientAppointmentsPage() {
   const [reviewingApt, setReviewingApt] = useState<Appointment | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
+
+  const [cancellingApt, setCancellingApt] = useState<Appointment | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const isCancellable = (apt: Appointment) => {
+    if (["cancelled", "completed", "missed"].includes(apt.status)) return false;
+    if (new Date(apt.startsAt) < new Date()) return false;
+    return true;
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!cancellingApt || !patient) return;
+    
+    setIsCancelling(true);
+
+    try {
+      // 1. Role Isolation check
+      if (cancellingApt.patient.name !== patient.name) {
+        toast.error("You can only cancel your own appointments.");
+        return;
+      }
+      
+      // 2. Validate not in past
+      if (new Date(cancellingApt.startsAt) < new Date()) {
+        toast.error("Cannot cancel past appointments.");
+        return;
+      }
+
+      // 3. Free availability slot
+      const slot = getAllSlots().find(s => s.appointmentId === cancellingApt.id);
+      if (slot) {
+        freeSlot(slot.id);
+        // Force slot sync since slots aren't in Zustand
+        window.dispatchEvent(new Event("schedula_slots_updated"));
+      }
+
+      // 4. Update Appointment Status (this also notifies patient and persists)
+      useAppointmentStore.getState().updateAppointmentStatus(cancellingApt.id, "cancelled");
+
+      // 5. Notify the doctor
+      const dateFormatted = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(cancellingApt.startsAt));
+      const timeFormatted = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(cancellingApt.startsAt));
+      addNotification({ 
+        userId: cancellingApt.doctorId, 
+        message: `Your appointment with ${patient.name} on ${dateFormatted} at ${timeFormatted} has been cancelled.`, 
+        type: "cancellation", 
+        appointmentId: cancellingApt.id 
+      });
+      // Force notification sync
+      window.dispatchEvent(new Event("schedula_notifications_updated"));
+
+      toast.success("Appointment cancelled successfully.");
+      setCancellingApt(null);
+    } catch (err) {
+      toast.error("Failed to cancel appointment.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const { patient } = useAuthStore();
   const allAppointments = useAppointmentStore(state => state.appointments);
@@ -239,6 +300,15 @@ export default function PatientAppointmentsPage() {
                           <Link href={`/confirmation/${apt.id}`} className="mt-2 text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
                             View Details
                           </Link>
+
+                          {isCancellable(apt) && (
+                            <button
+                              onClick={() => setCancellingApt(apt)}
+                              className="mt-2 text-sm font-semibold text-error hover:text-red-700 hover:underline transition-all"
+                            >
+                              Cancel Appointment
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -313,6 +383,42 @@ export default function PatientAppointmentsPage() {
                 <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark">Submit Review</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {cancellingApt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-dark/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+            <h2 className="text-xl font-bold text-text-primary mb-4 font-serif">Cancel Appointment?</h2>
+            <p className="text-text-secondary mb-6 leading-relaxed">
+              Are you sure you want to cancel your appointment with <strong>Dr. {cancellingApt.clinician}</strong> on <strong>{formatDate(cancellingApt.startsAt)}</strong> at <strong>{formatTime(cancellingApt.startsAt, cancellingApt.durationMinutes)}</strong>?
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 pt-2 border-t border-border mt-2">
+              <button 
+                type="button" 
+                onClick={() => setCancellingApt(null)} 
+                disabled={isCancelling}
+                className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+              >
+                Keep Appointment
+              </button>
+              <button 
+                type="button" 
+                onClick={handleCancelAppointment}
+                disabled={isCancelling}
+                className="rounded-lg bg-error px-4 py-2 text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+              >
+                {isCancelling ? (
+                  <>
+                    <svg className="animate-spin size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Cancelling...
+                  </>
+                ) : (
+                  "Cancel Appointment"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
