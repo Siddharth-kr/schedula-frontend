@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getDoctorSession } from "@/lib/availability-store";
+import { useAuthStore } from "@/store/authStore";
 import type { DoctorProfile } from "@/types/availability";
 import { getAppointmentsForDoctor } from "@/lib/appointment-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
@@ -59,36 +59,36 @@ export function DoctorAppointments() {
   const [calMonth, setCalMonth] = useState(now.getMonth());
   const [calYear, setCalYear] = useState(now.getFullYear());
 
-  useEffect(() => {
-    const session = getDoctorSession();
-    if (!session) {
-      router.push("/doctor/login");
-      return;
-    }
+  const { doctor: session } = useAuthStore();
 
+  useEffect(() => {
+    function loadData() {
+      if (!session) {
+        router.push("/doctor/login");
+        return;
+      }
+      setDoctor(session);
+      fetchAppointments(session);
+    }
+    
     async function fetchAppointments(doc: DoctorProfile) {
       try {
-        const myAppointments = getAppointmentsForDoctor(doc.id);
-        myAppointments.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDoctor(doc);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setAppointments(myAppointments);
-      } catch {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setErrorMsg("Failed to load appointments.");
-      } finally {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        const apts = getAppointmentsForDoctor(doc.id);
+        apts.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+        setAppointments(apts);
+        setIsLoading(false);
+      } catch (err) {
+        setErrorMsg("Failed to load appointments");
         setIsLoading(false);
       }
     }
 
-    fetchAppointments(session);
+    loadData();
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments") fetchAppointments(session);
+      if (e.key === "schedula_appointments") loadData();
     };
-    const handleCustomChange = () => fetchAppointments(session);
+    const handleCustomChange = () => loadData();
 
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("schedula_appointments_updated", handleCustomChange);
@@ -96,7 +96,7 @@ export function DoctorAppointments() {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("schedula_appointments_updated", handleCustomChange);
     };
-  }, [router]);
+  }, [session, router]);
 
   // Metrics
   const metrics = useMemo(() => {

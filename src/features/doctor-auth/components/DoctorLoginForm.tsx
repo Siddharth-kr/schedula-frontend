@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { doctorLogin } from "../api/doctor-login";
 import { toast } from "react-toastify";
+import { useAuthStore } from "@/store/authStore";
 
 export function DoctorLoginForm() {
   const router = useRouter();
@@ -21,6 +22,15 @@ export function DoctorLoginForm() {
   // Validation state
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  const { doctor } = useAuthStore();
+
+  // Redirect if already authenticated as doctor
+  useEffect(() => {
+    if (doctor) {
+      router.push("/doctor/dashboard");
+    }
+  }, [doctor, router]);
 
   const validate = () => {
     let isValid = true;
@@ -67,72 +77,90 @@ export function DoctorLoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
-      {error && (
-        <div className="rounded-md bg-error/10 p-3 text-sm text-error ring-1 ring-inset ring-red-200" role="alert">
-          {error}
-        </div>
-      )}
-
-      <Input
-        label="Email address"
-        type="email"
-        placeholder="doctor@schedula.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        error={emailError}
-        autoComplete="email"
-        disabled={isLoading}
-      />
+    <div className="flex w-full flex-col gap-6">
       
-      <div className="relative">
+      {/* Role Switcher */}
+      <div className="flex bg-stone-100 p-1 rounded-xl shadow-inner border border-stone-200/60 mb-2">
+        <Link href="/login" className="flex-1 text-center py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
+          Patient
+        </Link>
+        <div className="flex-1 text-center py-2 text-sm font-bold bg-white text-primary rounded-lg shadow-sm">
+          Doctor
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
+        {error && (
+          <div className="rounded-md bg-error/10 p-3 text-sm text-error ring-1 ring-inset ring-red-200" role="alert">
+            {error}
+          </div>
+        )}
+
         <Input
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={passwordError}
-          autoComplete="current-password"
+          label="Email address"
+          type="email"
+          placeholder="doctor@schedula.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={emailError}
+          autoComplete="email"
           disabled={isLoading}
         />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className={`absolute right-3 text-xs font-medium text-text-secondary hover:text-text-primary ${passwordError ? 'top-8' : 'top-9'}`}
-        >
-          {showPassword ? "Hide" : "Show"}
-        </button>
-      </div>
-
-      <div className="mt-2">
-        <Button type="submit" isLoading={isLoading}>
-          Sign in as Doctor
-        </Button>
-      </div>
-      
-      <div className="mt-4 flex flex-col items-center gap-4 border-t border-border pt-6">
-        <p className="text-center text-sm text-text-secondary">
-          Don&apos;t have a doctor account?{" "}
-          <Link 
-            href="/doctor/register"
-            className="font-semibold text-primary hover:underline"
-          >
-            Register here
-          </Link>
-        </p>
-
-        <Link 
-          href="/"
-          className="text-sm font-medium text-text-secondary hover:text-text-primary"
-        >
-          &larr; Back to Patient Portal
-        </Link>
         
-        <p className="text-center text-xs text-stone-400">
+        <div className="relative">
+          <Input
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={passwordError}
+            autoComplete="current-password"
+            disabled={isLoading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className={`absolute right-3 text-xs font-medium text-text-secondary hover:text-text-primary ${passwordError ? 'top-8' : 'top-9'}`}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        <div className="mt-2">
+          <Button type="submit" isLoading={isLoading} className="w-full py-3 text-base">
+            Sign in as Doctor
+          </Button>
+        </div>
+        
+        <div className="flex flex-col gap-4 mt-2">
+          <p className="text-center text-sm text-text-secondary">
+            Don&apos;t have a doctor account?{" "}
+            <Link 
+              href="/doctor/register"
+              className="font-semibold text-primary hover:underline transition-all"
+            >
+              Register here
+            </Link>
+          </p>
+
+          <div className="border-t border-border pt-5">
+            <p className="text-center text-sm text-text-secondary">
+              Are you a patient?{" "}
+              <Link 
+                href="/login"
+                className="font-semibold text-primary hover:underline transition-all"
+              >
+                Sign in to Patient Portal
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-stone-400 mt-2">
           Tip: You can use pre-seeded accounts like <strong>anika@schedula.com</strong> / <strong>doctor123</strong>
         </p>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

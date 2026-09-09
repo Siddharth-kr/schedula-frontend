@@ -52,4 +52,11 @@ export type UserProfile = {
   emergencyContactPhone: string;
   emergencyContactEmail?: string;
   emergencyContactAddress?: string;
+
+  // Preferences
+  notificationPreferences?: {
+    whatsapp: boolean;
+    sms: boolean;
+    inApp: boolean;
+  };
 };

@@ -70,6 +70,16 @@ export function updateAppointmentStatus(id: string, status: AppointmentStatus) {
   }
 }
 
+export function updateAppointmentData(id: string, data: Partial<Appointment>) {
+  const appointments = getAppointments();
+  const index = appointments.findIndex(a => a.id === id);
+  if (index !== -1) {
+    appointments[index] = { ...appointments[index], ...data };
+    localStorage.setItem("schedula_appointments", JSON.stringify(appointments));
+    window.dispatchEvent(new Event("schedula_appointments_updated"));
+  }
+}
+
 export function rescheduleAppointment(id: string, newDate: string, newStartTime: string) {
   const appointments = getAppointments();
   const idx = appointments.findIndex(a => a.id === id);

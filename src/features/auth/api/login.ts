@@ -1,5 +1,7 @@
 import type { User } from "@/types/user";
 
+import { useAuthStore } from "@/store/authStore";
+
 export async function loginWithEmail(email: string, password: string): Promise<User> {
   const response = await fetch("/api/auth/login", {
     method: "POST",
@@ -13,12 +15,7 @@ export async function loginWithEmail(email: string, password: string): Promise<U
     throw new Error(body.error || "Failed to login");
   }
 
-  // In a real app, you might save a token here, but for this mock,
-  // we'll just save the user object in localStorage for simplicity
-  if (typeof window !== "undefined") {
-    localStorage.setItem("mock_user", JSON.stringify(body.data));
-    localStorage.removeItem("schedula_doctor_user"); // Clear stale doctor session
-  }
+  useAuthStore.getState().loginPatient(body.data);
 
   return body.data;
 }

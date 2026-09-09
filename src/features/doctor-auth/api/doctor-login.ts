@@ -1,5 +1,7 @@
-import { getDoctorByEmail, setDoctorSession } from "@/lib/availability-store";
+import { getDoctorByEmail } from "@/lib/availability-store";
 import type { DoctorProfile } from "@/types/availability";
+
+import { useAuthStore } from "@/store/authStore";
 
 export async function doctorLogin(email: string, password: string): Promise<DoctorProfile> {
   // Simulate network delay for realistic UX
@@ -11,11 +13,7 @@ export async function doctorLogin(email: string, password: string): Promise<Doct
     throw new Error("Invalid email or password.");
   }
 
-  // Set the mock session in localStorage
-  setDoctorSession(doctor);
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("mock_user"); // Clear stale patient session
-  }
+  useAuthStore.getState().loginDoctor(doctor);
 
   return doctor;
 }

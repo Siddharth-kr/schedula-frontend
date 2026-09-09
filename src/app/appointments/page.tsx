@@ -6,10 +6,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
-import { getAppointmentsForPatient, addReview } from "@/lib/appointment-store";
+import { getAppointmentsForPatient, addReview, updateAppointmentData } from "@/lib/appointment-store";
+import { processPayment } from "@/lib/payment-store";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
 import { toast } from "react-toastify";
+import { useAuthStore } from "@/store/authStore";
 
 type FilterStatus = "all" | AppointmentStatus;
 
@@ -27,21 +29,17 @@ export default function PatientAppointmentsPage() {
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
 
+  const { patient } = useAuthStore();
+
   const loadData = () => {
     try {
-      const stored = localStorage.getItem("mock_user");
-      if (!stored) {
+      if (!patient || patient.role !== "patient") {
         router.push("/login");
         return;
       }
-      const user = JSON.parse(stored);
-      if (user.role !== "patient") {
-        router.push("/login");
-        return;
-      }
-      setPatientName(user.name);
+      setPatientName(patient.name);
 
-      const patientAppointments = getAppointmentsForPatient(user.name);
+      const patientAppointments = getAppointmentsForPatient(patient.name);
       patientAppointments.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
       setAppointments(patientAppointments);
 
@@ -69,10 +67,12 @@ export default function PatientAppointmentsPage() {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("schedula_appointments_updated", loadData);
     window.addEventListener("schedula_prescriptions_updated", loadData);
+    window.addEventListener("schedula_auth_change", loadData);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("schedula_appointments_updated", loadData);
       window.removeEventListener("schedula_prescriptions_updated", loadData);
+      window.removeEventListener("schedula_auth_change", loadData);
     };
   }, [router]);
 
@@ -100,6 +100,23 @@ export default function PatientAppointmentsPage() {
       toast.success("Review submitted successfully");
       setReviewingApt(null);
       loadData();
+    }
+  };
+
+  const handlePay = (apt: Appointment) => {
+    try {
+      const payment = processPayment({
+        appointmentId: apt.id,
+        patientId: apt.patient.name, // Using name as ID for mock
+        doctorId: apt.doctorId,
+        amount: apt.consultationFee || 100,
+        paymentMethod: "Credit Card",
+      });
+      updateAppointmentData(apt.id, { paymentStatus: "paid", paymentId: payment.paymentId });
+      toast.success("Payment successful!");
+      loadData();
+    } catch (e) {
+      toast.error("Payment failed. Please try again.");
     }
   };
 
@@ -157,31 +174,78 @@ export default function PatientAppointmentsPage() {
                 {filteredAppointments.map((apt) => (
                   <div key={apt.id} className="flex flex-col bg-white rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group overflow-hidden">
                     <div className="flex flex-col sm:flex-row justify-between p-6 gap-6">
-                      <div className="flex flex-col gap-1.5">
-                        <h3 className="text-lg font-bold text-text-primary group-hover:text-primary transition-colors">
-                          Dr. {apt.clinician}
-                        </h3>
+                      <div className="flex flex-col gap-1.5 flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-bold text-text-primary group-hover:text-primary transition-colors">
+                            Dr. {apt.clinician}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+                            {apt.appointmentType || "In-person Consultation"}
+                          </span>
+                        </div>
                         <p className="text-sm font-medium text-text-secondary mb-3">{apt.specialty}</p>
                         
                         <div className="flex items-center gap-2 text-sm text-text-primary">
                           <span className="font-medium">{formatDate(apt.startsAt)}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-text-secondary">
+                        <div className="flex items-center gap-2 text-sm text-text-secondary mb-2">
                           <span>{formatTime(apt.startsAt, apt.durationMinutes)}</span>
                         </div>
+                        
+                        {/* PAYMENT SECTION */}
+                        {(apt.consultationFee !== undefined) && (
+                          <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-border">
+                            <span className="text-sm text-text-secondary">Fee:</span>
+                            <span className="text-sm font-bold text-text-primary">${apt.consultationFee}</span>
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                              apt.paymentStatus === 'paid' ? 'bg-success/10 text-success' :
+                              apt.paymentStatus === 'refunded' ? 'bg-slate-100 text-slate-500' :
+                              apt.paymentStatus === 'failed' ? 'bg-error/10 text-error' :
+                              'bg-amber-100 text-amber-700'
+                            }`}>
+                              {apt.paymentStatus ? apt.paymentStatus.toUpperCase() : 'PENDING'}
+                            </span>
+                            {(!apt.paymentStatus || apt.paymentStatus === 'pending' || apt.paymentStatus === 'failed') && (
+                              <button
+                                onClick={() => handlePay(apt)}
+                                className="ml-2 text-xs font-bold bg-primary text-white px-3 py-1 rounded hover:bg-primary-dark transition-colors"
+                              >
+                                Pay Now
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end sm:text-right gap-4 border-t border-border sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
-                        {apt.status === "completed" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">Completed</span>}
-                        {apt.status === "confirmed" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-success/10 text-success">Confirmed</span>}
-                        {apt.status === "pending" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-background0/10 text-text-secondary">Pending</span>}
-                        {apt.status === "cancelled" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-error/10 text-error">Cancelled</span>}
-                        
-                        <Link href={`/confirmation/${apt.id}`}>
-                          <button className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
+                      <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end sm:text-right gap-4 border-t border-border sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0 w-full sm:w-auto shrink-0">
+                        <div className="flex flex-col gap-2 items-end">
+                          {apt.status === "completed" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">Completed</span>}
+                          {apt.status === "confirmed" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-success/10 text-success">Confirmed</span>}
+                          {apt.status === "pending" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-background0/10 text-text-secondary">Pending</span>}
+                          {apt.status === "cancelled" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-error/10 text-error">Cancelled</span>}
+                          
+                          {/* TELEMEDICINE ACTIONS */}
+                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.appointmentType === "Video Consultation") && (
+                            <Link href={`/appointments/${apt.id}/video`}>
+                              <button className="flex items-center gap-1.5 mt-2 text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                Join Video
+                              </button>
+                            </Link>
+                          )}
+                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.appointmentType === "Secure Chat" || apt.appointmentType === "Video Consultation") && (
+                            <Link href={`/appointments/${apt.id}/chat`}>
+                              <button className="flex items-center gap-1.5 mt-1 text-xs font-bold border border-border text-text-primary px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary transition-colors bg-white">
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                Secure Chat
+                              </button>
+                            </Link>
+                          )}
+
+                          <Link href={`/confirmation/${apt.id}`} className="mt-2 text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
                             View Details
-                          </button>
-                        </Link>
+                          </Link>
+                        </div>
                       </div>
                     </div>
 
@@ -205,7 +269,7 @@ export default function PatientAppointmentsPage() {
                               Review
                             </button>
                           ) : (
-                            <span className="text-sm text-text-secondary">★ {apt.review.rating}/5</span>
+                            <span className="text-sm text-text-secondary">â˜… {apt.review.rating}/5</span>
                           )}
                           <Link href={`/booking/${apt.doctorId}`}>
                             <button className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark transition-colors">
@@ -239,11 +303,11 @@ export default function PatientAppointmentsPage() {
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Rating</label>
                 <select value={rating} onChange={e => setRating(Number(e.target.value))} className="w-full rounded-lg border border-border px-3 py-2 outline-none">
-                  <option value={5}>★★★★★ (5)</option>
-                  <option value={4}>★★★★☆ (4)</option>
-                  <option value={3}>★★★☆☆ (3)</option>
-                  <option value={2}>★★☆☆☆ (2)</option>
-                  <option value={1}>★☆☆☆☆ (1)</option>
+                  <option value={5}>â˜…â˜…â˜…â˜…â˜… (5)</option>
+                  <option value={4}>â˜…â˜…â˜…â˜…â˜† (4)</option>
+                  <option value={3}>â˜…â˜…â˜…â˜†â˜† (3)</option>
+                  <option value={2}>â˜…â˜…â˜†â˜†â˜† (2)</option>
+                  <option value={1}>â˜…â˜†â˜†â˜†â˜† (1)</option>
                 </select>
               </div>
               <div>

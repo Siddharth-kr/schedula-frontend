@@ -8,8 +8,9 @@ import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
-import { getDoctorSession, getSlotsForDoctor, markSlotBooked, freeSlot } from "@/lib/availability-store";
+import { getSlotsForDoctor, markSlotBooked, freeSlot } from "@/lib/availability-store";
 import { getAppointmentsForDoctor, rescheduleAppointment } from "@/lib/appointment-store";
+import { useAuthStore } from "@/store/authStore";
 import type { Appointment } from "@/types/appointment";
 import type { AvailabilitySlot, DoctorProfile } from "@/types/availability";
 import { toast } from "react-toastify";
@@ -50,19 +51,18 @@ interface Props {
 
 export function DashboardCalendar({ date, view, filters, onNavigate, onView, onSelectEmptySlot, onSelectAvailableSlot }: Props) {
   const router = useRouter();
+  const { doctor: session } = useAuthStore();
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
 
   useEffect(() => {
-    const session = getDoctorSession();
     if (!session) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDoctor(session);
-  }, []);
+  }, [session]);
 
   const loadData = useCallback(() => {
-    const session = getDoctorSession();
     if (!session) return;
     
     const docSlots = getSlotsForDoctor(session.id);
@@ -152,7 +152,7 @@ export function DashboardCalendar({ date, view, filters, onNavigate, onView, onS
     });
 
     setAllEvents(newEvents);
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     Promise.resolve().then(loadData);
