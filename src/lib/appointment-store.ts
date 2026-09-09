@@ -1,114 +1,42 @@
 import type { Appointment, AppointmentStatus, Prescription } from "@/types/appointment";
-
-const APPOINTMENTS_KEY = "schedula_appointments";
-
-let _seeded = false;
-
-import { appointments as initialMockAppointments } from "@/lib/mock-data/appointments";
-
-function ensureSeeded() {
-  if (_seeded) return;
-  if (typeof window === "undefined") return;
-  _seeded = true;
-  
-  if (!localStorage.getItem(APPOINTMENTS_KEY)) {
-    localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(initialMockAppointments));
-  }
-}
+import { useAppointmentStore } from "@/store/appointmentStore";
 
 export function getAppointments(): Appointment[] {
-  if (typeof window === "undefined") return [];
-  ensureSeeded();
-  const data = localStorage.getItem(APPOINTMENTS_KEY);
-  return data ? JSON.parse(data) : [];
-}
-
-function saveAppointments(appointments: Appointment[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments));
-  window.dispatchEvent(new Event("schedula_appointments_updated"));
+  return useAppointmentStore.getState().appointments;
 }
 
 export function getAppointmentById(id: string): Appointment | undefined {
-  return getAppointments().find(a => a.id === id);
+  return useAppointmentStore.getState().getAppointmentById(id);
 }
 
 export function getAppointmentsForDoctor(doctorId: string): Appointment[] {
-  return getAppointments().filter(a => a.doctorId === doctorId);
+  return useAppointmentStore.getState().getAppointmentsForDoctor(doctorId);
 }
 
 export function getAppointmentsForPatient(patientName: string): Appointment[] {
-  return getAppointments().filter(a => a.patient.name === patientName);
+  return useAppointmentStore.getState().getAppointmentsForPatient(patientName);
 }
 
 export function addAppointment(appointment: Appointment) {
-  const appointments = getAppointments();
-  appointments.push(appointment);
-  saveAppointments(appointments);
+  useAppointmentStore.getState().addAppointment(appointment);
 }
 
-import { addNotification } from "@/lib/notification-store";
-
 export function updateAppointmentStatus(id: string, status: AppointmentStatus) {
-  const appointments = getAppointments();
-  const idx = appointments.findIndex(a => a.id === id);
-  if (idx !== -1) {
-    appointments[idx].status = status;
-    saveAppointments(appointments);
-    
-    // Notifications
-    const apt = appointments[idx];
-    if (status === "confirmed") {
-      addNotification({ userId: apt.patient.name, message: `Your appointment with ${apt.clinician} has been confirmed.`, type: "confirmation", appointmentId: id });
-    } else if (status === "cancelled") {
-      addNotification({ userId: apt.patient.name, message: `Your appointment with ${apt.clinician} has been cancelled.`, type: "cancellation", appointmentId: id });
-    } else if (status === "missed") {
-      addNotification({ userId: apt.patient.name, message: `You missed your appointment with ${apt.clinician}.`, type: "missed", appointmentId: id });
-    } else if (status === "completed") {
-      addNotification({ userId: apt.patient.name, message: `Your appointment with ${apt.clinician} is completed.`, type: "completed", appointmentId: id });
-    }
-  }
+  useAppointmentStore.getState().updateAppointmentStatus(id, status);
 }
 
 export function updateAppointmentData(id: string, data: Partial<Appointment>) {
-  const appointments = getAppointments();
-  const index = appointments.findIndex(a => a.id === id);
-  if (index !== -1) {
-    appointments[index] = { ...appointments[index], ...data };
-    localStorage.setItem("schedula_appointments", JSON.stringify(appointments));
-    window.dispatchEvent(new Event("schedula_appointments_updated"));
-  }
+  useAppointmentStore.getState().updateAppointmentData(id, data);
 }
 
 export function rescheduleAppointment(id: string, newDate: string, newStartTime: string) {
-  const appointments = getAppointments();
-  const idx = appointments.findIndex(a => a.id === id);
-  if (idx !== -1) {
-    appointments[idx].startsAt = `${newDate}T${newStartTime}:00`;
-    saveAppointments(appointments);
-    
-    const apt = appointments[idx];
-    addNotification({ userId: apt.patient.name, message: `Your appointment with ${apt.clinician} has been rescheduled to ${newDate} at ${newStartTime}.`, type: "rescheduling", appointmentId: id });
-  }
+  useAppointmentStore.getState().rescheduleAppointment(id, newDate, newStartTime);
 }
 
 export function addPrescription(id: string, prescription: Prescription) {
-  const appointments = getAppointments();
-  const idx = appointments.findIndex(a => a.id === id);
-  if (idx !== -1) {
-    appointments[idx].prescription = prescription;
-    saveAppointments(appointments);
-    
-    const apt = appointments[idx];
-    addNotification({ userId: apt.patient.name, message: `Prescription available for your appointment with ${apt.clinician}.`, type: "prescription", appointmentId: id });
-  }
+  useAppointmentStore.getState().addPrescription(id, prescription);
 }
 
 export function addReview(id: string, review: { rating: number; text?: string }) {
-  const appointments = getAppointments();
-  const idx = appointments.findIndex(a => a.id === id);
-  if (idx !== -1) {
-    appointments[idx].review = review;
-    saveAppointments(appointments);
-  }
+  useAppointmentStore.getState().addReview(id, review);
 }

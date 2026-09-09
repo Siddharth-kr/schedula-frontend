@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
-import { getAppointmentsForPatient, addReview, updateAppointmentData } from "@/lib/appointment-store";
+import { addReview, updateAppointmentData } from "@/lib/appointment-store";
 import { processPayment } from "@/lib/payment-store";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/store/authStore";
+import { useAppointmentStore } from "@/store/appointmentStore";
 
 type FilterStatus = "all" | AppointmentStatus;
 
@@ -30,51 +31,46 @@ export default function PatientAppointmentsPage() {
   const [reviewText, setReviewText] = useState("");
 
   const { patient } = useAuthStore();
+  const allAppointments = useAppointmentStore(state => state.appointments);
 
-  const loadData = () => {
-    try {
-      if (!patient || patient.role !== "patient") {
-        router.push("/login");
-        return;
+  const loadPrescriptions = useCallback((patientApts: Appointment[]) => {
+    const pMap: Record<string, Prescription> = {};
+    for (const apt of patientApts) {
+      if (apt.status === "completed") {
+        const p = getPrescriptionByAppointmentId(apt.id);
+        if (p) pMap[apt.id] = p;
       }
-      setPatientName(patient.name);
-
-      const patientAppointments = getAppointmentsForPatient(patient.name);
-      patientAppointments.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
-      setAppointments(patientAppointments);
-
-      const pMap: Record<string, Prescription> = {};
-      for (const apt of patientAppointments) {
-        if (apt.status === "completed") {
-          const p = getPrescriptionByAppointmentId(apt.id);
-          if (p) pMap[apt.id] = p;
-        }
-      }
-      setPrescriptions(pMap);
-    } catch {
-      router.push("/login");
-    } finally {
-      setIsLoading(false);
     }
-  };
+    setPrescriptions(pMap);
+  }, []);
 
   useEffect(() => {
-    Promise.resolve().then(loadData);
-    
+    if (!patient || patient.role !== "patient") {
+      router.push("/login");
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPatientName(patient.name);
+
+    const patientAppointments = allAppointments.filter(a => a.patient.name === patient.name);
+    patientAppointments.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+    setAppointments(patientAppointments);
+    loadPrescriptions(patientAppointments);
+    setIsLoading(false);
+  }, [patient, allAppointments, loadPrescriptions, router]);
+
+  useEffect(() => {
+    const handlePrescriptionUpdate = () => loadPrescriptions(appointments);
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "schedula_appointments" || e.key === "schedula_prescriptions") loadData();
+      if (e.key === "schedula_prescriptions") handlePrescriptionUpdate();
     };
     window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("schedula_appointments_updated", loadData);
-    window.addEventListener("schedula_prescriptions_updated", loadData);
-    window.addEventListener("schedula_auth_change", loadData);
+    window.addEventListener("schedula_prescriptions_updated", handlePrescriptionUpdate);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("schedula_appointments_updated", loadData);
-      window.removeEventListener("schedula_prescriptions_updated", loadData);
-      window.removeEventListener("schedula_auth_change", loadData);
+      window.removeEventListener("schedula_prescriptions_updated", handlePrescriptionUpdate);
     };
-  }, [router]);
+  }, [appointments, loadPrescriptions]);
 
   const filteredAppointments = useMemo(() => {
     if (filter === "all") return appointments;
@@ -99,7 +95,6 @@ export default function PatientAppointmentsPage() {
       addReview(reviewingApt.id, { rating, text: reviewText });
       toast.success("Review submitted successfully");
       setReviewingApt(null);
-      loadData();
     }
   };
 
@@ -114,7 +109,6 @@ export default function PatientAppointmentsPage() {
       });
       updateAppointmentData(apt.id, { paymentStatus: "paid", paymentId: payment.paymentId });
       toast.success("Payment successful!");
-      loadData();
     } catch (e) {
       toast.error("Payment failed. Please try again.");
     }
