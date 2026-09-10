@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
@@ -7,7 +8,6 @@ import { getAppointmentById } from "@/lib/appointment-store";
 import type { Appointment } from "@/types/appointment";
 import { getChatMessages, sendChatMessage, type ChatMessage } from "@/lib/chat-store";
 import { toast } from "react-toastify";
-import { useAuthStore } from "@/store/authStore";
 
 export default function SecureChatPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function SecureChatPage({ params }: { params: Promise<{ id: strin
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
-  const { patient } = useAuthStore();
+  const { patient } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     try {

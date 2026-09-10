@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -9,8 +10,6 @@ import type { Prescription } from "@/types/prescription";
 import { getPrescriptionsForPatient } from "@/lib/prescription-store";
 import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
 import { format, parseISO } from "date-fns";
-import { useAuthStore } from "@/store/authStore";
-import { useAppointmentStore } from "@/store/appointmentStore";
 
 type FilterType = "all" | "appointments" | "prescriptions" | "completed" | "cancelled";
 
@@ -25,8 +24,8 @@ export default function HealthJourneyPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { patient } = useAuthStore();
-  const allAppointments = useAppointmentStore(state => state.appointments);
+  const { patient } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
 
   useEffect(() => {
     if (!patient || patient.role !== "patient") {

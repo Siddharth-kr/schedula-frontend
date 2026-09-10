@@ -1,11 +1,10 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { updateAppointmentStatus } from "@/lib/appointment-store";
-import { useAuthStore } from "@/store/authStore";
-import { useAppointmentStore } from "@/store/appointmentStore";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
@@ -25,8 +24,8 @@ export function DoctorAppointmentDetails() {
   const [isPrescribing, setIsPrescribing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const { doctor: session } = useAuthStore();
-  const allAppointments = useAppointmentStore(state => state.appointments);
+  const { doctor: session } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
 
   // React to Zustand appointment changes
   useEffect(() => {

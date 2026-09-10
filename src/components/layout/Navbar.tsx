@@ -1,17 +1,19 @@
 "use client";
+import { logoutPatient, logoutDoctor } from "@/store/slices/authSlice";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NotificationBell } from "./NotificationBell";
-import { useAuthStore } from "@/store/authStore";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { patient, doctor, logoutPatient, logoutDoctor } = useAuthStore();
+  const { patient, doctor } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
 
   const isDoctorRoute = pathname === "/doctor" || pathname.startsWith("/doctor/");
   
@@ -67,12 +69,12 @@ export function Navbar() {
 
   const handleLogout = () => {
     if (role === "doctor") {
-      logoutDoctor();
-      logoutPatient(); // Just in case, clean everything
+      dispatch(logoutDoctor());
+      dispatch(logoutPatient()); // Just in case, clean everything
       router.push("/doctor/login");
     } else {
-      logoutPatient();
-      logoutDoctor();
+      dispatch(logoutPatient());
+      dispatch(logoutDoctor());
       router.push("/");
     }
   };

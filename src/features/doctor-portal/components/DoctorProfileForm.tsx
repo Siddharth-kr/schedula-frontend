@@ -1,9 +1,10 @@
 "use client";
+import { loadSession } from "@/store/slices/authSlice";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { setDoctorSession, updateDoctor, getAvailableSlotsForDoctor } from "@/lib/availability-store";
-import { useAuthStore } from "@/store/authStore";
 import type { DoctorProfile } from "@/types/availability";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -52,7 +53,8 @@ export function DoctorProfileForm() {
     });
   };
 
-  const { doctor: session, loadSession } = useAuthStore();
+  const { doctor: session } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const loadData = () => {

@@ -1,5 +1,9 @@
 "use client";
 
+import { useAppSelector } from "@/store/hooks";
+import { store } from "@/store";
+import { updateAppointmentStatus, rescheduleAppointment } from "@/store/slices/appointmentSlice";
+
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,8 +15,8 @@ import { processPayment } from "@/lib/payment-store";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
 import { toast } from "react-toastify";
-import { useAuthStore } from "@/store/authStore";
-import { useAppointmentStore } from "@/store/appointmentStore";
+
+
 import { getAllSlots, freeSlot, markSlotBooked, getAvailableSlotsForDoctor } from "@/lib/availability-store";
 import type { AvailabilitySlot } from "@/types/availability";
 import { addNotification } from "@/lib/notification-store";
@@ -69,7 +73,7 @@ export default function PatientAppointmentsPage() {
       }
 
       // 4. Update Appointment Status (this also notifies patient and persists)
-      useAppointmentStore.getState().updateAppointmentStatus(cancellingApt.id, "cancelled");
+      store.dispatch(updateAppointmentStatus({ id: cancellingApt.id, status: "cancelled" }));
 
       // 5. Notify the doctor
       const dateFormatted = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(cancellingApt.startsAt));
@@ -168,11 +172,9 @@ export default function PatientAppointmentsPage() {
       window.dispatchEvent(new Event("schedula_slots_updated"));
 
       // Update appointment via Zustand
-      useAppointmentStore.getState().rescheduleAppointment(
-        reschedulingApt.id, 
-        newSlot.date, 
-        newSlot.startTime
-      );
+      store.dispatch(rescheduleAppointment({id: 
+        reschedulingApt.id, newDate: newSlot.date, newStartTime: newSlot.startTime
+      }));
 
       // Notify doctor
       const oldDateFormatted = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(reschedulingApt.startsAt));
@@ -197,8 +199,8 @@ export default function PatientAppointmentsPage() {
     }
   };
 
-  const { patient } = useAuthStore();
-  const allAppointments = useAppointmentStore(state => state.appointments);
+  const { patient } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
 
   const loadPrescriptions = useCallback((patientApts: Appointment[]) => {
     const pMap: Record<string, Prescription> = {};

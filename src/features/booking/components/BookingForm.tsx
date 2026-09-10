@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,6 @@ import { createAppointment } from "@/features/appointments/api/create-appointmen
 import { getAvailableSlotsForDoctor, markSlotBooked, freeSlot } from "@/lib/availability-store";
 import type { AvailabilitySlot } from "@/types/availability";
 import { toast } from "react-toastify";
-import { useAuthStore } from "@/store/authStore";
 
 export function BookingForm({ doctor }: { doctor: Doctor }) {
   const router = useRouter();
@@ -52,7 +52,7 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
   const [confirmCheckbox1, setConfirmCheckbox1] = useState(false);
   const [confirmCheckbox2, setConfirmCheckbox2] = useState(false);
 
-  const { patient } = useAuthStore();
+  const { patient } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     if (patient) {

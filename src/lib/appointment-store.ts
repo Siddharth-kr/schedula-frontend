@@ -1,42 +1,43 @@
 import type { Appointment, AppointmentStatus, Prescription } from "@/types/appointment";
-import { useAppointmentStore } from "@/store/appointmentStore";
+import { store } from "@/store";
+import { addAppointment as addAppointmentAction, updateAppointmentStatus as updateAppointmentStatusAction, updateAppointmentData as updateAppointmentDataAction, rescheduleAppointment as rescheduleAppointmentAction, addPrescription as addPrescriptionAction, addReview as addReviewAction } from "@/store/slices/appointmentSlice";
 
 export function getAppointments(): Appointment[] {
-  return useAppointmentStore.getState().appointments;
+  return store.getState().appointments.appointments;
 }
 
 export function getAppointmentById(id: string): Appointment | undefined {
-  return useAppointmentStore.getState().getAppointmentById(id);
+  return store.getState().appointments.appointments.find(a => a.id === id);
 }
 
 export function getAppointmentsForDoctor(doctorId: string): Appointment[] {
-  return useAppointmentStore.getState().getAppointmentsForDoctor(doctorId);
+  return store.getState().appointments.appointments.filter(a => a.doctorId === doctorId);
 }
 
 export function getAppointmentsForPatient(patientName: string): Appointment[] {
-  return useAppointmentStore.getState().getAppointmentsForPatient(patientName);
+  return store.getState().appointments.appointments.filter(a => a.patient.name === patientName);
 }
 
 export function addAppointment(appointment: Appointment) {
-  useAppointmentStore.getState().addAppointment(appointment);
+  store.dispatch(addAppointmentAction(appointment));
 }
 
 export function updateAppointmentStatus(id: string, status: AppointmentStatus) {
-  useAppointmentStore.getState().updateAppointmentStatus(id, status);
+  store.dispatch(updateAppointmentStatusAction({ id, status }));
 }
 
 export function updateAppointmentData(id: string, data: Partial<Appointment>) {
-  useAppointmentStore.getState().updateAppointmentData(id, data);
+  store.dispatch(updateAppointmentDataAction({ id, data }));
 }
 
 export function rescheduleAppointment(id: string, newDate: string, newStartTime: string) {
-  useAppointmentStore.getState().rescheduleAppointment(id, newDate, newStartTime);
+  store.dispatch(rescheduleAppointmentAction({ id, newDate, newStartTime }));
 }
 
 export function addPrescription(id: string, prescription: Prescription) {
-  useAppointmentStore.getState().addPrescription(id, prescription);
+  store.dispatch(addPrescriptionAction({ id, prescription }));
 }
 
 export function addReview(id: string, review: { rating: number; text?: string }) {
-  useAppointmentStore.getState().addReview(id, review);
+  store.dispatch(addReviewAction({ id, review }));
 }
