@@ -120,7 +120,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
             <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Consultation Ended</h2>
-          <p className="text-stone-400 mb-8">Your video consultation with Dr. {appointment.clinician} has concluded.</p>
+          <p className="text-stone-400 mb-8">Your video consultation with {appointment.clinician} has concluded.</p>
           <div className="flex flex-col gap-3">
             <button onClick={() => router.push("/appointments")} className="w-full bg-white text-stone-900 font-bold py-3 rounded-lg hover:bg-stone-200 transition-colors">
               Return to Appointments
@@ -147,7 +147,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </button>
             <div>
-              <h2 className="text-white font-bold text-lg leading-tight">Dr. {appointment.clinician}</h2>
+              <h2 className="text-white font-bold text-lg leading-tight">{appointment.clinician}</h2>
               <p className="text-stone-300 text-xs font-medium">{appointment.appointmentType || "Video Consultation"}</p>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               
               <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 backdrop-blur-[2px]">
                 <h3 className="text-2xl font-bold text-white mb-2">Ready to join?</h3>
-                <p className="text-stone-300 text-sm mb-8 text-center max-w-md">Make sure your camera and microphone are positioned correctly before joining the consultation with Dr. {appointment.clinician}.</p>
+                <p className="text-stone-300 text-sm mb-8 text-center max-w-md">Make sure your camera and microphone are positioned correctly before joining the consultation with {appointment.clinician}.</p>
                 <button onClick={handleJoin} className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-full font-bold text-lg shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
                   Join Consultation
                 </button>
@@ -193,7 +193,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
           ) : connState === "connecting" ? (
             <div className="text-center">
               <div className="size-12 rounded-full border-4 border-stone-700 border-t-indigo-500 animate-spin mx-auto mb-4"></div>
-              <p className="text-white font-bold text-lg">Connecting to Dr. {appointment.clinician}...</p>
+              <p className="text-white font-bold text-lg">Connecting to {appointment.clinician}...</p>
               <p className="text-stone-400 text-sm mt-1">Please wait, establishing secure connection</p>
             </div>
           ) : (
@@ -205,7 +205,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
                 </div>
                 <div className="absolute bottom-6 left-6 px-4 py-2 rounded-lg bg-black/50 backdrop-blur text-white font-medium text-sm border border-white/10 flex items-center gap-2">
                   <div className="size-2 rounded-full bg-success"></div>
-                  Dr. {appointment.clinician}
+                  {appointment.clinician}
                 </div>
               </div>
               
@@ -282,7 +282,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               <div className="m-auto text-center p-4">
                 <svg className="size-12 mx-auto text-stone-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" /></svg>
                 <p className="text-sm font-medium text-text-secondary">No messages yet.</p>
-                <p className="text-xs text-text-secondary mt-1">Send a message to Dr. {appointment.clinician}.</p>
+                <p className="text-xs text-text-secondary mt-1">Send a message to {appointment.clinician}.</p>
               </div>
             ) : (
               messages.map(msg => {

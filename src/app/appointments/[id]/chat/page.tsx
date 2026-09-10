@@ -95,7 +95,7 @@ export default function SecureChatPage({ params }: { params: Promise<{ id: strin
                   <div className="absolute bottom-0 right-0 size-3 border-2 border-white bg-success rounded-full"></div>
                 </div>
                 <div>
-                  <h2 className="font-bold text-text-primary leading-tight">Dr. {appointment.clinician}</h2>
+                  <h2 className="font-bold text-text-primary leading-tight">{appointment.clinician}</h2>
                   <p className="text-[11px] font-medium text-success">Online</p>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export default function SecureChatPage({ params }: { params: Promise<{ id: strin
                   <svg className="size-8 text-primary/40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Secure Chat</h3>
-                <p className="text-sm text-text-secondary">Messages are end-to-end encrypted. Dr. {appointment.clinician} will respond as soon as they are available.</p>
+                <p className="text-sm text-text-secondary">Messages are end-to-end encrypted. {appointment.clinician} will respond as soon as they are available.</p>
               </div>
             ) : (
               messages.map(msg => {
@@ -154,7 +154,7 @@ export default function SecureChatPage({ params }: { params: Promise<{ id: strin
                 <textarea 
                   value={newMessage}
                   onChange={e => setNewMessage(e.target.value)}
-                  placeholder="Type your message to Dr. {appointment.clinician}..."
+                  placeholder="Type your message to {appointment.clinician}..."
                   className="w-full bg-transparent border-none px-4 py-3 text-sm outline-none resize-none max-h-32 min-h-[44px]"
                   rows={1}
                   onKeyDown={e => {

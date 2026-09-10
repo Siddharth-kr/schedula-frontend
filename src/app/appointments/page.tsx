@@ -338,7 +338,7 @@ export default function PatientAppointmentsPage() {
                       <div className="flex flex-col gap-1.5 flex-1">
                         <div className="flex items-center gap-3">
                           <h3 className="text-lg font-bold text-text-primary group-hover:text-primary transition-colors">
-                            Dr. {apt.clinician}
+                            {apt.clinician}
                           </h3>
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
                             {apt.appointmentType || "In-person Consultation"}
@@ -505,7 +505,7 @@ export default function PatientAppointmentsPage() {
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
             <h2 className="text-xl font-bold text-text-primary mb-4 font-serif">Cancel Appointment?</h2>
             <p className="text-text-secondary mb-6 leading-relaxed">
-              Are you sure you want to cancel your appointment with <strong>Dr. {cancellingApt.clinician}</strong> on <strong>{formatDate(cancellingApt.startsAt)}</strong> at <strong>{formatTime(cancellingApt.startsAt, cancellingApt.durationMinutes)}</strong>?
+              Are you sure you want to cancel your appointment with <strong>{cancellingApt.clinician}</strong> on <strong>{formatDate(cancellingApt.startsAt)}</strong> at <strong>{formatTime(cancellingApt.startsAt, cancellingApt.durationMinutes)}</strong>?
               This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3 pt-2 border-t border-border mt-2">
@@ -607,7 +607,7 @@ export default function PatientAppointmentsPage() {
               <div className="space-y-4">
                 <div className="bg-background rounded-xl p-4 border border-border">
                   <h3 className="text-sm font-semibold text-text-secondary uppercase mb-2">Current Appointment</h3>
-                  <p className="font-medium text-text-primary">Dr. {reschedulingApt.clinician}</p>
+                  <p className="font-medium text-text-primary">{reschedulingApt.clinician}</p>
                   <p className="text-text-secondary">{formatDate(reschedulingApt.startsAt)} at {formatTime(reschedulingApt.startsAt, reschedulingApt.durationMinutes)}</p>
                 </div>
 
@@ -619,7 +619,7 @@ export default function PatientAppointmentsPage() {
 
                 <div className="bg-success/10 rounded-xl p-4 border border-success/20">
                   <h3 className="text-sm font-semibold text-success uppercase mb-2">New Appointment</h3>
-                  <p className="font-bold text-text-primary">Dr. {reschedulingApt.clinician}</p>
+                  <p className="font-bold text-text-primary">{reschedulingApt.clinician}</p>
                   {(() => {
                     const selectedSlot = availableSlots.find(s => s.id === selectedSlotId);
                     if (!selectedSlot) return null;

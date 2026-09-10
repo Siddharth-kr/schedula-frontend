@@ -57,7 +57,7 @@ export function PrescriptionDetails({ prescription, appointment, onEdit, isDocto
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div>
             <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Doctor</h4>
-            <p className="font-bold text-text-primary mt-1">Dr. {appointment.clinician}</p>
+            <p className="font-bold text-text-primary mt-1">{appointment.clinician}</p>
             <p className="text-sm text-text-secondary">{appointment.specialty}</p>
           </div>
           <div className="text-right">

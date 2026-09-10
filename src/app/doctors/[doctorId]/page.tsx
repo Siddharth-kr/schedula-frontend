@@ -136,7 +136,7 @@ export default function DoctorDetailsPage() {
                     {doctor.name.split(" ").map(n => n[0]).join("").substring(0,2)}
                   </div>
                   <div className="flex-1 text-center sm:text-left">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-text-primary font-serif mb-2">Dr. {doctor.name}</h1>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-text-primary font-serif mb-2">{doctor.name}</h1>
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-4">
                       <p className="text-lg font-semibold text-primary">{doctor.specialty}</p>
                       <span className="w-1.5 h-1.5 rounded-full bg-border"></span>
@@ -166,7 +166,7 @@ export default function DoctorDetailsPage() {
 
               {/* About Card */}
               <div className="rounded-3xl border border-border bg-white p-6 sm:p-10 shadow-sm">
-                <h2 className="text-xl font-bold text-text-primary font-serif mb-5">About Dr. {doctor.name.split(" ")[0]}</h2>
+                <h2 className="text-xl font-bold text-text-primary font-serif mb-5">About {doctor.name.split(" ")[0]}</h2>
                 <p className="text-text-secondary leading-relaxed text-base">
                   {doctor.bio || `${doctor.name} is a dedicated ${doctor.specialty.toLowerCase()} with ${doctor.experienceYears} years of medical experience. They are committed to providing personalized, comprehensive healthcare and staying current with the latest medical advancements to ensure optimal patient outcomes.`}
                 </p>

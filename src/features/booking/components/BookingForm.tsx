@@ -260,7 +260,7 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
                 {doctor.name.split(" ").map(n => n[0]).join("").substring(0,2)}
               </div>
               <div>
-                <h4 className="font-bold text-text-primary">Dr. {doctor.name}</h4>
+                <h4 className="font-bold text-text-primary">{doctor.name}</h4>
                 <p className="text-sm text-primary font-medium">{doctor.specialty}</p>
               </div>
             </div>
