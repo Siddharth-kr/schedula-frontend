@@ -13,7 +13,8 @@ import { UserPrescription } from "@/features/user-portal/components/UserPrescrip
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/store/authStore";
 import { useAppointmentStore } from "@/store/appointmentStore";
-import { getAllSlots, freeSlot } from "@/lib/availability-store";
+import { getAllSlots, freeSlot, markSlotBooked, getAvailableSlotsForDoctor } from "@/lib/availability-store";
+import type { AvailabilitySlot } from "@/types/availability";
 import { addNotification } from "@/lib/notification-store";
 
 type FilterStatus = "all" | AppointmentStatus;
@@ -88,6 +89,111 @@ export default function PatientAppointmentsPage() {
       toast.error("Failed to cancel appointment.");
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const [reschedulingApt, setReschedulingApt] = useState<Appointment | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedSlotId, setSelectedSlotId] = useState<string>("");
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [rescheduleStep, setRescheduleStep] = useState<1 | 2>(1);
+
+  const openReschedule = (apt: Appointment) => {
+    const slots = getAvailableSlotsForDoctor(apt.doctorId).filter(s => {
+      const slotDate = new Date(`${s.date}T${s.startTime}`);
+      return slotDate > new Date() && !s.isBooked && !s.isUnavailable;
+    });
+    setAvailableSlots(slots);
+    setReschedulingApt(apt);
+    setRescheduleStep(1);
+    setSelectedDate("");
+    setSelectedSlotId("");
+  };
+
+  const availableDates = useMemo(() => {
+    const dates = new Set(availableSlots.map(s => s.date));
+    return Array.from(dates).sort();
+  }, [availableSlots]);
+
+  const slotsForDate = useMemo(() => {
+    if (!selectedDate) return [];
+    return availableSlots.filter(s => s.date === selectedDate).sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }, [selectedDate, availableSlots]);
+
+  const handleReschedule = async () => {
+    if (!reschedulingApt || !patient || !selectedSlotId) return;
+
+    setIsRescheduling(true);
+
+    try {
+      if (reschedulingApt.patient.name !== patient.name) {
+        toast.error("You can only reschedule your own appointments.");
+        return;
+      }
+
+      if (new Date(reschedulingApt.startsAt) < new Date()) {
+        toast.error("Cannot reschedule past appointments.");
+        return;
+      }
+
+      const newSlot = availableSlots.find(s => s.id === selectedSlotId);
+      // Double check availability
+      const currentSlots = getAvailableSlotsForDoctor(reschedulingApt.doctorId);
+      const stillAvailable = currentSlots.find(s => s.id === selectedSlotId && !s.isBooked && !s.isUnavailable);
+      
+      if (!newSlot || !stillAvailable) {
+        toast.error("This slot is no longer available. Please select another time.");
+        // Refresh slots
+        const slots = getAvailableSlotsForDoctor(reschedulingApt.doctorId).filter(s => {
+          const slotDate = new Date(`${s.date}T${s.startTime}`);
+          return slotDate > new Date() && !s.isBooked && !s.isUnavailable;
+        });
+        setAvailableSlots(slots);
+        setRescheduleStep(1);
+        setSelectedSlotId("");
+        return;
+      }
+
+      // Free old slot
+      const oldSlot = getAllSlots().find(s => s.appointmentId === reschedulingApt.id);
+      if (oldSlot) {
+        freeSlot(oldSlot.id);
+      }
+
+      // Book new slot
+      markSlotBooked(newSlot.id, reschedulingApt.id);
+      
+      // Force slot sync
+      window.dispatchEvent(new Event("schedula_slots_updated"));
+
+      // Update appointment via Zustand
+      useAppointmentStore.getState().rescheduleAppointment(
+        reschedulingApt.id, 
+        newSlot.date, 
+        newSlot.startTime
+      );
+
+      // Notify doctor
+      const oldDateFormatted = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(reschedulingApt.startsAt));
+      const oldTimeFormatted = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(reschedulingApt.startsAt));
+      const newDateFormatted = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(`${newSlot.date}T${newSlot.startTime}`));
+      const newTimeFormatted = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(`${newSlot.date}T${newSlot.startTime}`));
+      
+      addNotification({ 
+        userId: reschedulingApt.doctorId, 
+        message: `${patient.name} has rescheduled their appointment from ${oldDateFormatted} at ${oldTimeFormatted} to ${newDateFormatted} at ${newTimeFormatted}.`, 
+        type: "rescheduling", 
+        appointmentId: reschedulingApt.id 
+      });
+      window.dispatchEvent(new Event("schedula_notifications_updated"));
+
+      toast.success("Appointment rescheduled successfully.");
+      setReschedulingApt(null);
+    } catch (err) {
+      toast.error("Failed to reschedule appointment.");
+    } finally {
+      setIsRescheduling(false);
     }
   };
 
@@ -302,12 +408,20 @@ export default function PatientAppointmentsPage() {
                           </Link>
 
                           {isCancellable(apt) && (
-                            <button
-                              onClick={() => setCancellingApt(apt)}
-                              className="mt-2 text-sm font-semibold text-error hover:text-red-700 hover:underline transition-all"
-                            >
-                              Cancel Appointment
-                            </button>
+                            <div className="flex items-center gap-3 mt-2">
+                              <button
+                                onClick={() => openReschedule(apt)}
+                                className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all"
+                              >
+                                Reschedule
+                              </button>
+                              <button
+                                onClick={() => setCancellingApt(apt)}
+                                className="text-sm font-semibold text-error hover:text-red-700 hover:underline transition-all"
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -419,6 +533,129 @@ export default function PatientAppointmentsPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {reschedulingApt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-dark/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6">
+            <h2 className="text-xl font-bold text-text-primary mb-4 font-serif">Reschedule Appointment</h2>
+            
+            {rescheduleStep === 1 ? (
+              <div className="space-y-4">
+                <p className="text-text-secondary">
+                  Current: <strong>{formatDate(reschedulingApt.startsAt)}</strong> at <strong>{formatTime(reschedulingApt.startsAt, reschedulingApt.durationMinutes)}</strong>
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">Select New Date</label>
+                  <select 
+                    value={selectedDate} 
+                    onChange={e => { setSelectedDate(e.target.value); setSelectedSlotId(""); }} 
+                    className="w-full rounded-lg border border-border px-3 py-2 outline-none"
+                  >
+                    <option value="" disabled>-- Select a date --</option>
+                    {availableDates.map(date => (
+                      <option key={date} value={date}>{formatDate(`${date}T00:00:00`)}</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Select Available Time</label>
+                    {slotsForDate.length === 0 ? (
+                      <p className="text-sm text-text-secondary">No slots available for this date.</p>
+                    ) : (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        {slotsForDate.map(slot => (
+                          <button
+                            key={slot.id}
+                            onClick={() => setSelectedSlotId(slot.id)}
+                            className={`px-3 py-2 text-sm rounded-lg border text-center transition-all ${
+                              selectedSlotId === slot.id 
+                                ? "bg-primary text-white border-primary" 
+                                : "bg-white text-text-primary border-border hover:border-primary hover:text-primary"
+                            }`}
+                          >
+                            {slot.startTime}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4">
+                  <button 
+                    type="button" 
+                    onClick={() => setReschedulingApt(null)} 
+                    className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setRescheduleStep(2)}
+                    disabled={!selectedSlotId}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+                  >
+                    Review
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-background rounded-xl p-4 border border-border">
+                  <h3 className="text-sm font-semibold text-text-secondary uppercase mb-2">Current Appointment</h3>
+                  <p className="font-medium text-text-primary">Dr. {reschedulingApt.clinician}</p>
+                  <p className="text-text-secondary">{formatDate(reschedulingApt.startsAt)} at {formatTime(reschedulingApt.startsAt, reschedulingApt.durationMinutes)}</p>
+                </div>
+
+                <div className="flex justify-center text-primary py-1">
+                  <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
+
+                <div className="bg-success/10 rounded-xl p-4 border border-success/20">
+                  <h3 className="text-sm font-semibold text-success uppercase mb-2">New Appointment</h3>
+                  <p className="font-bold text-text-primary">Dr. {reschedulingApt.clinician}</p>
+                  {(() => {
+                    const selectedSlot = availableSlots.find(s => s.id === selectedSlotId);
+                    if (!selectedSlot) return null;
+                    return (
+                      <p className="font-bold text-success">{formatDate(`${selectedSlot.date}T00:00:00`)} at {selectedSlot.startTime}</p>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4">
+                  <button 
+                    type="button" 
+                    onClick={() => setRescheduleStep(1)} 
+                    disabled={isRescheduling}
+                    className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+                  >
+                    Go Back
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleReschedule}
+                    disabled={isRescheduling}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isRescheduling ? (
+                      <>
+                        <svg className="animate-spin size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Confirming...
+                      </>
+                    ) : (
+                      "Confirm Reschedule"
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
