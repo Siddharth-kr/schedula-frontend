@@ -1,9 +1,9 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { processAssistantQuery, AssistantResponse, AssistantAction, ChatMessage } from "@/lib/assistant-engine";
-import { useAuthStore } from "@/store/authStore";
 import { rescheduleAppointment } from "@/lib/appointment-store";
 import { toast } from "react-toastify";
 import Link from "next/link";
@@ -13,7 +13,7 @@ export function GlobalAssistant() {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const { patient, doctor } = useAuthStore();
+  const { patient, doctor } = useAppSelector(state => state.auth);
   const isDoctorRoute = pathname === "/doctor" || pathname.startsWith("/doctor/");
 
   const role: "public" | "patient" | "doctor" = isDoctorRoute

@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -6,7 +7,6 @@ import Link from "next/link";
 
 import { getPrescriptionsForDoctor } from "@/lib/prescription-store";
 import type { Prescription } from "@/types/prescription";
-import { useAuthStore } from "@/store/authStore";
 import { format, parseISO } from "date-fns";
 
 export function DoctorPrescriptionDashboard() {
@@ -15,7 +15,7 @@ export function DoctorPrescriptionDashboard() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  const { doctor: session } = useAuthStore();
+  const { doctor: session } = useAppSelector(state => state.auth);
 
   const loadData = useCallback(() => {
     if (!session) {

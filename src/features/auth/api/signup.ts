@@ -1,6 +1,7 @@
+import { loginPatient } from "@/store/slices/authSlice";
+import { store } from "@/store";
 import type { User } from "@/types/user";
 
-import { useAuthStore } from "@/store/authStore";
 
 export async function signupWithEmail(name: string, email: string, password: string): Promise<User> {
   const response = await fetch("/api/auth/signup", {
@@ -15,7 +16,7 @@ export async function signupWithEmail(name: string, email: string, password: str
     throw new Error(body.error || "Failed to sign up");
   }
 
-  useAuthStore.getState().loginPatient(body.data);
+  store.dispatch(loginPatient(body.data));
 
   return body.data;
 }

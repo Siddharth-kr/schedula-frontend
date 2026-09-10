@@ -14,6 +14,7 @@ const fraunces = Fraunces({
 
 import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { StoreProvider } from "@/components/providers/StoreProvider";
 import { GlobalAssistant } from "@/components/assistant/GlobalAssistant";
 
 export const metadata: Metadata = {
@@ -32,10 +33,12 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans text-text-primary bg-background">
-        <ToastProvider />
-        <Navbar />
-        {children}
-        <GlobalAssistant />
+        <StoreProvider>
+          <ToastProvider />
+          <Navbar />
+          {children}
+          <GlobalAssistant />
+        </StoreProvider>
       </body>
     </html>
   );

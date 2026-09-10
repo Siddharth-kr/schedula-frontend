@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
@@ -10,8 +11,6 @@ import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 import { getSlotsForDoctor, markSlotBooked, freeSlot } from "@/lib/availability-store";
 import { rescheduleAppointment } from "@/lib/appointment-store";
-import { useAuthStore } from "@/store/authStore";
-import { useAppointmentStore } from "@/store/appointmentStore";
 import type { Appointment } from "@/types/appointment";
 import type { AvailabilitySlot, DoctorProfile } from "@/types/availability";
 import { toast } from "react-toastify";
@@ -52,8 +51,8 @@ interface Props {
 
 export function DashboardCalendar({ date, view, filters, onNavigate, onView, onSelectEmptySlot, onSelectAvailableSlot }: Props) {
   const router = useRouter();
-  const { doctor: session } = useAuthStore();
-  const allAppointments = useAppointmentStore(state => state.appointments);
+  const { doctor: session } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);

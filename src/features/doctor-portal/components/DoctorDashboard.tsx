@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -9,8 +10,6 @@ import type { Appointment } from "@/types/appointment";
 import { getUserNotifications } from "@/lib/notification-store";
 import type { AppNotification, NotificationType } from "@/lib/notification-store";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
-import { useAuthStore } from "@/store/authStore";
-import { useAppointmentStore } from "@/store/appointmentStore";
 
 export function DoctorDashboard() {
   const router = useRouter();
@@ -21,8 +20,8 @@ export function DoctorDashboard() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { doctor: session } = useAuthStore();
-  const allAppointments = useAppointmentStore(state => state.appointments);
+  const { doctor: session } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
 
   useEffect(() => {
     if (!session) {

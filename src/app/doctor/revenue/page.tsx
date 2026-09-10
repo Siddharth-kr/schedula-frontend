@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,7 +7,6 @@ import { getDoctorRevenue, type Payment } from "@/lib/payment-store";
 import type { DoctorProfile } from "@/types/availability";
 import { getAppointmentById } from "@/lib/appointment-store";
 
-import { useAuthStore } from "@/store/authStore";
 
 export default function DoctorRevenuePage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function DoctorRevenuePage() {
   const [filter, setFilter] = useState<"all" | "today" | "week" | "month">("month");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
-  const { doctor: session } = useAuthStore();
+  const { doctor: session } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     const loadRevenue = () => {

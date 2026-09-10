@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,6 @@ import type { UserProfile } from "@/types/user-profile";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { useAuthStore } from "@/store/authStore";
 
 export function UserProfileForm() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export function UserProfileForm() {
   const [newSurgYear, setNewSurgYear] = useState("");
   const [newSurgNotes, setNewSurgNotes] = useState("");
 
-  const { patient } = useAuthStore();
+  const { patient } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     const fetchData = () => {

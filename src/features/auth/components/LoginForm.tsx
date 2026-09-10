@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -7,7 +8,6 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { loginWithEmail } from "../api/login";
 import { toast } from "react-toastify";
-import { useAuthStore } from "@/store/authStore";
 
 export function LoginForm() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export function LoginForm() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const { patient } = useAuthStore();
+  const { patient } = useAppSelector(state => state.auth);
 
   // Redirect if already authenticated
   useEffect(() => {

@@ -1,10 +1,9 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthStore } from "@/store/authStore";
-import { useAppointmentStore } from "@/store/appointmentStore";
 import type { DoctorProfile } from "@/types/availability";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
@@ -59,8 +58,8 @@ export function DoctorAppointments() {
   const [calMonth, setCalMonth] = useState(now.getMonth());
   const [calYear, setCalYear] = useState(now.getFullYear());
 
-  const { doctor: session } = useAuthStore();
-  const allAppointments = useAppointmentStore(state => state.appointments);
+  const { doctor: session } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
 
   useEffect(() => {
     if (!session) {
