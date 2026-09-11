@@ -14,6 +14,10 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { patient, doctor } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setIsMounted(true), []);
 
   const isDoctorRoute = pathname === "/doctor" || pathname.startsWith("/doctor/");
   
@@ -29,6 +33,8 @@ export function Navbar() {
       setIsMobileMenuOpen(false);
     });
   }, [pathname]);
+
+  if (!isMounted) return null;
 
   // Hide navbar on auth screens if desired, but prompt says "provide simple link back to Schedula"
   // so we should probably show it, or a simplified version. For now, keep it on.
@@ -52,6 +58,7 @@ export function Navbar() {
     { href: "/doctor/dashboard", label: "Dashboard" },
     { href: "/doctor/appointments", label: "Appointments" },
     { href: "/doctor/profile", label: "Profile" },
+    { href: "/doctor/rating-analyzer", label: "Rating Analyzer" },
     { href: "/doctor/revenue", label: "Revenue" },
   ];
 

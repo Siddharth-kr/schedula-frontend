@@ -84,6 +84,11 @@ export function GlobalAssistant() {
     };
   }, [pathname]);
 
+  const [isMounted, setIsMounted] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setIsMounted(true), []);
+
+  if (!isMounted) return null;
   if (role === "public") return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
