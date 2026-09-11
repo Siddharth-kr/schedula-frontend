@@ -64,6 +64,7 @@ export function Navbar() {
 
   const patientLinks = [
     { href: "/", label: "Home" },
+    { href: "/find-specialist", label: "Find Specialist" },
     { href: "/doctors", label: "Find Doctors" },
     ...(role === "patient" ? [
       { href: "/appointments", label: "Appointments" },
