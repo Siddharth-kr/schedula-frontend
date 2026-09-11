@@ -180,6 +180,75 @@ export default function RatingAnalyzerPage() {
       .sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [filteredReviews, ratingFilter, searchQuery]);
 
+  // Milestones
+  const milestones = useMemo(() => {
+    return [
+      { label: "First review received", achieved: doctorReviews.length >= 1 },
+      { label: "10+ reviews", achieved: doctorReviews.length >= 10 },
+      { label: "50+ reviews", achieved: doctorReviews.length >= 50 },
+      { label: "100+ reviews", achieved: doctorReviews.length >= 100 },
+      { label: "Maintained 4.5+ average", achieved: parseFloat(overallRating) >= 4.5 && doctorReviews.length > 0 },
+      { label: "Maintained 4.8+ average", achieved: parseFloat(overallRating) >= 4.8 && doctorReviews.length > 0 },
+    ];
+  }, [doctorReviews.length, overallRating]);
+
+  // Export report
+  const handleExportReport = () => {
+    if (!doctor) return;
+    
+    const reportDate = new Date().toLocaleDateString();
+    let text = `=======================================\n`;
+    text += `  SCHEDULA - RATING PERFORMANCE REPORT \n`;
+    text += `=======================================\n\n`;
+    text += `Doctor: Dr. ${doctor.name}\n`;
+    text += `Specialty: ${doctor.specialty}\n`;
+    text += `Generated: ${reportDate}\n`;
+    text += `Selected Timeframe: ${dateRange}\n\n`;
+    
+    text += `--- SUMMARY METRICS ---\n`;
+    text += `Total Reviews: ${totalReviews}\n`;
+    text += `Average Rating: ${overallRating} / 5.0\n`;
+    text += `Positive Feedback (>= 4 stars): ${positivePercentage}%\n\n`;
+    
+    text += `--- RATING DISTRIBUTION ---\n`;
+    distribution.forEach(d => {
+      text += `${d.stars} Stars: ${d.count} reviews\n`;
+    });
+    text += `\n`;
+
+    text += `--- MILESTONES ACHIEVED ---\n`;
+    const achievedMilestones = milestones.filter(m => m.achieved);
+    if (achievedMilestones.length > 0) {
+      achievedMilestones.forEach(m => text += `[X] ${m.label}\n`);
+    } else {
+      text += `No milestones achieved yet.\n`;
+    }
+    text += `\n`;
+
+    text += `--- AREAS TO IMPROVE / RESPONSE RATE ---\n`;
+    text += `Structured rating categories and doctor responses are not currently supported by the Schedula feedback system.\n\n`;
+
+    text += `--- RECENT FEEDBACK (${displayedReviews.length} shown) ---\n`;
+    displayedReviews.slice(0, 10).forEach((r, idx) => {
+      text += `${idx + 1}. [${r.rating} Stars] - ${r.date.toLocaleDateString()}\n`;
+      text += `   "${r.text || "No written feedback"}"\n`;
+    });
+    if (displayedReviews.length > 10) {
+      text += `   ... and ${displayedReviews.length - 10} more.\n`;
+    }
+
+    // Download file
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rating_report_${doctor.name.replace(/\\s+/g, '_').toLowerCase()}_${new Date().getTime()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Early return after all hooks
   if (!isMounted || !doctor) return null;
   return (
@@ -194,9 +263,20 @@ export default function RatingAnalyzerPage() {
               Understand patient feedback and track your overall rating performance.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-text-secondary">Timeframe:</span>
-            <select
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <button 
+              onClick={handleExportReport}
+              className="px-4 py-2.5 bg-white border border-border text-text-primary rounded-xl text-sm font-medium hover:bg-background transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export Report
+            </button>
+            <div className="h-6 w-px bg-border hidden sm:block"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-text-secondary">Timeframe:</span>
+              <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as DateRangeOption)}
               className="border border-border rounded-lg px-4 py-2 bg-white text-sm font-medium text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm"
@@ -208,6 +288,7 @@ export default function RatingAnalyzerPage() {
               <option value="1y">Last 1 Year</option>
               <option value="all">All Time</option>
             </select>
+            </div>
           </div>
         </header>
 
@@ -380,6 +461,74 @@ export default function RatingAnalyzerPage() {
                 </div>
               </div>
 
+            </div>
+
+            {/* Performance & Reporting Section */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold font-serif text-text-primary mb-6">Performance & Reporting</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Milestones Card */}
+                <div className="bg-white rounded-2xl border border-border p-6 shadow-sm lg:col-span-1 flex flex-col">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                      <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                      Milestones
+                    </h3>
+                    <p className="text-sm text-text-secondary">Your feedback achievements</p>
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center space-y-3">
+                    {milestones.map((m, idx) => (
+                      <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border ${m.achieved ? "bg-green-50/50 border-green-100" : "bg-background/50 border-transparent opacity-60"}`}>
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${m.achieved ? "bg-green-100 text-green-600" : "bg-gray-200 text-gray-400"}`}>
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className={`text-sm font-medium ${m.achieved ? "text-green-800" : "text-gray-500"}`}>{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Areas to Improve & Response Rate */}
+                <div className="bg-white rounded-2xl border border-border p-6 shadow-sm lg:col-span-2 flex flex-col">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-text-primary">Actionable Insights</h3>
+                    <p className="text-sm text-text-secondary">Areas to improve and response tracking</p>
+                  </div>
+                  
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-6 bg-background rounded-xl border border-border flex flex-col justify-center items-center text-center">
+                      <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm text-text-secondary">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-sm font-bold text-text-primary mb-1">Areas to Improve</h4>
+                      <p className="text-xs text-text-secondary max-w-[200px]">
+                        Structured rating categories are not currently available in the feedback system.
+                      </p>
+                    </div>
+
+                    <div className="p-6 bg-background rounded-xl border border-border flex flex-col justify-center items-center text-center">
+                      <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm text-text-secondary">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-sm font-bold text-text-primary mb-1">Response Rate</h4>
+                      <p className="text-xs text-text-secondary max-w-[200px]">
+                        Review responses are not currently supported by the feedback system.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
 
             {/* Review Intelligence Section */}
