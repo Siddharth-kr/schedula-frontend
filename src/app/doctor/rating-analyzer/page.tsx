@@ -22,9 +22,11 @@ export default function RatingAnalyzerPage() {
 
   const [dateRange, setDateRange] = useState<DateRangeOption>("all");
   const [isMounted, setIsMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [ratingFilter, setRatingFilter] = useState<"all" | 5 | 4 | 3 | 2 | 1>("all");
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -40,9 +42,11 @@ export default function RatingAnalyzerPage() {
     return allAppointments
       .filter((a) => a.doctorId === doctor.id && a.review)
       .map((a) => ({
+        id: a.id,
         rating: a.review!.rating,
         text: a.review!.text || "",
         date: new Date(a.startsAt),
+        patient: a.patient,
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [allAppointments, doctor]);
@@ -163,9 +167,21 @@ export default function RatingAnalyzerPage() {
     }));
   }, [filteredReviews]);
 
+  const displayedReviews = useMemo(() => {
+    return filteredReviews
+      .filter((r) => {
+        if (ratingFilter !== "all" && r.rating !== ratingFilter) return false;
+        if (searchQuery.trim() !== "") {
+          const q = searchQuery.toLowerCase();
+          if (!r.text.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [filteredReviews, ratingFilter, searchQuery]);
+
   // Early return after all hooks
   if (!isMounted || !doctor) return null;
-
   return (
     <div className="w-full bg-background min-h-screen pb-12">
       <div className="w-full px-4 sm:px-8 lg:px-12 py-8">
@@ -364,6 +380,111 @@ export default function RatingAnalyzerPage() {
                 </div>
               </div>
 
+            </div>
+
+            {/* Review Intelligence Section */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold font-serif text-text-primary mb-6">Review Intelligence</h2>
+              
+              <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+                {/* Controls */}
+                <div className="p-4 md:p-6 border-b border-border flex flex-col md:flex-row md:items-center gap-4 bg-background/30">
+                  <div className="flex-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search reviews by keyword..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="block w-full pl-10 pr-10 py-2.5 border border-border rounded-xl text-sm focus:ring-primary focus:border-primary bg-white outline-none"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery("")}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-primary"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-sm text-text-secondary font-medium">Rating:</span>
+                    <select
+                      value={ratingFilter}
+                      onChange={(e) => setRatingFilter(e.target.value === "all" ? "all" : Number(e.target.value) as 5 | 4 | 3 | 2 | 1)}
+                      className="block w-full md:w-auto py-2.5 pl-3 pr-10 border border-border rounded-xl text-sm focus:ring-primary focus:border-primary bg-white font-medium outline-none"
+                    >
+                      <option value="all">All Ratings</option>
+                      <option value="5">5 Stars</option>
+                      <option value="4">4 Stars</option>
+                      <option value="3">3 Stars</option>
+                      <option value="2">2 Stars</option>
+                      <option value="1">1 Star</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Review List */}
+                <div className="divide-y divide-border">
+                  {displayedReviews.length > 0 ? (
+                    displayedReviews.map((review, i) => (
+                      <div key={review.id || i} className="p-4 md:p-6 hover:bg-background/30 transition-colors">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="flex text-accent">
+                                {[...Array(5)].map((_, idx) => (
+                                  <svg key={idx} className={`h-4 w-4 ${idx < review.rating ? "text-accent" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                              </div>
+                              <span className="text-sm font-medium text-text-secondary">
+                                {review.date.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                            </div>
+                            <p className="text-text-primary text-sm md:text-base leading-relaxed mb-4">
+                              {review.text || <span className="italic text-text-secondary">No written feedback provided.</span>}
+                            </p>
+                          </div>
+                          <div className="shrink-0 flex items-center gap-3 md:w-48 p-3 bg-background rounded-xl border border-border">
+                            <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                              {review.patient?.initials || "?"}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-text-primary">Verified Patient</p>
+                              {review.patient?.age && <p className="text-xs text-text-secondary">{review.patient.age} yrs</p>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center flex flex-col items-center justify-center">
+                      <svg className="h-12 w-12 text-text-secondary/50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <h3 className="text-lg font-bold text-text-primary mb-1">No reviews found</h3>
+                      <p className="text-text-secondary text-sm max-w-md mx-auto">
+                        We couldn&apos;t find any reviews matching your current filters and search query. Try adjusting your criteria.
+                      </p>
+                      <button 
+                        onClick={() => { setSearchQuery(""); setRatingFilter("all"); }}
+                        className="mt-6 px-4 py-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+                      >
+                        Clear all filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </>
         )}
