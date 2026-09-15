@@ -9,6 +9,8 @@ import type { Appointment } from "@/types/appointment";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 import { toast } from "react-toastify";
 
+import { DemoPayment } from "@/components/payment/DemoPayment";
+
 export default function ConfirmationPage() {
   const params = useParams();
   const appointmentId = params.appointmentId as string;
@@ -18,6 +20,10 @@ export default function ConfirmationPage() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
+
+  const refreshAppointment = () => {
+    getAppointment(appointmentId).then(setAppointment);
+  };
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -56,7 +62,11 @@ export default function ConfirmationPage() {
           </div>
         )}
 
-        {status === "ready" && appointment && (
+        {status === "ready" && appointment && appointment.paymentStatus === "pending" && (
+          <DemoPayment appointment={appointment} onComplete={refreshAppointment} />
+        )}
+
+        {status === "ready" && appointment && appointment.paymentStatus !== "pending" && (
           <div className="overflow-hidden rounded-3xl border border-border bg-white text-center shadow-xl shadow-[var(--color-primary)]/5 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-success/10 px-6 py-12 sm:px-10">
               <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-success text-white shadow-md ring-8 ring-[var(--success)]/20">
@@ -102,6 +112,33 @@ export default function ConfirmationPage() {
                 <div className="flex justify-between border-b border-border pb-5">
                   <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Appointment ID</dt>
                   <dd className="font-mono text-sm text-text-secondary text-right">{appointment.id}</dd>
+                </div>
+                {appointment.paymentId && (
+                  <div className="flex justify-between border-b border-border pb-5">
+                    <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Transaction ID</dt>
+                    <dd className="font-mono text-sm text-text-secondary text-right">{appointment.paymentId}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pb-5 border-b border-border">
+                  <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Payment</dt>
+                  <dd>
+                    {appointment.paymentStatus === 'paid' ? (
+                      <span className="inline-flex items-center gap-1.5 font-bold text-success text-sm">
+                        <span className="size-2 rounded-full bg-success"></span>
+                        Paid (₹{appointment.consultationFee})
+                      </span>
+                    ) : appointment.paymentStatus === 'failed' ? (
+                      <span className="inline-flex items-center gap-1.5 font-bold text-error text-sm">
+                        <span className="size-2 rounded-full bg-error"></span>
+                        Failed
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 font-bold text-amber-500 text-sm">
+                        <span className="size-2 rounded-full bg-amber-500"></span>
+                        Pending
+                      </span>
+                    )}
+                  </dd>
                 </div>
                 <div className="flex justify-between items-center">
                   <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Status</dt>

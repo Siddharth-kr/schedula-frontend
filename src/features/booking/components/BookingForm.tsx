@@ -205,7 +205,9 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
           additionalReportInfo: visitInfo.additionalReportInfo
         },
         appointmentType: appointmentInfo.type,
-        preferredCommunication: appointmentInfo.preferredCommunication
+        preferredCommunication: appointmentInfo.preferredCommunication,
+        consultationFee: doctor.consultationFee,
+        paymentStatus: "pending" as const
       };
 
       const apt = await createAppointment(payload);

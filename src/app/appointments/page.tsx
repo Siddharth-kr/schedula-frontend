@@ -405,9 +405,26 @@ export default function PatientAppointmentsPage() {
                             </Link>
                           )}
 
-                          <Link href={`/confirmation/${apt.id}`} className="mt-2 text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
-                            View Details
-                          </Link>
+                          <div className="flex flex-col items-end mt-2">
+                            {apt.paymentStatus === 'paid' && (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-success text-[11px] uppercase tracking-wide mb-1">
+                                <span className="size-1.5 rounded-full bg-success"></span> Paid
+                              </span>
+                            )}
+                            {apt.paymentStatus === 'failed' && (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-error text-[11px] uppercase tracking-wide mb-1">
+                                <span className="size-1.5 rounded-full bg-error"></span> Payment Failed
+                              </span>
+                            )}
+                            {apt.paymentStatus === 'pending' && (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-amber-500 text-[11px] uppercase tracking-wide mb-1">
+                                <span className="size-1.5 rounded-full bg-amber-500"></span> Payment Pending
+                              </span>
+                            )}
+                            <Link href={`/confirmation/${apt.id}`} className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
+                              View Details
+                            </Link>
+                          </div>
 
                           {isCancellable(apt) && (
                             <div className="flex items-center gap-3 mt-2">
