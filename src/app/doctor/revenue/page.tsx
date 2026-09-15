@@ -3,6 +3,7 @@ import { useAppSelector } from "@/store/hooks";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getDoctorRevenue, type Payment } from "@/lib/payment-store";
 import type { DoctorProfile } from "@/types/availability";
 import { getAppointmentById } from "@/lib/appointment-store";
@@ -23,9 +24,11 @@ export default function DoctorRevenuePage() {
   });
   
   const [filter, setFilter] = useState<"all" | "today" | "week" | "month">("month");
+  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "failed" | "cancelled" | "refunded">("all");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   const { doctor: session } = useAppSelector(state => state.auth);
+  const allAppointments = useAppSelector(state => state.appointments.appointments);
 
   useEffect(() => {
     const loadRevenue = () => {
@@ -61,6 +64,7 @@ export default function DoctorRevenuePage() {
   const thisMonthStr = todayStr.substring(0, 7);
 
   const filteredPayments = revenueStats.payments.filter(p => {
+    if (statusFilter !== "all" && p.status !== statusFilter) return false;
     if (filter === "all") return true;
     if (filter === "today") return p.transactionDate.startsWith(todayStr);
     if (filter === "week") return p.transactionDate >= weekStr;
@@ -105,9 +109,9 @@ export default function DoctorRevenuePage() {
         {/* METRICS CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Today's Earnings", value: `$${revenueStats.todaysEarnings}`, icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "This Month", value: `$${revenueStats.monthlyEarnings}`, icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", color: "text-primary", bg: "bg-primary/10" },
-            { label: "Pending Settlements", value: `$${revenueStats.pendingSettlements}`, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-amber-600", bg: "bg-amber-50" },
+            { label: "Today's Earnings", value: `₹${revenueStats.todaysEarnings}`, icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-emerald-600", bg: "bg-emerald-50" },
+            { label: "This Month", value: `₹${revenueStats.monthlyEarnings}`, icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", color: "text-primary", bg: "bg-primary/10" },
+            { label: "Pending Settlements", value: `₹${revenueStats.pendingSettlements}`, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-amber-600", bg: "bg-amber-50" },
             { label: "Total Paid Consultations", value: revenueStats.totalCompleted, icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-violet-600", bg: "bg-violet-50" },
           ].map((m, i) => (
             <div key={i} className="bg-white rounded-xl border border-border p-5 shadow-sm">
@@ -135,7 +139,7 @@ export default function DoctorRevenuePage() {
                   return (
                     <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
                       <span className={`text-[10px] font-bold transition-opacity ${isToday ? "text-emerald-600 opacity-100" : "text-text-primary opacity-0 group-hover:opacity-100"}`}>
-                        ${d.amount}
+                        ₹{d.amount}
                       </span>
                       <div className="w-full max-w-[32px] bg-emerald-50 rounded-t-md relative flex flex-col justify-end overflow-hidden" style={{ height: "100%" }}>
                         <div 
@@ -159,26 +163,26 @@ export default function DoctorRevenuePage() {
                       <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-text-primary">Settled</p>
-                      <p className="text-[11px] text-text-secondary font-medium">Transferred to bank</p>
+                      <p className="text-sm font-bold text-text-primary">Settled to Bank</p>
+                      <p className="text-xs text-text-secondary mt-0.5">Funds successfully transferred</p>
                     </div>
                   </div>
-                  <span className="font-bold text-text-primary tabular-nums">
-                    ${revenueStats.payments.filter(p => p.settlementStatus === "settled").reduce((s,p)=>s+p.amount, 0)}
+                  <span className="font-bold text-text-primary">
+                    ₹{revenueStats.payments.filter(p => p.settlementStatus === "settled" && p.status === "paid").reduce((s, p) => s + p.amount, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                    <div className="size-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
                       <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-text-primary">Pending</p>
-                      <p className="text-[11px] text-text-secondary font-medium">Processing settlement</p>
+                      <p className="text-sm font-bold text-text-primary">Processing</p>
+                      <p className="text-xs text-text-secondary mt-0.5">Arriving in 1-2 business days</p>
                     </div>
                   </div>
-                  <span className="font-bold text-text-primary tabular-nums">
-                    ${revenueStats.pendingSettlements}
+                  <span className="font-bold text-text-primary">
+                    ₹{revenueStats.pendingSettlements}
                   </span>
                 </div>
               </div>
@@ -186,45 +190,64 @@ export default function DoctorRevenuePage() {
           </div>
           
           {/* RIGHT COL: Transactions */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl border border-border shadow-sm flex flex-col h-full">
-              <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden flex flex-col h-full">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border gap-4">
                 <h2 className="text-base font-bold text-text-primary">Transaction History</h2>
-                <div className="flex bg-stone-100 p-1 rounded-lg">
-                  {(["all", "today", "week", "month"] as const).map(f => (
-                    <button
-                      key={f}
-                      onClick={() => setFilter(f)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize transition-all ${filter === f ? 'bg-white shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
-                    >
-                      {f === "all" ? "All Time" : f}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-2">
+                  <select 
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as "all" | "paid" | "pending" | "failed" | "cancelled" | "refunded")}
+                    className="text-sm border border-border rounded-lg px-3 py-2 bg-stone-50 text-text-primary font-medium focus:ring-2 focus:ring-primary/20 outline-none"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                    <option value="refunded">Refunded</option>
+                  </select>
+                  <select 
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value as "all" | "today" | "week" | "month")}
+                    className="text-sm border border-border rounded-lg px-3 py-2 bg-stone-50 text-text-primary font-medium focus:ring-2 focus:ring-primary/20 outline-none"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">Past 7 Days</option>
+                    <option value="month">This Month</option>
+                  </select>
                 </div>
               </div>
               
-              <div className="flex-1 overflow-x-auto min-h-[400px]">
+              <div className="overflow-x-auto">
                 {filteredPayments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full py-16 text-center">
-                    <svg className="size-12 text-stone-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                    <p className="text-sm font-medium text-text-secondary">No transactions found for this period.</p>
+                  <div className="p-12 text-center flex flex-col items-center justify-center">
+                    <div className="size-12 rounded-full bg-stone-100 flex items-center justify-center mb-3">
+                      <svg className="size-6 text-text-secondary/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    </div>
+                    <p className="text-base font-bold text-text-primary">No transactions found</p>
+                    <p className="text-sm text-text-secondary mt-1">Try adjusting your filters to see more results.</p>
                   </div>
                 ) : (
-                  <table className="w-full text-left border-collapse min-w-[600px]">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                      <tr className="border-b border-border bg-stone-50/50">
-                        <th className="px-5 py-3 text-xs font-bold text-text-secondary uppercase tracking-wider">Patient / ID</th>
-                        <th className="px-5 py-3 text-xs font-bold text-text-secondary uppercase tracking-wider">Date</th>
-                        <th className="px-5 py-3 text-xs font-bold text-text-secondary uppercase tracking-wider">Amount</th>
-                        <th className="px-5 py-3 text-xs font-bold text-text-secondary uppercase tracking-wider">Settlement</th>
-                        <th className="px-5 py-3 text-xs font-bold text-text-secondary uppercase tracking-wider text-right">Action</th>
+                      <tr className="bg-stone-50/50 text-[11px] uppercase tracking-wider font-bold text-text-secondary">
+                        <th className="px-5 py-3 font-semibold">Patient & ID</th>
+                        <th className="px-5 py-3 font-semibold">Date & Time</th>
+                        <th className="px-5 py-3 font-semibold">Amount</th>
+                        <th className="px-5 py-3 font-semibold">Payment Status</th>
+                        <th className="px-5 py-3 font-semibold">Settlement</th>
+                        <th className="px-5 py-3 font-semibold text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {filteredPayments.map(p => (
+                      {filteredPayments.map(p => {
+                        const apt = allAppointments.find(a => a.id === p.appointmentId);
+                        const patientName = apt ? apt.patient.name : p.patientId;
+                        return (
                         <tr key={p.paymentId} className="hover:bg-stone-50/50 transition-colors">
                           <td className="px-5 py-4">
-                            <p className="text-sm font-bold text-text-primary">{p.patientId}</p>
+                            <p className="text-sm font-bold text-text-primary">{patientName}</p>
                             <p className="text-[11px] font-medium text-text-secondary mt-0.5 font-mono">{p.paymentId}</p>
                           </td>
                           <td className="px-5 py-4">
@@ -232,7 +255,17 @@ export default function DoctorRevenuePage() {
                             <p className="text-[11px] text-text-secondary">{new Date(p.transactionDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                           </td>
                           <td className="px-5 py-4">
-                            <span className="text-sm font-bold text-text-primary">${p.amount}</span>
+                            <span className="text-sm font-bold text-text-primary">₹{p.amount}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              p.status === 'paid' ? 'bg-success/10 text-success' : 
+                              p.status === 'failed' ? 'bg-error/10 text-error' : 
+                              p.status === 'refunded' ? 'bg-slate-100 text-slate-600' : 
+                              'bg-amber-100 text-amber-700'
+                            }`}>
+                              {p.status}
+                            </span>
                           </td>
                           <td className="px-5 py-4">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
@@ -250,7 +283,7 @@ export default function DoctorRevenuePage() {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                 )}
@@ -264,11 +297,12 @@ export default function DoctorRevenuePage() {
       {/* DETAILS MODAL */}
       {selectedPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-border">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-border animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5 border-b border-border flex items-center justify-between bg-stone-50">
               <h3 className="font-bold text-text-primary flex items-center gap-2">
                 <svg className="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                 Payment Details
+                <span className="ml-2 inline-flex items-center gap-1 rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Demo</span>
               </h3>
               <button onClick={() => setSelectedPayment(null)} className="text-text-secondary hover:text-text-primary p-1">
                 <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -276,8 +310,8 @@ export default function DoctorRevenuePage() {
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between pb-4 border-b border-border">
-                <span className="text-sm font-medium text-text-secondary">Amount Paid</span>
-                <span className="text-2xl font-bold text-emerald-600">${selectedPayment.amount}</span>
+                <span className="text-sm font-medium text-text-secondary">Amount {selectedPayment.status === "paid" ? "Paid" : ""}</span>
+                <span className="text-2xl font-bold text-text-primary">₹{selectedPayment.amount}</span>
               </div>
               
               <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
@@ -286,16 +320,38 @@ export default function DoctorRevenuePage() {
                   <span className="text-sm font-medium text-text-primary font-mono">{selectedPayment.paymentId}</span>
                 </div>
                 <div>
+                  <span className="block text-[11px] uppercase tracking-wider font-bold text-text-secondary mb-1">Payment Status</span>
+                  <span className={`inline-flex items-center gap-1.5 font-bold text-sm ${
+                    selectedPayment.status === 'paid' ? 'text-success' : 
+                    selectedPayment.status === 'failed' ? 'text-error' : 
+                    selectedPayment.status === 'refunded' ? 'text-slate-600' : 
+                    'text-amber-500'
+                  }`}>
+                    <span className={`size-2 rounded-full ${
+                      selectedPayment.status === 'paid' ? 'bg-success' : 
+                      selectedPayment.status === 'failed' ? 'bg-error' : 
+                      selectedPayment.status === 'refunded' ? 'bg-slate-400' : 
+                      'bg-amber-500'
+                    }`}></span>
+                    {selectedPayment.status.charAt(0).toUpperCase() + selectedPayment.status.slice(1)}
+                  </span>
+                </div>
+                <div>
                   <span className="block text-[11px] uppercase tracking-wider font-bold text-text-secondary mb-1">Date & Time</span>
                   <span className="text-sm font-medium text-text-primary">{new Date(selectedPayment.transactionDate).toLocaleString()}</span>
                 </div>
                 <div>
                   <span className="block text-[11px] uppercase tracking-wider font-bold text-text-secondary mb-1">Patient Name</span>
-                  <span className="text-sm font-medium text-text-primary">{selectedPayment.patientId}</span>
+                  <span className="text-sm font-medium text-text-primary">
+                    {(() => {
+                      const apt = allAppointments.find(a => a.id === selectedPayment.appointmentId);
+                      return apt ? apt.patient.name : selectedPayment.patientId;
+                    })()}
+                  </span>
                 </div>
                 <div>
                   <span className="block text-[11px] uppercase tracking-wider font-bold text-text-secondary mb-1">Payment Method</span>
-                  <span className="text-sm font-medium text-text-primary">{selectedPayment.paymentMethod}</span>
+                  <span className="text-sm font-medium text-text-primary">{selectedPayment.paymentMethod || "Demo Payment"}</span>
                 </div>
               </div>
               
@@ -325,11 +381,20 @@ export default function DoctorRevenuePage() {
               {(() => {
                 const apt = getAppointmentById(selectedPayment.appointmentId);
                 return apt ? (
-                  <div className="pt-4 border-t border-border flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wider font-bold text-text-secondary mb-1">Appointment Type</p>
-                      <p className="text-sm font-bold text-primary">{apt.appointmentType || "General Consultation"}</p>
+                  <div className="pt-4 border-t border-border flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider font-bold text-text-secondary mb-1">Appointment Details</p>
+                        <p className="text-sm font-bold text-primary">{apt.appointmentType || "General Consultation"}</p>
+                      </div>
+                      <Link 
+                        href={`/doctor/appointments/${apt.id}`}
+                        className="text-xs font-bold text-primary hover:underline"
+                      >
+                        View Appointment
+                      </Link>
                     </div>
+                    <p className="text-xs text-text-secondary">Appointment ID: <span className="font-mono">{apt.id}</span></p>
                   </div>
                 ) : null;
               })()}

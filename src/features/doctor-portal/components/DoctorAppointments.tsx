@@ -402,8 +402,30 @@ export function DoctorAppointments() {
                       </div>
 
                       {/* Status + Action */}
-                      <div className="flex items-center justify-between lg:justify-end gap-4 pl-12 lg:pl-0 lg:w-[200px] shrink-0">
-                        <AppointmentStatusBadge status={apt.status} />
+                      <div className="flex items-center justify-between lg:justify-end gap-3 pl-12 lg:pl-0 lg:w-[260px] shrink-0">
+                        <div className="flex flex-col items-end gap-1.5">
+                          <AppointmentStatusBadge status={apt.status} />
+                          {apt.paymentStatus === "paid" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-success text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-success"></span> Paid
+                            </span>
+                          )}
+                          {apt.paymentStatus === "pending" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-amber-500 text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-amber-500"></span> Pending
+                            </span>
+                          )}
+                          {apt.paymentStatus === "failed" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-error text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-error"></span> Failed
+                            </span>
+                          )}
+                          {apt.paymentStatus === "refunded" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-slate-500 text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-slate-500"></span> Refunded
+                            </span>
+                          )}
+                        </div>
                         <Link
                           href={`/doctor/appointments/${apt.id}`}
                           className="text-[13px] font-semibold text-primary hover:text-primary-dark transition-colors whitespace-nowrap"

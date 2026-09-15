@@ -72,21 +72,22 @@ export function processPayment(payment: Omit<Payment, "paymentId" | "transaction
 }
 
 export function getDoctorRevenue(doctorId: string) {
-  const payments = getPayments().filter(p => p.doctorId === doctorId && p.status === "paid");
+  const allPayments = getPayments().filter(p => p.doctorId === doctorId);
+  const paidPayments = allPayments.filter(p => p.status === "paid");
   
-  const totalCompleted = payments.length;
+  const totalCompleted = paidPayments.length;
   const todayStr = new Date().toISOString().split("T")[0];
   const thisMonthStr = todayStr.substring(0, 7);
   
-  const todaysEarnings = payments
+  const todaysEarnings = paidPayments
     .filter(p => p.transactionDate.startsWith(todayStr))
     .reduce((sum, p) => sum + p.amount, 0);
     
-  const monthlyEarnings = payments
+  const monthlyEarnings = paidPayments
     .filter(p => p.transactionDate.startsWith(thisMonthStr))
     .reduce((sum, p) => sum + p.amount, 0);
     
-  const pendingSettlements = payments
+  const pendingSettlements = paidPayments
     .filter(p => p.settlementStatus === "pending")
     .reduce((sum, p) => sum + p.amount, 0);
     
@@ -95,6 +96,6 @@ export function getDoctorRevenue(doctorId: string) {
     todaysEarnings,
     monthlyEarnings,
     pendingSettlements,
-    payments
+    payments: allPayments
   };
 }
