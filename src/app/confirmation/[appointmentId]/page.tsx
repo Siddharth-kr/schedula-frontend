@@ -106,7 +106,13 @@ export default function ConfirmationPage() {
                   </dd>
                 </div>
                 <div className="flex justify-between border-b border-border pb-5">
-                  <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Type</dt>
+                  <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Consultation Type</dt>
+                  <dd className="font-bold text-text-primary text-right text-base">
+                    {appointment.consultationType === "online" ? "Online Consultation" : "In-person Consultation"}
+                  </dd>
+                </div>
+                <div className="flex justify-between border-b border-border pb-5">
+                  <dt className="text-text-secondary font-semibold uppercase tracking-wider text-xs">Category</dt>
                   <dd className="font-bold text-text-primary text-right text-base">{appointment.appointmentType || "Consultation"}</dd>
                 </div>
                 <div className="flex justify-between border-b border-border pb-5">

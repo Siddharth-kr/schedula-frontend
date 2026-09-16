@@ -1,3 +1,5 @@
+export type ConsultationType = "online" | "in-person";
+
 export type AppointmentStatus = "pending" | "confirmed" | "upcoming" | "completed" | "cancelled" | "missed";
 
 export type Prescription = {
@@ -50,4 +52,5 @@ export type Appointment = {
   consultationFee?: number;
   paymentStatus?: "pending" | "paid" | "failed" | "refunded";
   paymentId?: string;
+  consultationType?: ConsultationType;
 };

@@ -114,6 +114,12 @@ export function DoctorAppointmentDetails() {
           
           <dl className="space-y-4">
             <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Consultation Type</dt>
+              <dd className="text-base font-medium text-text-primary mt-1">
+                {appointment.consultationType === "online" ? "Online Consultation" : "In-person Consultation"}
+              </dd>
+            </div>
+            <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Reason for Visit</dt>
               <dd className="text-base font-medium text-text-primary mt-1">{appointment.reason || "General Consultation"}</dd>
             </div>
