@@ -43,7 +43,7 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
   });
 
   const [appointmentInfo, setAppointmentInfo] = useState({
-    date: "", timeSlotId: "", type: "",
+    date: "", timeSlotId: "", type: "", consultationType: "in-person" as "online" | "in-person",
     additionalInfo: "",
     preferredCommunication: "Email",
     reminderAppointment: true, reminderConfirmation: true, reminderRescheduling: true
@@ -205,7 +205,10 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
           additionalReportInfo: visitInfo.additionalReportInfo
         },
         appointmentType: appointmentInfo.type,
-        preferredCommunication: appointmentInfo.preferredCommunication
+        preferredCommunication: appointmentInfo.preferredCommunication,
+        consultationFee: doctor.consultationFee,
+        paymentStatus: "pending" as const,
+        consultationType: appointmentInfo.consultationType
       };
 
       const apt = await createAppointment(payload);
@@ -618,11 +621,39 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
               
               <div className="space-y-10">
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-5">Consultation Type</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-5">Consultation Mode</h4>
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-text-secondary">Appointment Type *</label>
+                    <label className="text-sm font-semibold text-text-secondary">Consultation Type *</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      <label 
+                        className={`flex flex-col gap-1 cursor-pointer border px-5 py-4 rounded-2xl transition-all ${appointmentInfo.consultationType === "online" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background border-border hover:border-text-secondary/30"}`}
+                        onClick={() => setAppointmentInfo({...appointmentInfo, consultationType: "online"})}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="consultationType" value="online" className="size-4 text-primary focus:ring-primary" checked={appointmentInfo.consultationType === "online"} readOnly />
+                          <span className="text-base font-bold text-text-primary">Online Consultation</span>
+                        </div>
+                        <span className="text-sm text-text-secondary ml-7">Consult with your doctor remotely.</span>
+                      </label>
+                      <label 
+                        className={`flex flex-col gap-1 cursor-pointer border px-5 py-4 rounded-2xl transition-all ${appointmentInfo.consultationType === "in-person" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background border-border hover:border-text-secondary/30"}`}
+                        onClick={() => setAppointmentInfo({...appointmentInfo, consultationType: "in-person"})}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="consultationType" value="in-person" className="size-4 text-primary focus:ring-primary" checked={appointmentInfo.consultationType === "in-person"} readOnly />
+                          <span className="text-base font-bold text-text-primary">In-person Consultation</span>
+                        </div>
+                        <span className="text-sm text-text-secondary ml-7">Visit the doctor&apos;s clinic.</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-text-secondary">Appointment Category *</label>
                     <div className="flex flex-wrap gap-4 mt-2">
-                      {["In-Person Consultation", "Video Consultation"].map(opt => (
+                      {["New Patient", "Follow-up", "Routine Checkup"].map(opt => (
                         <label key={opt} className="flex items-center gap-3 cursor-pointer bg-background border border-border px-6 py-4 rounded-2xl hover:border-primary transition-colors">
                           <input type="radio" name="appttype" value={opt} className="size-4 text-primary focus:ring-primary" checked={appointmentInfo.type === opt} onChange={e => setAppointmentInfo({...appointmentInfo, type: e.target.value})} />
                           <span className="text-sm font-bold text-text-primary">{opt}</span>
@@ -899,7 +930,11 @@ export function BookingForm({ doctor }: { doctor: Doctor }) {
                            <p className="text-sm font-bold text-text-primary">{selectedSlot?.startTime}</p>
                          </div>
                          <div>
-                           <p className="text-xs text-text-secondary mb-1">Type</p>
+                           <p className="text-xs text-text-secondary mb-1">Mode</p>
+                           <p className="text-sm font-bold text-text-primary">{appointmentInfo.consultationType === "online" ? "Online Consultation" : "In-person Consultation"}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-text-secondary mb-1">Category</p>
                            <p className="text-sm font-bold text-text-primary">{appointmentInfo.type}</p>
                          </div>
                        </div>

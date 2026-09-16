@@ -15,6 +15,9 @@ type CreateAppointmentPayload = {
   appointmentType?: string;
   preferredCommunication?: string;
   extraNotes?: string;
+  consultationFee?: number;
+  paymentStatus?: "pending" | "paid" | "failed" | "refunded";
+  consultationType?: "online" | "in-person";
 };
 
 export async function createAppointment(payload: CreateAppointmentPayload): Promise<Appointment> {

@@ -343,8 +343,13 @@ export default function PatientAppointmentsPage() {
                             {apt.clinician}
                           </h3>
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
-                            {apt.appointmentType || "In-person Consultation"}
+                            {apt.consultationType === "online" ? "Online Consultation" : "In-person Consultation"}
                           </span>
+                          {apt.appointmentType && !["In-Person Consultation", "Video Consultation"].includes(apt.appointmentType) && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-stone-100 text-text-secondary border border-border">
+                              {apt.appointmentType}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm font-medium text-text-secondary mb-3">{apt.specialty}</p>
                         
@@ -388,7 +393,7 @@ export default function PatientAppointmentsPage() {
                           {apt.status === "cancelled" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-error/10 text-error">Cancelled</span>}
                           
                           {/* TELEMEDICINE ACTIONS */}
-                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.appointmentType === "Video Consultation") && (
+                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.consultationType === "online") && (
                             <Link href={`/appointments/${apt.id}/video`}>
                               <button className="flex items-center gap-1.5 mt-2 text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -396,7 +401,7 @@ export default function PatientAppointmentsPage() {
                               </button>
                             </Link>
                           )}
-                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.appointmentType === "Secure Chat" || apt.appointmentType === "Video Consultation") && (
+                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.appointmentType === "Secure Chat" || apt.consultationType === "online") && (
                             <Link href={`/appointments/${apt.id}/chat`}>
                               <button className="flex items-center gap-1.5 mt-1 text-xs font-bold border border-border text-text-primary px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary transition-colors bg-white">
                                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
@@ -405,9 +410,26 @@ export default function PatientAppointmentsPage() {
                             </Link>
                           )}
 
-                          <Link href={`/confirmation/${apt.id}`} className="mt-2 text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
-                            View Details
-                          </Link>
+                          <div className="flex flex-col items-end mt-2">
+                            {apt.paymentStatus === 'paid' && (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-success text-[11px] uppercase tracking-wide mb-1">
+                                <span className="size-1.5 rounded-full bg-success"></span> Paid
+                              </span>
+                            )}
+                            {apt.paymentStatus === 'failed' && (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-error text-[11px] uppercase tracking-wide mb-1">
+                                <span className="size-1.5 rounded-full bg-error"></span> Payment Failed
+                              </span>
+                            )}
+                            {apt.paymentStatus === 'pending' && (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-amber-500 text-[11px] uppercase tracking-wide mb-1">
+                                <span className="size-1.5 rounded-full bg-amber-500"></span> Payment Pending
+                              </span>
+                            )}
+                            <Link href={`/confirmation/${apt.id}`} className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-all">
+                              View Details
+                            </Link>
+                          </div>
 
                           {isCancellable(apt) && (
                             <div className="flex items-center gap-3 mt-2">

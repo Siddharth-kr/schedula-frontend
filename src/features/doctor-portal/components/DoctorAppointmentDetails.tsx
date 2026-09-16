@@ -114,6 +114,12 @@ export function DoctorAppointmentDetails() {
           
           <dl className="space-y-4">
             <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Consultation Type</dt>
+              <dd className="text-base font-medium text-text-primary mt-1">
+                {appointment.consultationType === "online" ? "Online Consultation" : "In-person Consultation"}
+              </dd>
+            </div>
+            <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Reason for Visit</dt>
               <dd className="text-base font-medium text-text-primary mt-1">{appointment.reason || "General Consultation"}</dd>
             </div>
@@ -175,6 +181,49 @@ export function DoctorAppointmentDetails() {
                   )}
                 </dl>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Payment Details */}
+        {appointment.paymentId && (
+          <div className="px-6 py-6 sm:px-8 border-t border-border bg-stone-50">
+            <h3 className="text-lg font-bold text-text-primary font-serif mb-4 flex items-center gap-2">
+              <svg className="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Payment Details
+              <span className="ml-2 inline-flex items-center gap-1 rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Demo</span>
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Status</dt>
+                <dd className="mt-1">
+                  {appointment.paymentStatus === 'paid' ? (
+                    <span className="inline-flex items-center gap-1.5 font-bold text-success text-sm">
+                      <span className="size-2 rounded-full bg-success"></span> Paid
+                    </span>
+                  ) : appointment.paymentStatus === 'failed' ? (
+                    <span className="inline-flex items-center gap-1.5 font-bold text-error text-sm">
+                      <span className="size-2 rounded-full bg-error"></span> Failed
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 font-bold text-amber-500 text-sm">
+                      <span className="size-2 rounded-full bg-amber-500"></span> Pending
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Amount</dt>
+                <dd className="text-sm font-bold text-text-primary mt-1">₹{appointment.consultationFee}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Transaction ID</dt>
+                <dd className="text-sm font-bold font-mono text-text-primary mt-1">{appointment.paymentId}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Method</dt>
+                <dd className="text-sm font-bold text-text-primary mt-1">Demo Payment</dd>
+              </div>
             </div>
           </div>
         )}

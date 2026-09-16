@@ -10,14 +10,15 @@ import type { Appointment } from "@/types/appointment";
 import { getUserNotifications } from "@/lib/notification-store";
 import type { AppNotification, NotificationType } from "@/lib/notification-store";
 import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
+import { getDoctorRevenue } from "@/lib/payment-store";
 
 export function DoctorDashboard() {
   const router = useRouter();
-  const pathname = usePathname();
 
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [revenue, setRevenue] = useState<{ todaysEarnings: number, pendingSettlements: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const { doctor: session } = useAppSelector(state => state.auth);
@@ -34,6 +35,7 @@ export function DoctorDashboard() {
     setAppointments(myAppointments);
     const myNotifications = getUserNotifications(session.id);
     setNotifications(myNotifications);
+    setRevenue(getDoctorRevenue(session.id));
     setIsLoading(false);
   }, [session, allAppointments, router]);
 
@@ -195,11 +197,12 @@ export function DoctorDashboard() {
         </div>
 
         {/* METRICS CARDS */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
           {[
+            { label: "Today's Earnings", value: revenue ? `₹${revenue.todaysEarnings}` : "₹0", sub: "Today", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-emerald-600", bg: "bg-emerald-50" },
             { label: "Total Bookings", value: metrics.totalBookings, sub: "Today", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", color: "text-primary", bg: "bg-primary/10" },
-            { label: "Confirmed", value: metrics.confirmed, sub: "Today", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "Pending", value: metrics.pending, sub: "Today", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-amber-600", bg: "bg-amber-50" },
+            { label: "Pending Revenue", value: revenue ? `₹${revenue.pendingSettlements}` : "₹0", sub: "To be settled", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-amber-600", bg: "bg-amber-50" },
+            { label: "Confirmed", value: metrics.confirmed, sub: "Today", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-blue-600", bg: "bg-blue-50" },
             { label: "Cancelled", value: metrics.cancelled, sub: "Today", icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-red-500", bg: "bg-red-50" },
             { label: "Total Patients", value: metrics.totalPatients, sub: "All time", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", color: "text-violet-600", bg: "bg-violet-50" },
           ].map((m, i) => (

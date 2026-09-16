@@ -393,6 +393,9 @@ export function DoctorAppointments() {
                           <svg className="size-3.5 shrink-0 text-text-secondary/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                           {apt.appointmentType || apt.reason || "General Consultation"}
                         </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/5 text-primary border border-primary/20 shrink-0">
+                          {apt.consultationType === "online" ? "Online" : "In-person"}
+                        </span>
                         {apt.preferredCommunication && (
                           <span className="hidden xl:flex items-center gap-1 text-[11px] text-text-secondary/70 font-medium">
                             <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -402,8 +405,30 @@ export function DoctorAppointments() {
                       </div>
 
                       {/* Status + Action */}
-                      <div className="flex items-center justify-between lg:justify-end gap-4 pl-12 lg:pl-0 lg:w-[200px] shrink-0">
-                        <AppointmentStatusBadge status={apt.status} />
+                      <div className="flex items-center justify-between lg:justify-end gap-3 pl-12 lg:pl-0 lg:w-[260px] shrink-0">
+                        <div className="flex flex-col items-end gap-1.5">
+                          <AppointmentStatusBadge status={apt.status} />
+                          {apt.paymentStatus === "paid" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-success text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-success"></span> Paid
+                            </span>
+                          )}
+                          {apt.paymentStatus === "pending" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-amber-500 text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-amber-500"></span> Pending
+                            </span>
+                          )}
+                          {apt.paymentStatus === "failed" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-error text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-error"></span> Failed
+                            </span>
+                          )}
+                          {apt.paymentStatus === "refunded" && (
+                            <span className="inline-flex items-center gap-1 font-bold text-slate-500 text-[10px] uppercase tracking-wide">
+                              <span className="size-1.5 rounded-full bg-slate-500"></span> Refunded
+                            </span>
+                          )}
+                        </div>
                         <Link
                           href={`/doctor/appointments/${apt.id}`}
                           className="text-[13px] font-semibold text-primary hover:text-primary-dark transition-colors whitespace-nowrap"
