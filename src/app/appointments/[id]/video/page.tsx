@@ -14,7 +14,6 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
   const { id } = resolvedParams;
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
-  const [patientId, setPatientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Connection State: pre-join -> connecting -> connected -> ended
@@ -32,23 +31,35 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
   // Duration Timer
   const [seconds, setSeconds] = useState(0);
 
-  const { patient } = useAppSelector(state => state.auth);
+  const [isDoctorView, setIsDoctorView] = useState(false);
+  const [currentUserInfo, setCurrentUserInfo] = useState<{name: string, role: "patient"|"doctor"}|null>(null);
+
+  const { patient, doctor } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     try {
-      if (!patient || patient.role !== "patient") {
+      const apt = getAppointmentById(id);
+      if (!apt) {
+        toast.error("Appointment not found.");
+        router.push("/");
+        return;
+      }
+
+      const isPatientMatch = !!(patient && patient.role === "patient" && apt.patient.name === patient.name);
+      const isDoctorMatch = !!(doctor && apt.clinician === doctor.name);
+
+      if (!isPatientMatch && !isDoctorMatch) {
         router.push("/login");
         return;
       }
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPatientId(patient.name); // Using name as ID for mock
 
-      const apt = getAppointmentById(id);
-      if (!apt || apt.patient.name !== patient.name) {
-        toast.error("Appointment not found.");
-        router.push("/appointments");
-        return;
-      }
+      const currentName = isDoctorMatch ? doctor.name : patient!.name;
+      const currentRole = isDoctorMatch ? "doctor" : "patient";
+      
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsDoctorView(isDoctorMatch);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentUserInfo({ name: currentName, role: currentRole });
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAppointment(apt);
       
@@ -60,9 +71,10 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
     } catch {
       router.push("/login");
     } finally {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(false);
     }
-  }, [id, router]);
+  }, [id, router, patient, doctor]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -86,13 +98,13 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !appointment || !patientId) return;
+    if (!newMessage.trim() || !appointment || !currentUserInfo) return;
     
     sendChatMessage({
       appointmentId: appointment.id,
-      patientId: patientId,
+      patientId: appointment.patient.name,
       doctorId: appointment.doctorId,
-      senderId: patientId,
+      senderId: currentUserInfo.name,
       message: newMessage.trim(),
     });
     setNewMessage("");
@@ -120,12 +132,12 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
             <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Consultation Ended</h2>
-          <p className="text-stone-400 mb-8">Your video consultation with {appointment.clinician} has concluded.</p>
+          <p className="text-stone-400 mb-8">Your video consultation with {isDoctorView ? appointment.patient.name : appointment.clinician} has concluded.</p>
           <div className="flex flex-col gap-3">
-            <button onClick={() => router.push("/appointments")} className="w-full bg-white text-stone-900 font-bold py-3 rounded-lg hover:bg-stone-200 transition-colors">
-              Return to Appointments
+            <button onClick={() => router.push(isDoctorView ? `/doctor/appointments/${id}` : "/appointments")} className="w-full bg-white text-stone-900 font-bold py-3 rounded-lg hover:bg-stone-200 transition-colors">
+              Return to {isDoctorView ? 'Details' : 'Appointments'}
             </button>
-            <button onClick={() => router.push(`/appointments/${id}/chat`)} className="w-full bg-stone-700 text-white font-bold py-3 rounded-lg hover:bg-stone-600 transition-colors">
+            <button onClick={() => router.push(isDoctorView ? `/doctor/appointments/${id}` : `/appointments/${id}/chat`)} className="w-full bg-stone-700 text-white font-bold py-3 rounded-lg hover:bg-stone-600 transition-colors">
               Continue in Secure Chat
             </button>
           </div>
@@ -143,11 +155,11 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
         {/* TOP BAR */}
         <div className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.push("/appointments")} className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur transition-colors">
+            <button onClick={() => router.push(isDoctorView ? `/doctor/appointments/${id}` : "/appointments")} className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur transition-colors">
               <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </button>
             <div>
-              <h2 className="text-white font-bold text-lg leading-tight">{appointment.clinician}</h2>
+              <h2 className="text-white font-bold text-lg leading-tight">{isDoctorView ? appointment.patient.name : appointment.clinician}</h2>
               <p className="text-stone-300 text-xs font-medium">Online Consultation</p>
             </div>
             <div className="ml-4 px-2 py-1 rounded bg-amber-500/20 border border-amber-500/50 text-amber-500 text-[10px] font-bold uppercase tracking-wider hidden sm:block">
@@ -187,16 +199,16 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               
               <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 backdrop-blur-[2px]">
                 <h3 className="text-2xl font-bold text-white mb-2">Ready to join?</h3>
-                <p className="text-stone-300 text-sm mb-8 text-center max-w-md">Make sure your camera and microphone are positioned correctly before joining the consultation with {appointment.clinician}.</p>
+                <p className="text-stone-300 text-sm mb-8 text-center max-w-md">Make sure your camera and microphone are positioned correctly before joining the consultation with {isDoctorView ? appointment.patient.name : appointment.clinician}.</p>
                 <button onClick={handleJoin} className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-full font-bold text-lg shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
-                  Join Consultation
+                  {isDoctorView ? "Start Consultation" : "Join Consultation"}
                 </button>
               </div>
             </div>
           ) : connState === "connecting" ? (
             <div className="text-center">
               <div className="size-12 rounded-full border-4 border-stone-700 border-t-indigo-500 animate-spin mx-auto mb-4"></div>
-              <p className="text-white font-bold text-lg">Connecting to {appointment.clinician}...</p>
+              <p className="text-white font-bold text-lg">Connecting to {isDoctorView ? appointment.patient.name : appointment.clinician}...</p>
               <p className="text-stone-400 text-sm mt-1">Please wait, establishing secure connection</p>
             </div>
           ) : (
@@ -204,7 +216,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               {/* Doctor Main Video (Mock) */}
               <div className="absolute inset-0 bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 flex flex-col items-center justify-center">
                 <div className="size-32 rounded-full bg-stone-800 flex items-center justify-center text-4xl font-bold text-stone-600 mb-6 shadow-inner">
-                  {appointment.clinician.replace("Dr. ", "").charAt(0)}
+                  {isDoctorView ? appointment.patient.initials : appointment.clinician.replace("Dr. ", "").charAt(0)}
                 </div>
                 <p className="text-stone-500 font-medium text-sm flex items-center gap-2 mb-2">
                   <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4l16 16" /></svg>
@@ -214,7 +226,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
 
                 <div className="absolute bottom-6 left-6 px-4 py-2 rounded-lg bg-black/50 backdrop-blur text-white font-medium text-sm border border-white/10 flex items-center gap-2">
                   <div className="size-2 rounded-full bg-success animate-pulse"></div>
-                  {appointment.clinician}
+                  {isDoctorView ? appointment.patient.name : appointment.clinician}
                 </div>
               </div>
               
@@ -222,7 +234,7 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               <div className="absolute top-6 right-6 w-32 sm:w-48 aspect-video bg-stone-800 rounded-xl overflow-hidden border-2 border-stone-700 shadow-2xl flex items-center justify-center">
                 {!camOn ? (
                   <div className="size-10 sm:size-12 rounded-full bg-stone-700 flex items-center justify-center text-lg sm:text-xl font-bold text-stone-400">
-                    {appointment.patient.initials}
+                    {isDoctorView ? appointment.clinician.replace("Dr. ", "").charAt(0) : appointment.patient.initials}
                   </div>
                 ) : (
                   <span className="text-stone-500 text-xs font-bold uppercase tracking-wider">You</span>
@@ -291,11 +303,11 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
               <div className="m-auto text-center p-4">
                 <svg className="size-12 mx-auto text-stone-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" /></svg>
                 <p className="text-sm font-medium text-text-secondary">No messages yet.</p>
-                <p className="text-xs text-text-secondary mt-1">Send a message to {appointment.clinician}.</p>
+                <p className="text-xs text-text-secondary mt-1">Send a message to {isDoctorView ? appointment.patient.name : appointment.clinician}.</p>
               </div>
             ) : (
               messages.map(msg => {
-                const isMe = msg.senderId === patientId;
+                const isMe = msg.senderId === currentUserInfo?.name;
                 return (
                   <div key={msg.messageId} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                     <div className={`px-4 py-2.5 rounded-2xl max-w-[85%] text-sm ${isMe ? 'bg-primary text-white rounded-tr-sm' : 'bg-white border border-border text-text-primary rounded-tl-sm shadow-sm'}`}>

@@ -12,6 +12,7 @@ import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 import { PrescriptionForm } from "./PrescriptionForm";
 import { PrescriptionDetails } from "./PrescriptionDetails";
 import { toast } from "react-toastify";
+import { OnlineAppointmentActions } from "@/features/appointments/components/OnlineAppointmentActions";
 
 export function DoctorAppointmentDetails() {
   const router = useRouter();
@@ -89,12 +90,19 @@ export function DoctorAppointmentDetails() {
       </div>
       
       <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-border">
-        <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-5 sm:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-border bg-background/50 px-6 py-5 sm:px-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text-primary font-serif">Appointment Details</h1>
             <p className="text-sm text-text-secondary mt-1">ID: {appointment.id}</p>
           </div>
-          <AppointmentStatusBadge status={appointment.status} />
+          <div className="flex flex-col sm:items-end gap-2">
+            <div className="self-start sm:self-end">
+              <AppointmentStatusBadge status={appointment.status} />
+            </div>
+            {appointment.consultationType === "online" && (
+              <OnlineAppointmentActions appointment={appointment} role="doctor" />
+            )}
+          </div>
         </div>
         
         <div className="px-6 py-6 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -123,10 +131,12 @@ export function DoctorAppointmentDetails() {
               <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Reason for Visit</dt>
               <dd className="text-base font-medium text-text-primary mt-1">{appointment.reason || "General Consultation"}</dd>
             </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Room</dt>
-              <dd className="text-base font-medium text-text-primary mt-1">{appointment.room || "TBD"}</dd>
-            </div>
+            {(!appointment.consultationType || appointment.consultationType === "in-person") && (
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Clinic & Location</dt>
+                <dd className="text-base font-medium text-text-primary mt-1">{appointment.room || "Main Care Center"}</dd>
+              </div>
+            )}
           </dl>
         </div>
 
