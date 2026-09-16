@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Appointment } from "@/types/appointment";
 
-export function OnlineAppointmentActions({ appointment }: { appointment: Appointment }) {
+export function OnlineAppointmentActions({ appointment, role = "patient" }: { appointment: Appointment, role?: "patient" | "doctor" }) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -45,6 +45,9 @@ export function OnlineAppointmentActions({ appointment }: { appointment: Appoint
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
+  const actionText = role === "doctor" ? "Start Consultation" : "Join Consultation";
+  const disabledText = role === "doctor" ? "Start available soon" : "Join available soon";
+
   return (
     <div className="flex flex-col items-end gap-2 mt-2 pt-3 border-t border-border sm:border-t-0 sm:pt-0">
       {liveStatus === "upcoming" && (
@@ -54,7 +57,7 @@ export function OnlineAppointmentActions({ appointment }: { appointment: Appoint
             <p className="text-sm font-bold font-mono text-primary">{formatCountdown(diffMs)}</p>
           </div>
           <button disabled className="mt-1 flex items-center gap-1.5 text-xs font-bold bg-slate-100 text-slate-400 px-3 py-1.5 rounded-lg cursor-not-allowed border border-slate-200">
-            Join available soon
+            {disabledText}
           </button>
         </>
       )}
@@ -71,7 +74,7 @@ export function OnlineAppointmentActions({ appointment }: { appointment: Appoint
           <Link href={`/appointments/${appointment.id}/video`}>
             <button className="flex items-center gap-1.5 text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm mt-1 animate-in fade-in zoom-in duration-300">
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              Join Consultation
+              {actionText}
             </button>
           </Link>
         </>
@@ -88,7 +91,7 @@ export function OnlineAppointmentActions({ appointment }: { appointment: Appoint
           <Link href={`/appointments/${appointment.id}/video`}>
             <button className="flex items-center gap-1.5 text-xs font-bold bg-error text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-sm shadow-error/20 mt-1 animate-in fade-in zoom-in duration-300">
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              Join Consultation
+              {actionText}
             </button>
           </Link>
         </>
