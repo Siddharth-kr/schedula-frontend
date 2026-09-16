@@ -14,6 +14,7 @@ import { addReview, updateAppointmentData } from "@/lib/appointment-store";
 import { processPayment } from "@/lib/payment-store";
 import { getPrescriptionByAppointmentId } from "@/lib/prescription-store";
 import { UserPrescription } from "@/features/user-portal/components/UserPrescription";
+import { OnlineAppointmentActions } from "@/features/appointments/components/OnlineAppointmentActions";
 import { toast } from "react-toastify";
 
 
@@ -393,17 +394,24 @@ export default function PatientAppointmentsPage() {
                           {apt.status === "cancelled" && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-error/10 text-error">Cancelled</span>}
                           
                           {/* TELEMEDICINE ACTIONS */}
-                          {(apt.status === "confirmed" || apt.status === "completed") && (apt.consultationType === "online") && (
-                            <Link href={`/appointments/${apt.id}/video`}>
-                              <button className="flex items-center gap-1.5 mt-2 text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                Join Video
-                              </button>
-                            </Link>
+                          {apt.consultationType === "online" && (
+                            <OnlineAppointmentActions appointment={apt} />
                           )}
+                          
+                          {(!apt.consultationType || apt.consultationType === "in-person") && (
+                            <div className="flex flex-col items-end gap-2 mt-2 pt-3 border-t border-border sm:border-t-0 sm:pt-0 text-right">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-0.5">Clinic Location</p>
+                              <p className="text-sm font-bold text-text-primary">{apt.room || "Main Care Center"}</p>
+                              <button onClick={() => toast.info("Map functionality is not available in this demo.")} className="mt-1 flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-dark transition-colors bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/10">
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                View Location
+                              </button>
+                            </div>
+                          )}
+
                           {(apt.status === "confirmed" || apt.status === "completed") && (apt.appointmentType === "Secure Chat" || apt.consultationType === "online") && (
                             <Link href={`/appointments/${apt.id}/chat`}>
-                              <button className="flex items-center gap-1.5 mt-1 text-xs font-bold border border-border text-text-primary px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary transition-colors bg-white">
+                              <button className="flex items-center gap-1.5 mt-1 text-xs font-bold border border-border text-text-primary px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary transition-colors bg-white w-full justify-center">
                                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                                 Secure Chat
                               </button>

@@ -148,7 +148,10 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
             </button>
             <div>
               <h2 className="text-white font-bold text-lg leading-tight">{appointment.clinician}</h2>
-              <p className="text-stone-300 text-xs font-medium">{appointment.appointmentType || "Video Consultation"}</p>
+              <p className="text-stone-300 text-xs font-medium">Online Consultation</p>
+            </div>
+            <div className="ml-4 px-2 py-1 rounded bg-amber-500/20 border border-amber-500/50 text-amber-500 text-[10px] font-bold uppercase tracking-wider hidden sm:block">
+              Demo Consultation
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -199,27 +202,33 @@ export default function VideoConsultationPage({ params }: { params: Promise<{ id
           ) : (
             <div className="w-full h-full relative">
               {/* Doctor Main Video (Mock) */}
-              <div className="absolute inset-0 bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 flex items-center justify-center">
-                <div className="size-32 rounded-full bg-stone-800 flex items-center justify-center text-4xl font-bold text-stone-600">
+              <div className="absolute inset-0 bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 flex flex-col items-center justify-center">
+                <div className="size-32 rounded-full bg-stone-800 flex items-center justify-center text-4xl font-bold text-stone-600 mb-6 shadow-inner">
                   {appointment.clinician.replace("Dr. ", "").charAt(0)}
                 </div>
+                <p className="text-stone-500 font-medium text-sm flex items-center gap-2 mb-2">
+                  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4l16 16" /></svg>
+                  No real video/audio connection is active.
+                </p>
+                <p className="text-stone-600 text-xs">This is a UI-only demo.</p>
+
                 <div className="absolute bottom-6 left-6 px-4 py-2 rounded-lg bg-black/50 backdrop-blur text-white font-medium text-sm border border-white/10 flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-success"></div>
+                  <div className="size-2 rounded-full bg-success animate-pulse"></div>
                   {appointment.clinician}
                 </div>
               </div>
               
               {/* Patient Mini Video (Mock) */}
-              <div className="absolute top-6 right-6 w-48 aspect-video bg-stone-800 rounded-xl overflow-hidden border-2 border-stone-700 shadow-2xl flex items-center justify-center">
+              <div className="absolute top-6 right-6 w-32 sm:w-48 aspect-video bg-stone-800 rounded-xl overflow-hidden border-2 border-stone-700 shadow-2xl flex items-center justify-center">
                 {!camOn ? (
-                  <div className="size-12 rounded-full bg-stone-700 flex items-center justify-center text-xl font-bold text-stone-400">
+                  <div className="size-10 sm:size-12 rounded-full bg-stone-700 flex items-center justify-center text-lg sm:text-xl font-bold text-stone-400">
                     {appointment.patient.initials}
                   </div>
                 ) : (
                   <span className="text-stone-500 text-xs font-bold uppercase tracking-wider">You</span>
                 )}
                 {!micOn && (
-                  <div className="absolute bottom-2 right-2 size-6 rounded-full bg-error text-white flex items-center justify-center">
+                  <div className="absolute bottom-2 right-2 size-5 sm:size-6 rounded-full bg-error text-white flex items-center justify-center">
                     <svg className="size-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                   </div>
                 )}
