@@ -35,6 +35,7 @@ export function Navbar() {
   }, [pathname]);
 
   if (!isMounted) return null;
+  if (pathname.startsWith("/admin")) return null;
 
   // Hide navbar on auth screens if desired, but prompt says "provide simple link back to Schedula"
   // so we should probably show it, or a simplified version. For now, keep it on.

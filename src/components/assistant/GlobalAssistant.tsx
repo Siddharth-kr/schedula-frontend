@@ -89,6 +89,7 @@ export function GlobalAssistant() {
   useEffect(() => setIsMounted(true), []);
 
   if (!isMounted) return null;
+  if (pathname.startsWith("/admin")) return null;
   if (role === "public") return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
