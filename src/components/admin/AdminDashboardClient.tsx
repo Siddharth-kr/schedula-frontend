@@ -5,6 +5,12 @@ import { useAppSelector } from "@/store/hooks";
 import { mockDoctors } from "@/lib/mock-data/doctors";
 import { mockUsers } from "@/lib/mock-data/users";
 import Link from "next/link";
+import { AdminStatusBadge } from "./AdminStatusBadge";
+import { AdminTable, AdminTableColumn } from "./AdminTable";
+import { AdminErrorState } from "./AdminErrorState";
+import { AdminPageSkeleton } from "./AdminSkeleton";
+import type { Appointment } from "@/types/appointment";
+import type { Doctor } from "@/types/doctor";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from "recharts";
@@ -84,45 +90,71 @@ export function AdminDashboardClient() {
     return data;
   }, [appointments]);
 
+  const appointmentColumns: AdminTableColumn<Appointment>[] = useMemo(() => [
+    {
+      key: "patient",
+      title: "Patient",
+      render: (apt) => (
+        <div>
+          <div className="font-bold text-stone-900">{apt.patient.name}</div>
+          <div className="text-xs text-stone-500">{apt.appointmentType || 'Consultation'}</div>
+        </div>
+      )
+    },
+    { key: "clinician", title: "Doctor" },
+    {
+      key: "startsAt",
+      title: "Date",
+      render: (apt) => <span className="text-stone-600">{new Date(apt.startsAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: (apt) => <AdminStatusBadge status={apt.status} />
+    }
+  ], []);
+
+  const doctorColumns: AdminTableColumn<Doctor>[] = useMemo(() => [
+    {
+      key: "name",
+      title: "Doctor",
+      render: (doc) => (
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-xs">
+            {doc.name.replace("Dr. ", "").charAt(0)}
+          </div>
+          <div className="font-bold text-stone-900">{doc.name}</div>
+        </div>
+      )
+    },
+    { key: "specialty", title: "Specialty", render: (doc) => <span className="text-stone-600">{doc.specialty}</span> },
+    {
+      key: "rating",
+      title: "Rating",
+      render: (doc) => (
+        <div className="flex items-center gap-1 text-stone-600">
+          <svg className="size-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+          {doc.rating}
+        </div>
+      )
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: () => <AdminStatusBadge status="verified" />
+    }
+  ], []);
+
   if (!isClient) {
     return null; // Avoid hydration mismatch
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-error/20">
-        <div className="size-16 rounded-full bg-error/10 flex items-center justify-center text-error mb-4">
-          <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <h3 className="text-xl font-bold text-stone-900">Failed to load dashboard data</h3>
-        <p className="text-stone-500 mt-2">There was an error communicating with the data store.</p>
-        <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition-colors">
-          Retry
-        </button>
-      </div>
-    );
+    return <AdminErrorState title="Failed to load dashboard data" message="There was an error communicating with the data store." onRetry={() => window.location.reload()} />;
   }
 
   if (isLoading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-stone-200 rounded-xl"></div>
-          ))}
-        </div>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 h-96 bg-stone-200 rounded-xl"></div>
-          <div className="h-96 bg-stone-200 rounded-xl"></div>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="h-80 bg-stone-200 rounded-xl"></div>
-          <div className="h-80 bg-stone-200 rounded-xl"></div>
-        </div>
-      </div>
-    );
+    return <AdminPageSkeleton />;
   }
 
   return (
@@ -255,97 +287,39 @@ export function AdminDashboardClient() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Appointments */}
-        <div className="rounded-2xl bg-white shadow-sm border border-border flex flex-col">
-          <div className="p-6 border-b border-border flex items-center justify-between">
+        <div className="rounded-2xl bg-white shadow-sm border border-border flex flex-col overflow-hidden">
+          <div className="p-6 flex items-center justify-between bg-white border-b border-border">
             <h2 className="text-lg font-bold text-stone-900">Recent Appointments</h2>
             <Link href="/admin/appointments" className="text-sm font-medium text-primary hover:text-primary-dark">
               View all
             </Link>
           </div>
-          <div className="p-0 overflow-x-auto">
-            {recentAppointments.length === 0 ? (
-              <div className="p-8 text-center text-stone-500 text-sm">No recent appointments found.</div>
-            ) : (
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-stone-50 text-stone-500 font-medium border-b border-border">
-                  <tr>
-                    <th className="px-6 py-3 font-medium">Patient</th>
-                    <th className="px-6 py-3 font-medium">Doctor</th>
-                    <th className="px-6 py-3 font-medium">Date</th>
-                    <th className="px-6 py-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {recentAppointments.map(apt => (
-                    <tr key={apt.id} className="hover:bg-stone-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-stone-900">{apt.patient.name}</div>
-                        <div className="text-xs text-stone-500">{apt.appointmentType || 'Consultation'}</div>
-                      </td>
-                      <td className="px-6 py-4 text-stone-600">{apt.clinician}</td>
-                      <td className="px-6 py-4 text-stone-600">
-                        {new Date(apt.startsAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={apt.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+          <AdminTable 
+            columns={appointmentColumns} 
+            data={recentAppointments} 
+            keyExtractor={(apt) => apt.id} 
+            emptyStateTitle="No recent appointments found."
+            emptyStateMessage=""
+            className="border-none shadow-none rounded-none"
+          />
         </div>
 
         {/* Recent Doctors */}
-        <div className="rounded-2xl bg-white shadow-sm border border-border flex flex-col">
-          <div className="p-6 border-b border-border flex items-center justify-between">
+        <div className="rounded-2xl bg-white shadow-sm border border-border flex flex-col overflow-hidden">
+          <div className="p-6 flex items-center justify-between bg-white border-b border-border">
             <h2 className="text-lg font-bold text-stone-900">Recent Doctors</h2>
             <Link href="/admin/doctors" className="text-sm font-medium text-primary hover:text-primary-dark">
               View all
             </Link>
           </div>
-          <div className="p-0 overflow-x-auto">
-            {recentDoctors.length === 0 ? (
-              <div className="p-8 text-center text-stone-500 text-sm">No doctors found.</div>
-            ) : (
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-stone-50 text-stone-500 font-medium border-b border-border">
-                  <tr>
-                    <th className="px-6 py-3 font-medium">Doctor</th>
-                    <th className="px-6 py-3 font-medium">Specialty</th>
-                    <th className="px-6 py-3 font-medium">Rating</th>
-                    <th className="px-6 py-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {recentDoctors.map(doc => (
-                    <tr key={doc.id} className="hover:bg-stone-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="size-8 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-xs">
-                            {doc.name.replace("Dr. ", "").charAt(0)}
-                          </div>
-                          <div className="font-bold text-stone-900">{doc.name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-stone-600">{doc.specialty}</td>
-                      <td className="px-6 py-4 text-stone-600 flex items-center gap-1">
-                        <svg className="size-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        {doc.rating}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">
-                          <span className="size-1.5 rounded-full bg-emerald-500"></span>
-                          Verified
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+          <AdminTable 
+            columns={doctorColumns} 
+            data={recentDoctors} 
+            keyExtractor={(doc) => doc.id} 
+            emptyStateTitle="No doctors found."
+            emptyStateMessage=""
+            className="border-none shadow-none rounded-none"
+          />
         </div>
       </div>
     </div>
@@ -375,21 +349,4 @@ function MetricCard({ title, value, icon, trend, accent = "text-stone-500 bg-sto
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
-    confirmed: "bg-indigo-50 text-indigo-700 ring-indigo-600/20",
-    upcoming: "bg-blue-50 text-blue-700 ring-blue-600/20",
-    completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-    cancelled: "bg-error/10 text-error ring-error/20",
-    missed: "bg-stone-100 text-stone-600 ring-stone-500/20",
-  };
-  
-  const style = styles[status] || "bg-stone-50 text-stone-600 ring-stone-500/20";
-  
-  return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold ring-1 ring-inset ${style}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
-}
+
