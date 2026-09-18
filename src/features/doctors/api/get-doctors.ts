@@ -1,12 +1,11 @@
 import type { Doctor } from "@/types/doctor";
+import { store } from "@/store";
 
 export async function getDoctors(): Promise<Doctor[]> {
-  const response = await fetch("/api/doctors");
+  // Simulate network delay to keep the loading states testing working
+  await new Promise((resolve) => setTimeout(resolve, 800));
   
-  if (!response.ok) {
-    throw new Error("Unable to load doctors");
-  }
-  
-  const body: { data: Doctor[] } = await response.json();
-  return body.data;
+  // Return from global redux state to support mock admin updates
+  const doctors = store.getState().doctors.doctors;
+  return doctors;
 }

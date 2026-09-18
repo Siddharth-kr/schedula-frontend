@@ -1,21 +1,18 @@
 import { useState, useEffect } from "react";
 import type { Doctor } from "@/types/doctor";
-import { getDoctors } from "../api/get-doctors";
+import { useAppSelector } from "@/store/hooks";
 
 export function useDoctors() {
-  const [data, setData] = useState<Doctor[]>([]);
+  const doctors = useAppSelector(state => state.doctors.doctors);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
-    getDoctors()
-      .then((doctors) => {
-        setData(doctors);
-        setStatus("ready");
-      })
-      .catch(() => {
-        setStatus("error");
-      });
+    // Simulate network delay to preserve Schedula loading states
+    const timer = setTimeout(() => {
+      setStatus("ready");
+    }, 800);
+    return () => clearTimeout(timer);
   }, []);
 
-  return { data, status };
+  return { data: doctors, status };
 }

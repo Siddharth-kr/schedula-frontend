@@ -1,12 +1,13 @@
 import type { Doctor } from "@/types/doctor";
+import { store } from "@/store";
 
 export async function getDoctor(id: string): Promise<Doctor> {
-  const response = await fetch(`/api/doctors/${id}`);
+  await new Promise((resolve) => setTimeout(resolve, 500));
   
-  if (!response.ok) {
-    throw new Error("Unable to load doctor");
+  const doctor = store.getState().doctors.doctors.find((d) => d.id === id);
+  if (!doctor) {
+    throw new Error("Doctor not found");
   }
   
-  const body = await response.json();
-  return body.data;
+  return doctor;
 }

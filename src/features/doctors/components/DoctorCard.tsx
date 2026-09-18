@@ -55,7 +55,15 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
               </div>
             )}
             <div>
-              <h3 className="text-[1.1rem] font-extrabold text-slate-800 leading-tight" title={doctor.name}>{doctor.name}</h3>
+              <h3 className="text-[1.1rem] font-extrabold text-slate-800 leading-tight flex items-center gap-2" title={doctor.name}>
+                {doctor.name}
+                {doctor.verificationStatus === 'approved' && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] uppercase tracking-wider border border-emerald-200/50" title="Verified Doctor">
+                    <svg className="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    Verified
+                  </span>
+                )}
+              </h3>
               <p className="text-[0.85rem] font-bold text-primary mt-0.5">{doctor.specialty}</p>
               <div className="mt-1 flex items-center gap-1.5 text-[0.75rem] font-bold text-slate-500">
                 <span className="flex items-center text-amber-500">

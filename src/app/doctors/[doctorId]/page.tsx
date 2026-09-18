@@ -136,7 +136,15 @@ export default function DoctorDetailsPage() {
                     {doctor.name.split(" ").map(n => n[0]).join("").substring(0,2)}
                   </div>
                   <div className="flex-1 text-center sm:text-left">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-text-primary font-serif mb-2">{doctor.name}</h1>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-text-primary font-serif mb-2 flex items-center justify-center sm:justify-start gap-3">
+                      {doctor.name}
+                      {doctor.verificationStatus === 'approved' && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-sans font-bold uppercase tracking-wider border border-emerald-200/50" title="Verified Doctor">
+                          <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          Verified
+                        </span>
+                      )}
+                    </h1>
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-4">
                       <p className="text-lg font-semibold text-primary">{doctor.specialty}</p>
                       <span className="w-1.5 h-1.5 rounded-full bg-border"></span>

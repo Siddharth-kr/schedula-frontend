@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { mockDoctors } from "@/lib/mock-data/doctors";
 import { mockUsers } from "@/lib/mock-data/users";
 import Link from "next/link";
 import { AdminStatusBadge } from "./AdminStatusBadge";
@@ -17,6 +16,7 @@ import {
 
 export function AdminDashboardClient() {
   const appointments = useAppSelector((state) => state.appointments.appointments);
+  const doctors = useAppSelector((state) => state.doctors.doctors);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const error = null;
@@ -39,7 +39,7 @@ export function AdminDashboardClient() {
     const appointmentPatients = appointments.map((a) => a.patient.name);
     const uniquePatientsCount = new Set([...patientEmails, ...appointmentPatients]).size;
 
-    const totalDoctors = mockDoctors.length;
+    const totalDoctors = doctors.length;
     const totalAppointments = appointments.length;
 
     const upcomingAppointments = appointments.filter(
@@ -54,7 +54,7 @@ export function AdminDashboardClient() {
       upcomingAppointments,
       completedAppointments,
     };
-  }, [appointments]);
+  }, [appointments, doctors]);
 
   const recentAppointments = useMemo(() => {
     return [...appointments]
@@ -62,10 +62,10 @@ export function AdminDashboardClient() {
       .slice(0, 5);
   }, [appointments]);
 
+
   const recentDoctors = useMemo(() => {
-    return [...mockDoctors]
-      .slice(0, 4); // Just mock 4 for the dashboard
-  }, []);
+    return [...doctors].slice(0, 4);
+  }, [doctors]);
 
   const chartData = useMemo(() => {
     // Generate last 7 days including today
