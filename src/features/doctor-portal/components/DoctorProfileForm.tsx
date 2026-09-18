@@ -1,6 +1,7 @@
 "use client";
 import { loadSession } from "@/store/slices/authSlice";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { resubmitVerification } from "@/store/slices/doctorSlice";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -55,6 +56,8 @@ export function DoctorProfileForm() {
 
   const { doctor: session } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
+  const globalDoctors = useAppSelector(state => state.doctors.doctors);
+  const globalDoc = session ? globalDoctors.find(d => d.id === session.id) : null;
 
   useEffect(() => {
     const loadData = () => {
@@ -175,7 +178,7 @@ export function DoctorProfileForm() {
             <div className="size-24 sm:size-28 shrink-0 rounded-full bg-primary text-3xl font-bold text-white shadow-md ring-4 ring-white flex items-center justify-center font-serif">
               {initials}
             </div>
-            {doctor.rating > 4.5 && (
+            {globalDoc?.verificationStatus === 'approved' && (
               <div className="absolute -bottom-2 -right-2 bg-success text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm flex items-center gap-1">
                 <svg className="size-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                 Verified
@@ -292,11 +295,50 @@ export function DoctorProfileForm() {
                 style={{ width: `${profileCompletion}%` }}
               ></div>
             </div>
-            {profileCompletion < 100 && (
-              <p className="text-xs text-text-secondary">Add missing professional details to help patients better understand your practice.</p>
-            )}
-            {profileCompletion === 100 && (
-              <p className="text-xs text-success font-medium">Your profile is completely verified and ready for patients.</p>
+            
+            {/* Verification Status Banner */}
+            {globalDoc && (
+              <div className={`mt-6 p-4 rounded-xl border ${
+                globalDoc.verificationStatus === 'approved' ? 'bg-success/5 border-success/20 text-success' :
+                globalDoc.verificationStatus === 'rejected' ? 'bg-error/5 border-error/20 text-error' :
+                'bg-amber-50 border-amber-200 text-amber-700'
+              }`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold mb-1 flex items-center gap-2">
+                      {globalDoc.verificationStatus === 'approved' && <svg className="size-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                      {globalDoc.verificationStatus === 'approved' ? 'Profile Verified' :
+                       globalDoc.verificationStatus === 'rejected' ? 'Verification Rejected' :
+                       'Verification Pending'}
+                    </h4>
+                    <p className="text-sm opacity-90">
+                      {globalDoc.verificationStatus === 'approved' 
+                        ? 'Your profile is completely verified and ready for patients.' 
+                        : globalDoc.verificationStatus === 'rejected'
+                        ? 'Your application was rejected by administrators.'
+                        : 'Your documents are currently under review by administrators.'}
+                    </p>
+                    
+                    {globalDoc.verificationStatus === 'rejected' && globalDoc.rejectionReason && (
+                      <div className="mt-3 p-3 bg-white/50 rounded-lg text-sm font-medium border border-error/10">
+                        <strong>Reason:</strong> {globalDoc.rejectionReason}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {globalDoc.verificationStatus === 'rejected' && (
+                    <button 
+                      onClick={() => {
+                        dispatch(resubmitVerification(globalDoc.id));
+                        toast.success("Verification has been resubmitted successfully.");
+                      }}
+                      className="px-4 py-2 bg-error text-white text-sm font-bold rounded-lg hover:bg-error-dark transition-colors shadow-sm whitespace-nowrap ml-4"
+                    >
+                      Resubmit Verification
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
           </div>
           
