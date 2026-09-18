@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Doctor } from '@/types/doctor';
 import { mockDoctors } from '@/lib/mock-data/doctors';
+import { defaultDoctorAccounts } from '@/lib/mock-data/doctor-accounts';
 
 interface DoctorState {
   doctors: Doctor[];
@@ -21,14 +22,17 @@ const baseInitialDoctors: Doctor[] = mockDoctors.map((d, index) => {
     active = false;
   }
   
+  const authAccount = defaultDoctorAccounts.find(acc => acc.id === d.id);
+  
   return {
     ...d,
     active,
     verificationStatus: status,
     submittedAt,
     rejectionReason: status === 'rejected' ? 'Invalid medical license document uploaded.' : undefined,
-    email: `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@example.com`,
-    phone: '+1 (555) 123-4567',
+    email: authAccount ? authAccount.email : `${d.name.toLowerCase().replace(/[^a-z]/g, '')}@example.com`,
+    password: authAccount ? authAccount.password : 'doctor123',
+    phone: authAccount ? authAccount.phone : '+1 (555) 123-4567',
     clinic: 'Schedula Medical Center',
     documents: [
       { type: 'Medical License', url: '/mock-doc-1.pdf' },
@@ -42,7 +46,44 @@ const loadFromStorage = (): Doctor[] => {
   try {
     const data = localStorage.getItem(DOCTORS_KEY);
     if (data) {
-      return JSON.parse(data);
+      let parsedDoctors = JSON.parse(data) as Doctor[];
+      let migrated = false;
+      
+      parsedDoctors = parsedDoctors.map(doc => {
+        const authAccount = defaultDoctorAccounts.find(acc => acc.id === doc.id);
+        const updatedDoc = { ...doc };
+        let modified = false;
+        
+        if (authAccount) {
+          if (updatedDoc.email !== authAccount.email) {
+            updatedDoc.email = authAccount.email;
+            modified = true;
+          }
+          if (updatedDoc.password !== authAccount.password) {
+            updatedDoc.password = authAccount.password;
+            modified = true;
+          }
+        }
+        
+        // Ensure new registrations have a verification status so they show up in Admin
+        if (updatedDoc.verificationStatus === undefined) {
+          updatedDoc.verificationStatus = 'pending';
+          updatedDoc.submittedAt = new Date().toISOString();
+          updatedDoc.active = true;
+          modified = true;
+        }
+        
+        if (modified) {
+          migrated = true;
+        }
+        return updatedDoc;
+      });
+
+      if (migrated && typeof window !== 'undefined') {
+        localStorage.setItem(DOCTORS_KEY, JSON.stringify(parsedDoctors));
+      }
+      
+      return parsedDoctors;
     }
   } catch (error) {
     console.warn("Failed to load doctors from localStorage", error);

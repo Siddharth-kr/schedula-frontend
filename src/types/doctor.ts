@@ -18,4 +18,5 @@ export type Doctor = {
   clinic?: string;
   email?: string;
   phone?: string;
+  password?: string;
 };
