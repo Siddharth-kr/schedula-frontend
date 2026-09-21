@@ -8,6 +8,24 @@ export const mockUsers: Record<string, User> = {
     name: "Alex Patient",
     role: "patient",
   },
+  "maya.patel@example.com": {
+    id: "user-102",
+    email: "maya.patel@example.com",
+    name: "Maya Patel",
+    role: "patient",
+  },
+  "ethan.brooks@example.com": {
+    id: "user-103",
+    email: "ethan.brooks@example.com",
+    name: "Ethan Brooks",
+    role: "patient",
+  },
+  "inactive.user@example.com": {
+    id: "user-104",
+    email: "inactive.user@example.com",
+    name: "Inactive User",
+    role: "patient",
+  },
   "staff@example.com": {
     id: "user-999",
     email: "staff@example.com",

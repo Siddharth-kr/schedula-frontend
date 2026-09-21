@@ -32,6 +32,7 @@ export function AdminStatusBadge({ status, className = "" }: AdminStatusBadgePro
     rejected: "bg-error/10 text-error ring-error/20",
     missed: "bg-stone-100 text-stone-600 ring-stone-500/20",
     inactive: "bg-stone-100 text-stone-600 ring-stone-500/20",
+    rescheduled: "bg-purple-50 text-purple-700 ring-purple-600/20",
   };
   
   const style = styles[normalizedStatus] || "bg-stone-50 text-stone-600 ring-stone-500/20";
