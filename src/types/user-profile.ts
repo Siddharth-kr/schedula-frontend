@@ -11,6 +11,9 @@ export type UserProfile = {
   state: string;
   pincode: string;
   
+  accountStatus?: "active" | "inactive";
+  registrationDate?: string;
+  
   maritalStatus?: string;
   nationality?: string;
   preferredLanguage?: string;

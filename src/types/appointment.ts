@@ -53,4 +53,6 @@ export type Appointment = {
   paymentStatus?: "pending" | "paid" | "failed" | "refunded";
   paymentId?: string;
   consultationType?: ConsultationType;
+  rescheduledFrom?: string; // Original startsAt before rescheduling
+  cancelledAt?: string; // Date of cancellation
 };

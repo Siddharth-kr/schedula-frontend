@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, current } from '@reduxjs/toolkit';
 import type { Appointment, AppointmentStatus, Prescription } from '@/types/appointment';
 import { appointments as initialMockAppointments } from "@/lib/mock-data/appointments";
 import { addNotification } from "@/lib/notification-store";
@@ -34,14 +34,17 @@ const appointmentSlice = createSlice({
     },
     addAppointment: (state, action: PayloadAction<Appointment>) => {
       state.appointments.push(action.payload);
-      persistToLocalStorage(state.appointments);
+      persistToLocalStorage(current(state.appointments));
     },
     updateAppointmentStatus: (state, action: PayloadAction<{ id: string; status: AppointmentStatus }>) => {
       const { id, status } = action.payload;
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
         apt.status = status;
-        persistToLocalStorage(state.appointments);
+        if (status === "cancelled") {
+          apt.cancelledAt = new Date().toISOString();
+        }
+        persistToLocalStorage(current(state.appointments));
         
         if (status === "confirmed") {
           addNotification({ userId: apt.patient.name, message: `Your appointment with ${apt.clinician} has been confirmed.`, type: "confirmation", appointmentId: id });
@@ -59,15 +62,18 @@ const appointmentSlice = createSlice({
       const aptIndex = state.appointments.findIndex(a => a.id === id);
       if (aptIndex !== -1) {
         state.appointments[aptIndex] = { ...state.appointments[aptIndex], ...data };
-        persistToLocalStorage(state.appointments);
+        persistToLocalStorage(current(state.appointments));
       }
     },
     rescheduleAppointment: (state, action: PayloadAction<{ id: string; newDate: string; newStartTime: string }>) => {
       const { id, newDate, newStartTime } = action.payload;
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
+        if (!apt.rescheduledFrom) {
+          apt.rescheduledFrom = apt.startsAt;
+        }
         apt.startsAt = `${newDate}T${newStartTime}:00`;
-        persistToLocalStorage(state.appointments);
+        persistToLocalStorage(current(state.appointments));
         addNotification({ userId: apt.patient.name, message: `Your appointment with ${apt.clinician} has been rescheduled to ${newDate} at ${newStartTime}.`, type: "rescheduling", appointmentId: id });
       }
     },
@@ -76,7 +82,7 @@ const appointmentSlice = createSlice({
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
         apt.prescription = prescription;
-        persistToLocalStorage(state.appointments);
+        persistToLocalStorage(current(state.appointments));
         addNotification({ userId: apt.patient.name, message: `Prescription available for your appointment with ${apt.clinician}.`, type: "prescription", appointmentId: id });
       }
     },
@@ -85,7 +91,7 @@ const appointmentSlice = createSlice({
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
         apt.review = review;
-        persistToLocalStorage(state.appointments);
+        persistToLocalStorage(current(state.appointments));
       }
     }
   }
