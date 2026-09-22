@@ -85,8 +85,8 @@ export function AdminAppointmentsClient() {
       title: "Patient",
       render: (apt) => (
         <div>
-          <div className="font-medium text-stone-900">{apt.patient.name}</div>
-          {apt.patientInfo?.email && <div className="text-xs text-stone-500">{apt.patientInfo.email}</div>}
+          <div className="font-medium text-slate-900">{apt.patient.name}</div>
+          {apt.patientInfo?.email && <div className="text-xs text-slate-500">{apt.patientInfo.email}</div>}
         </div>
       ),
     },
@@ -95,8 +95,8 @@ export function AdminAppointmentsClient() {
       title: "Doctor",
       render: (apt) => (
         <div>
-          <div className="font-medium text-stone-900">{apt.clinician}</div>
-          <div className="text-xs text-stone-500">{apt.specialty}</div>
+          <div className="font-medium text-slate-900">{apt.clinician}</div>
+          <div className="text-xs text-slate-500">{apt.specialty}</div>
         </div>
       ),
     },
@@ -107,8 +107,8 @@ export function AdminAppointmentsClient() {
         const d = new Date(apt.startsAt);
         return (
           <div>
-            <div className="font-medium text-stone-900">{d.toLocaleDateString()}</div>
-            <div className="text-xs text-stone-500">{d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            <div className="font-medium text-slate-900">{d.toLocaleDateString()}</div>
+            <div className="text-xs text-slate-500">{d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
         );
       },
@@ -117,7 +117,7 @@ export function AdminAppointmentsClient() {
       key: "type",
       title: "Type",
       render: (apt) => (
-        <span className="text-stone-600">
+        <span className="text-slate-600">
           {apt.consultationType === "online" ? "Online" : "In-person"}
         </span>
       ),
@@ -135,7 +135,7 @@ export function AdminAppointmentsClient() {
       render: (apt) => (
         <button
           onClick={() => setSelectedAppointment(apt)}
-          className="text-indigo-600 hover:text-indigo-900 font-medium text-sm transition-colors"
+          className="text-blue-600 hover:text-blue-900 font-medium text-sm transition-colors"
         >
           View Details
         </button>
@@ -147,8 +147,8 @@ export function AdminAppointmentsClient() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900 font-serif">Appointments</h1>
-          <p className="text-stone-500 mt-1 text-sm">Manage and review all scheduled appointments.</p>
+          <h1 className="text-2xl font-bold text-slate-900 font-serif">Appointments</h1>
+          <p className="text-slate-500 mt-1 text-sm">Manage and review all scheduled appointments.</p>
         </div>
       </div>
 
@@ -223,7 +223,7 @@ export function AdminAppointmentsClient() {
                   setStatusFilter("all");
                   setTypeFilter("all");
                 }}
-                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-lg text-sm font-medium transition-colors"
               >
                 Clear Filters
               </button>
@@ -241,30 +241,30 @@ export function AdminAppointmentsClient() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-stone-900">{selectedAppointment.patient.name}</h3>
+                <h3 className="text-lg font-bold text-slate-900">{selectedAppointment.patient.name}</h3>
                 {selectedAppointment.patientInfo?.email && (
-                  <p className="text-sm text-stone-500">{selectedAppointment.patientInfo.email}</p>
+                  <p className="text-sm text-slate-500">{selectedAppointment.patientInfo.email}</p>
                 )}
                 {selectedAppointment.patientInfo?.phone && (
-                  <p className="text-sm text-stone-500">{selectedAppointment.patientInfo.phone}</p>
+                  <p className="text-sm text-slate-500">{selectedAppointment.patientInfo.phone}</p>
                 )}
               </div>
               <div className="text-right">
                 <AdminStatusBadge status={selectedAppointment.rescheduledFrom ? "rescheduled" : selectedAppointment.status} className="mb-1" />
-                <p className="text-xs text-stone-500 font-mono">ID: {selectedAppointment.id}</p>
+                <p className="text-xs text-slate-500 font-mono">ID: {selectedAppointment.id}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-stone-50 rounded-lg p-3 border border-stone-100">
-                <p className="text-stone-500 mb-1">Doctor</p>
-                <p className="font-medium text-stone-900">{selectedAppointment.clinician}</p>
-                <p className="text-stone-500 text-xs">{selectedAppointment.specialty}</p>
+              <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <p className="text-slate-500 mb-1">Doctor</p>
+                <p className="font-medium text-slate-900">{selectedAppointment.clinician}</p>
+                <p className="text-slate-500 text-xs">{selectedAppointment.specialty}</p>
               </div>
-              <div className="bg-stone-50 rounded-lg p-3 border border-stone-100">
-                <p className="text-stone-500 mb-1">Schedule</p>
-                <p className="font-medium text-stone-900">{new Date(selectedAppointment.startsAt).toLocaleDateString()}</p>
-                <p className="text-stone-500 text-xs">{new Date(selectedAppointment.startsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({selectedAppointment.durationMinutes} min)</p>
+              <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <p className="text-slate-500 mb-1">Schedule</p>
+                <p className="font-medium text-slate-900">{new Date(selectedAppointment.startsAt).toLocaleDateString()}</p>
+                <p className="text-slate-500 text-xs">{new Date(selectedAppointment.startsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({selectedAppointment.durationMinutes} min)</p>
               </div>
             </div>
 
@@ -283,47 +283,47 @@ export function AdminAppointmentsClient() {
             )}
 
             <div className="space-y-3">
-              <h4 className="font-semibold text-stone-900 border-b border-border pb-2">Consultation Details</h4>
+              <h4 className="font-semibold text-slate-900 border-b border-border pb-2">Consultation Details</h4>
               <div className="grid grid-cols-2 gap-y-3 text-sm">
                 <div>
-                  <p className="text-stone-500">Consultation Type</p>
-                  <p className="font-medium text-stone-900">{selectedAppointment.consultationType === "online" ? "Online" : "In-person"}</p>
+                  <p className="text-slate-500">Consultation Type</p>
+                  <p className="font-medium text-slate-900">{selectedAppointment.consultationType === "online" ? "Online" : "In-person"}</p>
                 </div>
                 {selectedAppointment.room && (
                   <div>
-                    <p className="text-stone-500">Room / Link</p>
-                    <p className="font-medium text-stone-900">{selectedAppointment.room}</p>
+                    <p className="text-slate-500">Room / Link</p>
+                    <p className="font-medium text-slate-900">{selectedAppointment.room}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-stone-500">Payment Status</p>
-                  <p className="font-medium text-stone-900 capitalize">{selectedAppointment.paymentStatus || "Unknown"}</p>
+                  <p className="text-slate-500">Payment Status</p>
+                  <p className="font-medium text-slate-900 capitalize">{selectedAppointment.paymentStatus || "Unknown"}</p>
                 </div>
                 {selectedAppointment.consultationFee !== undefined && (
                   <div>
-                    <p className="text-stone-500">Fee</p>
-                    <p className="font-medium text-stone-900">${selectedAppointment.consultationFee}</p>
+                    <p className="text-slate-500">Fee</p>
+                    <p className="font-medium text-slate-900">${selectedAppointment.consultationFee}</p>
                   </div>
                 )}
                 <div className="col-span-2">
-                  <p className="text-stone-500">Reason for Visit</p>
-                  <p className="font-medium text-stone-900">{selectedAppointment.reason}</p>
+                  <p className="text-slate-500">Reason for Visit</p>
+                  <p className="font-medium text-slate-900">{selectedAppointment.reason}</p>
                 </div>
               </div>
             </div>
             
             {selectedAppointment.medicalInfo && (
               <div className="space-y-3">
-                <h4 className="font-semibold text-stone-900 border-b border-border pb-2">Intake Medical Info</h4>
+                <h4 className="font-semibold text-slate-900 border-b border-border pb-2">Intake Medical Info</h4>
                 <div className="text-sm space-y-2">
                   {selectedAppointment.medicalInfo.symptoms && (
-                    <p><span className="text-stone-500">Symptoms:</span> {selectedAppointment.medicalInfo.symptoms}</p>
+                    <p><span className="text-slate-500">Symptoms:</span> {selectedAppointment.medicalInfo.symptoms}</p>
                   )}
                   {selectedAppointment.medicalInfo.allergies && (
-                    <p><span className="text-stone-500">Allergies:</span> {selectedAppointment.medicalInfo.allergies}</p>
+                    <p><span className="text-slate-500">Allergies:</span> {selectedAppointment.medicalInfo.allergies}</p>
                   )}
                   {selectedAppointment.medicalInfo.medicalConditions && (
-                    <p><span className="text-stone-500">Conditions:</span> {selectedAppointment.medicalInfo.medicalConditions}</p>
+                    <p><span className="text-slate-500">Conditions:</span> {selectedAppointment.medicalInfo.medicalConditions}</p>
                   )}
                 </div>
               </div>

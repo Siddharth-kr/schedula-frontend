@@ -40,7 +40,7 @@ export function AdminTable<T>({
     <div className={`rounded-2xl border border-border bg-white shadow-sm overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-stone-50/80 text-stone-500 font-medium border-b border-border">
+          <thead className="bg-slate-50/80 text-slate-500 font-medium border-b border-border">
             <tr>
               {columns.map((col) => (
                 <th key={col.key} className={`px-6 py-3.5 font-medium tracking-wide ${col.className || ""}`}>
@@ -54,7 +54,7 @@ export function AdminTable<T>({
               <tr 
                 key={keyExtractor(item)} 
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
-                className={`transition-colors ${onRowClick ? "cursor-pointer hover:bg-stone-50/80" : "hover:bg-stone-50/40"}`}
+                className={`transition-colors ${onRowClick ? "cursor-pointer hover:bg-blue-50/60" : "hover:bg-blue-50/30"}`}
               >
                 {columns.map((col) => (
                   <td key={col.key} className={`px-6 py-4 ${col.className || ""}`}>

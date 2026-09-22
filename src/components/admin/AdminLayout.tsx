@@ -56,27 +56,27 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const currentPage = navItems.find(item => pathname === item.href || pathname.startsWith(item.href + "/"))?.name || "Admin Portal";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-stone-50 font-sans text-text-primary">
+    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-text-primary">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-border bg-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center px-6 border-b border-border">
+        <div className="flex h-16 items-center px-6 border-b border-slate-200">
           <Link href="/admin/dashboard" className="flex items-center gap-3 transition-opacity hover:opacity-90">
-            <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-stone-800 to-stone-950 font-serif text-lg font-bold text-white shadow-sm">
+            <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 font-serif text-lg font-bold text-white shadow-sm">
               S
             </div>
-            <span className="text-xl font-bold tracking-tight text-stone-900">Admin</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900">Admin</span>
           </Link>
         </div>
 
@@ -89,11 +89,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-stone-100 text-stone-900"
-                    : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <svg className={`size-5 shrink-0 ${isActive ? 'text-stone-900' : 'text-stone-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`size-5 shrink-0 ${isActive ? 'text-blue-700' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.name}
@@ -102,14 +102,24 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="p-4">
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-2">
+            <h3 className="text-sm font-bold text-slate-900 mb-1">Need Help?</h3>
+            <p className="text-xs text-slate-500 mb-3">Check our docs or contact support.</p>
+            <button className="w-full rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-slate-50 transition-colors shadow-sm">
+              Contact Support
+            </button>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 p-4">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="size-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-700">
+            <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700">
               {admin.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-stone-900 truncate">{admin.name}</p>
-              <p className="text-xs text-stone-500 truncate">Administrator</p>
+              <p className="text-sm font-bold text-slate-900 truncate">{admin.name}</p>
+              <p className="text-xs text-slate-500 truncate">Administrator</p>
             </div>
           </div>
         </div>
@@ -119,34 +129,66 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-stone-600 hover:text-stone-900 rounded-lg hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-200"
+              className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200"
               aria-label="Open sidebar"
             >
               <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-bold text-stone-900">{currentPage}</h1>
+            <h1 className="text-lg font-bold text-slate-900 hidden sm:block">{currentPage}</h1>
+            
+            <div className="hidden md:flex relative max-w-md w-full ml-4">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-9 pr-3 py-1.5 text-sm text-slate-900 border border-slate-200 rounded-full bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-colors"
+                placeholder="Search..."
+              />
+            </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500 border-2 border-white"></span>
+            </button>
+            
+            <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
+            
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-sm font-bold text-slate-900 truncate">{admin.name}</p>
+                <p className="text-xs text-slate-500 truncate">Administrator</p>
+              </div>
+              <div className="size-9 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 text-sm ring-2 ring-white shadow-sm">
+                {admin.name.charAt(0)}
+              </div>
+            </div>
+
             <button 
               onClick={handleLogout}
-              className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors flex items-center gap-2"
+              className="p-2 text-slate-400 hover:text-red-600 transition-colors bg-slate-50 hover:bg-red-50 rounded-lg ml-1"
+              title="Logout"
             >
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-stone-50">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50">
           {children}
         </main>
       </div>
