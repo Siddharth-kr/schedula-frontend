@@ -1,22 +1,22 @@
 import React from "react";
 
 export function AdminMetricSkeleton() {
-  return <div className="h-28 bg-stone-100 rounded-2xl animate-pulse border border-border" />;
+  return <div className="h-28 bg-slate-100 rounded-2xl animate-pulse border border-border" />;
 }
 
 export function AdminTableSkeleton({ rows = 5, columns = 4 }: { rows?: number, columns?: number }) {
   return (
     <div className="w-full animate-pulse overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="flex border-b border-border bg-stone-50 px-6 py-4">
+      <div className="flex border-b border-border bg-slate-50 px-6 py-4">
         {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="flex-1 h-4 bg-stone-200 rounded mr-4 last:mr-0" />
+          <div key={i} className="flex-1 h-4 bg-slate-200 rounded mr-4 last:mr-0" />
         ))}
       </div>
       <div className="divide-y divide-border">
         {Array.from({ length: rows }).map((_, r) => (
           <div key={r} className="flex px-6 py-5">
             {Array.from({ length: columns }).map((_, c) => (
-              <div key={c} className="flex-1 h-4 bg-stone-100 rounded mr-4 last:mr-0" />
+              <div key={c} className="flex-1 h-4 bg-slate-100 rounded mr-4 last:mr-0" />
             ))}
           </div>
         ))}
@@ -34,8 +34,8 @@ export function AdminPageSkeleton() {
         ))}
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 h-96 bg-stone-100 rounded-2xl animate-pulse border border-border" />
-        <div className="h-96 bg-stone-100 rounded-2xl animate-pulse border border-border" />
+        <div className="lg:col-span-2 h-96 bg-slate-100 rounded-2xl animate-pulse border border-border" />
+        <div className="h-96 bg-slate-100 rounded-2xl animate-pulse border border-border" />
       </div>
     </div>
   );

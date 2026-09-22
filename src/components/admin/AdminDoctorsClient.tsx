@@ -72,17 +72,17 @@ export function AdminDoctorsClient() {
       title: "Doctor",
       render: (doc) => (
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-sm">
+          <div className="size-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-sm">
             {doc.name.replace("Dr. ", "").charAt(0)}
           </div>
           <div>
-            <div className="font-bold text-stone-900">{doc.name}</div>
-            <div className="text-xs text-stone-500">{doc.email || "No email"}</div>
+            <div className="font-bold text-slate-900">{doc.name}</div>
+            <div className="text-xs text-slate-500">{doc.email || "No email"}</div>
           </div>
         </div>
       )
     },
-    { key: "specialty", title: "Specialty", render: (doc) => <span className="text-stone-600 font-medium">{doc.specialty}</span> },
+    { key: "specialty", title: "Specialty", render: (doc) => <span className="text-slate-600 font-medium">{doc.specialty}</span> },
     {
       key: "verificationStatus",
       title: "Verification",
@@ -100,7 +100,7 @@ export function AdminDoctorsClient() {
       render: (doc) => (
         <button 
           onClick={(e) => { e.stopPropagation(); setSelectedDoctor(doc); }}
-          className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
           View Details
         </button>
@@ -114,13 +114,13 @@ export function AdminDoctorsClient() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900 font-serif">Doctors</h1>
-          <p className="text-sm text-stone-500 mt-1">Manage doctor accounts and profiles.</p>
+          <h1 className="text-2xl font-bold text-slate-900 font-serif">Doctors</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage doctor accounts and profiles.</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-border flex flex-col lg:flex-row gap-4 items-center justify-between bg-stone-50/50">
+        <div className="p-4 sm:p-6 border-b border-border flex flex-col lg:flex-row gap-4 items-center justify-between bg-slate-50/50">
           <div className="w-full lg:w-96">
             <AdminSearch value={searchTerm} onChange={setSearchTerm} placeholder="Search by name, specialty, email..." />
           </div>
@@ -165,7 +165,7 @@ export function AdminDoctorsClient() {
               currentPage={currentPage} 
               totalPages={totalPages} 
               onPageChange={setCurrentPage} 
-              className="border-0 shadow-none rounded-none bg-stone-50/30"
+              className="border-0 shadow-none rounded-none bg-slate-50/30"
             />
           </div>
         )}
@@ -196,12 +196,12 @@ export function AdminDoctorsClient() {
         {selectedDoctor && (
           <div className="space-y-6">
             <div className="flex items-center gap-4 border-b border-border pb-6">
-              <div className="size-16 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 text-xl">
+              <div className="size-16 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-xl">
                 {selectedDoctor.name.replace("Dr. ", "").charAt(0)}
               </div>
               <div>
-                <h3 className="text-lg font-bold text-stone-900">{selectedDoctor.name}</h3>
-                <p className="text-sm font-medium text-primary">{selectedDoctor.specialty}</p>
+                <h3 className="text-lg font-bold text-slate-900">{selectedDoctor.name}</h3>
+                <p className="text-sm font-medium text-blue-600">{selectedDoctor.specialty}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <AdminStatusBadge status={selectedDoctor.verificationStatus || "pending"} />
                   <AdminStatusBadge status={selectedDoctor.active ? "active" : "inactive"} />
@@ -211,52 +211,52 @@ export function AdminDoctorsClient() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Contact Information</h4>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Contact Information</h4>
                 <div className="space-y-2">
                   <div>
-                    <span className="text-xs text-stone-500 block">Email</span>
-                    <span className="text-sm font-medium text-stone-900">{selectedDoctor.email || "Not provided"}</span>
+                    <span className="text-xs text-slate-500 block">Email</span>
+                    <span className="text-sm font-medium text-slate-900">{selectedDoctor.email || "Not provided"}</span>
                   </div>
                   <div>
-                    <span className="text-xs text-stone-500 block">Phone</span>
-                    <span className="text-sm font-medium text-stone-900">{selectedDoctor.phone || "Not provided"}</span>
+                    <span className="text-xs text-slate-500 block">Phone</span>
+                    <span className="text-sm font-medium text-slate-900">{selectedDoctor.phone || "Not provided"}</span>
                   </div>
                   <div>
-                    <span className="text-xs text-stone-500 block">Clinic</span>
-                    <span className="text-sm font-medium text-stone-900">{selectedDoctor.clinic || "Not provided"}</span>
+                    <span className="text-xs text-slate-500 block">Clinic</span>
+                    <span className="text-sm font-medium text-slate-900">{selectedDoctor.clinic || "Not provided"}</span>
                   </div>
                 </div>
               </div>
               
               <div>
-                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Professional Information</h4>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Professional Information</h4>
                 <div className="space-y-2">
                   <div>
-                    <span className="text-xs text-stone-500 block">Experience</span>
-                    <span className="text-sm font-medium text-stone-900">{selectedDoctor.experienceYears} years</span>
+                    <span className="text-xs text-slate-500 block">Experience</span>
+                    <span className="text-sm font-medium text-slate-900">{selectedDoctor.experienceYears} years</span>
                   </div>
                   <div>
-                    <span className="text-xs text-stone-500 block">Qualification</span>
-                    <span className="text-sm font-medium text-stone-900">{selectedDoctor.qualification || "Not provided"}</span>
+                    <span className="text-xs text-slate-500 block">Qualification</span>
+                    <span className="text-sm font-medium text-slate-900">{selectedDoctor.qualification || "Not provided"}</span>
                   </div>
                   <div>
-                    <span className="text-xs text-stone-500 block">Consultation Fee</span>
-                    <span className="text-sm font-medium text-stone-900">${selectedDoctor.consultationFee}</span>
+                    <span className="text-xs text-slate-500 block">Consultation Fee</span>
+                    <span className="text-sm font-medium text-slate-900">${selectedDoctor.consultationFee}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-stone-50 rounded-xl p-4 border border-border">
-              <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Verification Record</h4>
+            <div className="bg-slate-50 rounded-xl p-4 border border-border">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Verification Record</h4>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-stone-500">Status</span>
+                  <span className="text-sm text-slate-500">Status</span>
                   <AdminStatusBadge status={selectedDoctor.verificationStatus || "pending"} />
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-stone-500">Submitted</span>
-                  <span className="text-sm font-medium text-stone-900">
+                  <span className="text-sm text-slate-500">Submitted</span>
+                  <span className="text-sm font-medium text-slate-900">
                     {selectedDoctor.submittedAt ? new Date(selectedDoctor.submittedAt).toLocaleDateString() : "Not available"}
                   </span>
                 </div>
@@ -280,7 +280,7 @@ export function AdminDoctorsClient() {
           <>
             <button
               onClick={() => setDoctorToToggle(null)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
             >
               Cancel
             </button>
@@ -296,7 +296,7 @@ export function AdminDoctorsClient() {
         }
       >
         <div className="py-4">
-          <p className="text-stone-600 text-sm">
+          <p className="text-slate-600 text-sm">
             Are you sure you want to <strong>{doctorToToggle?.active ? "deactivate" : "activate"}</strong> Dr. {doctorToToggle?.name}? 
           </p>
           {doctorToToggle?.active && (
