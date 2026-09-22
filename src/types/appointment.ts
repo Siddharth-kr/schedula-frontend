@@ -20,7 +20,14 @@ export type Appointment = {
   reason: string;
   room: string;
   prescription?: Prescription;
-  review?: { rating: number; text?: string };
+  review?: { 
+    rating: number; 
+    text?: string;
+    createdAt?: string;
+    isReported?: boolean;
+    reportReason?: string;
+    isHidden?: boolean;
+  };
   // New intake fields
   patientInfo?: {
     dob?: string;

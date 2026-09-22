@@ -86,11 +86,19 @@ const appointmentSlice = createSlice({
         addNotification({ userId: apt.patient.name, message: `Prescription available for your appointment with ${apt.clinician}.`, type: "prescription", appointmentId: id });
       }
     },
-    addReview: (state, action: PayloadAction<{ id: string; review: { rating: number; text?: string } }>) => {
+    addReview: (state, action: PayloadAction<{ id: string; review: { rating: number; text?: string; isReported?: boolean; reportReason?: string; isHidden?: boolean; createdAt?: string } }>) => {
       const { id, review } = action.payload;
       const apt = state.appointments.find(a => a.id === id);
       if (apt) {
         apt.review = review;
+        persistToLocalStorage(current(state.appointments));
+      }
+    },
+    updateReview: (state, action: PayloadAction<{ id: string; updates: Partial<{ rating: number; text?: string; isReported?: boolean; reportReason?: string; isHidden?: boolean }> }>) => {
+      const { id, updates } = action.payload;
+      const apt = state.appointments.find(a => a.id === id);
+      if (apt && apt.review) {
+        apt.review = { ...apt.review, ...updates };
         persistToLocalStorage(current(state.appointments));
       }
     }
@@ -104,7 +112,8 @@ export const {
   updateAppointmentData, 
   rescheduleAppointment, 
   addPrescription, 
-  addReview 
+  addReview,
+  updateReview
 } = appointmentSlice.actions;
 
 export default appointmentSlice.reducer;
