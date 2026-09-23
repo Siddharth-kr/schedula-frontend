@@ -129,6 +129,16 @@ export function AdminReviewsClient() {
   const confirmRemoveReview = () => {
     if (reviewToRemove) {
       dispatch(updateReview({ id: reviewToRemove.id, updates: { isHidden: true } }));
+      
+      import('@/store/slices/auditSlice').then(({ addAuditLog }) => {
+        dispatch(addAuditLog({
+          admin: "Schedula Admin",
+          action: "Review removed",
+          entity: `Review by ${reviewToRemove.patient.name}`,
+          details: `Removed reported review for doctor ${reviewToRemove.clinician}.`
+        }));
+      });
+      
       toast.success("Review removed successfully");
       setReviewToRemove(null);
     }

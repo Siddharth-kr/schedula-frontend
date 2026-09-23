@@ -39,6 +39,7 @@ export function AdminStatusBadge({ status, className = "" }: AdminStatusBadgePro
     paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
     published: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
     sent: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    scheduled: "bg-amber-50 text-amber-700 ring-amber-600/20",
     draft: "bg-slate-100 text-slate-600 ring-slate-500/20",
   };
   
