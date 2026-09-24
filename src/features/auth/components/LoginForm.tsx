@@ -24,6 +24,7 @@ export function LoginForm() {
   const [passwordError, setPasswordError] = useState("");
 
   const { patient } = useAppSelector(state => state.auth);
+  const maintenanceMode = useAppSelector(state => state.adminState.settings.maintenanceMode);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -55,6 +56,12 @@ export function LoginForm() {
     setError(null);
 
     if (!validate()) return;
+    
+    if (maintenanceMode) {
+      toast.error("Patient access is temporarily unavailable.");
+      setError("Patient access is currently unavailable while we perform scheduled maintenance. Please try again later.");
+      return;
+    }
 
     setIsLoading(true);
     try {

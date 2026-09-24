@@ -11,6 +11,7 @@ import { AdminStatusBadge } from "./AdminStatusBadge";
 import { AdminModal } from "./AdminModal";
 import { AdminPageSkeleton } from "./AdminSkeleton";
 import { AdminEmptyState } from "./AdminEmptyState";
+import { usePermissions } from "@/lib/permissions";
 import { toast } from "react-toastify";
 import type { Appointment } from "@/types/appointment";
 
@@ -18,6 +19,9 @@ export function AdminReviewsClient() {
   const dispatch = useAppDispatch();
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { hasPermission } = usePermissions();
+  const canApprove = hasPermission('Reviews', 'approve');
   
   const appointments = useAppSelector((state) => state.appointments.appointments);
 
@@ -257,7 +261,7 @@ export function AdminReviewsClient() {
               </svg>
             </button>
             <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 py-1">
-              {getReportStatus(apt) === "Reported" && (
+              {getReportStatus(apt) === "Reported" && canApprove && (
                 <button
                   onClick={() => setReviewToRemove(apt)}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -516,7 +520,7 @@ export function AdminReviewsClient() {
               >
                 Close
               </button>
-              {getReportStatus(selectedReview) === "Reported" && (
+              {getReportStatus(selectedReview) === "Reported" && canApprove && (
                 <button
                   onClick={() => {
                     setSelectedReview(null);

@@ -11,6 +11,7 @@ import { AdminStatusBadge } from "./AdminStatusBadge";
 import { AdminModal } from "./AdminModal";
 import { AdminPageSkeleton } from "./AdminSkeleton";
 import { AdminEmptyState } from "./AdminEmptyState";
+import { usePermissions } from "@/lib/permissions";
 import { toast } from "react-toastify";
 import type { UserProfile } from "@/types/user-profile";
 
@@ -29,6 +30,8 @@ type CombinedPatient = {
 export function AdminPatientsClient() {
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('Patients', 'edit');
   
   const appointments = useAppSelector((state) => state.appointments.appointments);
   const [profiles, setProfiles] = useState(() => {
@@ -461,16 +464,18 @@ export function AdminPatientsClient() {
 
             {/* Actions Footer */}
             <div className="border-t border-slate-100 pt-5 flex items-center justify-between">
-              <button
-                onClick={() => setIsConfirmingDeactivate(true)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border shadow-sm ${
-                  selectedPatient.accountStatus === 'active' 
-                    ? "bg-white border-red-200 text-red-600 hover:bg-red-50" 
-                    : "bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                }`}
-              >
-                {selectedPatient.accountStatus === 'active' ? "Deactivate Account" : "Activate Account"}
-              </button>
+              {canEdit ? (
+                <button
+                  onClick={() => setIsConfirmingDeactivate(true)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border shadow-sm ${
+                    selectedPatient.accountStatus === 'active' 
+                      ? "bg-white border-red-200 text-red-600 hover:bg-red-50" 
+                      : "bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                  }`}
+                >
+                  {selectedPatient.accountStatus === 'active' ? "Deactivate Account" : "Activate Account"}
+                </button>
+              ) : <div />}
               <button
                 onClick={() => setSelectedPatient(null)}
                 className="px-5 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200 transition-colors shadow-sm"

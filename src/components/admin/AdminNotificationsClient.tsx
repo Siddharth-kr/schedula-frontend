@@ -10,6 +10,7 @@ import { AdminStatusBadge } from "./AdminStatusBadge";
 import { AdminModal } from "./AdminModal";
 import { AdminPageSkeleton } from "./AdminSkeleton";
 import { AdminEmptyState } from "./AdminEmptyState";
+import { usePermissions } from "@/lib/permissions";
 import { toast } from "react-toastify";
 import type { AdminNotification, NotificationAudience } from "@/types/notification";
 import { mockUsers } from "@/lib/mock-data/users";
@@ -18,6 +19,9 @@ export function AdminNotificationsClient() {
   const dispatch = useAppDispatch();
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission('Notifications', 'create');
   
   const notifications = useAppSelector((state) => state.notifications.notifications);
   const doctors = useAppSelector((state) => state.doctors.doctors);
@@ -247,15 +251,17 @@ export function AdminNotificationsClient() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">System Notifications</h1>
           <p className="text-[15px] text-slate-500">Manage and send alerts to patients and doctors.</p>
         </div>
-        <button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-sm whitespace-nowrap text-[14px]"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Create Notification
-        </button>
+        {canCreate && (
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-sm whitespace-nowrap text-[14px]"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create Notification
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}

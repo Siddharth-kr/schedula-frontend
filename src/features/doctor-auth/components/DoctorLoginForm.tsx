@@ -24,6 +24,7 @@ export function DoctorLoginForm() {
   const [passwordError, setPasswordError] = useState("");
 
   const { doctor } = useAppSelector(state => state.auth);
+  const maintenanceMode = useAppSelector(state => state.adminState.settings.maintenanceMode);
 
   // Redirect if already authenticated as doctor
   useEffect(() => {
@@ -58,6 +59,12 @@ export function DoctorLoginForm() {
     setError(null);
 
     if (!validate()) return;
+    
+    if (maintenanceMode) {
+      toast.error("Doctor access is temporarily unavailable.");
+      setError("Doctor access is temporarily unavailable while scheduled maintenance is in progress. Please try again later.");
+      return;
+    }
 
     setIsLoading(true);
     try {

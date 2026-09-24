@@ -11,6 +11,7 @@ import { AdminModal } from "./AdminModal";
 import { AdminStatusBadge } from "./AdminStatusBadge";
 import { AdminPageSkeleton } from "./AdminSkeleton";
 import { AdminEmptyState } from "./AdminEmptyState";
+import { usePermissions } from "@/lib/permissions";
 import type { Doctor } from "@/types/doctor";
 import { toast } from "react-toastify";
 
@@ -18,6 +19,9 @@ export function AdminDoctorsClient() {
   const dispatch = useAppDispatch();
   const doctors = useAppSelector(state => state.doctors.doctors);
   const [isClient, setIsClient] = useState(false);
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('Doctors', 'edit');
+  const canCreate = hasPermission('Doctors', 'create');
   
   const [searchTerm, setSearchTerm] = useState("");
   const [verificationFilter, setVerificationFilter] = useState("all");
@@ -393,16 +397,18 @@ export function AdminDoctorsClient() {
 
             {/* Actions Footer */}
             <div className="border-t border-slate-100 pt-5 flex items-center justify-between">
-              <button
-                onClick={() => setDoctorToToggle(selectedDoctor)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border shadow-sm ${
-                  selectedDoctor.active 
-                    ? "bg-white border-red-200 text-red-600 hover:bg-red-50" 
-                    : "bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                }`}
-              >
-                {selectedDoctor.active ? "Deactivate Account" : "Activate Account"}
-              </button>
+              {canEdit ? (
+                <button
+                  onClick={() => setDoctorToToggle(selectedDoctor)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border shadow-sm ${
+                    selectedDoctor.active 
+                      ? "bg-white border-red-200 text-red-600 hover:bg-red-50" 
+                      : "bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                  }`}
+                >
+                  {selectedDoctor.active ? "Deactivate Account" : "Activate Account"}
+                </button>
+              ) : <div />}
               <button
                 onClick={() => setSelectedDoctor(null)}
                 className="px-5 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200 transition-colors shadow-sm"

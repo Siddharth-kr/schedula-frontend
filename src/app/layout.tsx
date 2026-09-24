@@ -16,6 +16,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { StoreProvider } from "@/components/providers/StoreProvider";
 import { GlobalAssistant } from "@/components/assistant/GlobalAssistant";
+import { MaintenanceGuard } from "@/components/layout/MaintenanceGuard";
 
 export const metadata: Metadata = {
   title: "Schedula | Appointment operations starter",
@@ -34,10 +35,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans text-text-primary bg-background">
         <StoreProvider>
-          <ToastProvider />
-          <Navbar />
-          {children}
-          <GlobalAssistant />
+          <MaintenanceGuard>
+            <ToastProvider />
+            <Navbar />
+            {children}
+            <GlobalAssistant />
+          </MaintenanceGuard>
         </StoreProvider>
       </body>
     </html>
