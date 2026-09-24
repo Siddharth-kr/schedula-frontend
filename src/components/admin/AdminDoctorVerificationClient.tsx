@@ -10,6 +10,7 @@ import { AdminModal } from "./AdminModal";
 import { AdminStatusBadge } from "./AdminStatusBadge";
 import { AdminPageSkeleton } from "./AdminSkeleton";
 import { AdminEmptyState } from "./AdminEmptyState";
+import { usePermissions } from "@/lib/permissions";
 import type { Doctor } from "@/types/doctor";
 import { toast } from "react-toastify";
 
@@ -17,6 +18,8 @@ export function AdminDoctorVerificationClient() {
   const dispatch = useAppDispatch();
   const doctors = useAppSelector(state => state.doctors.doctors);
   const [isClient, setIsClient] = useState(false);
+  const { hasPermission } = usePermissions();
+  const canApprove = hasPermission('Doctor Verification', 'approve');
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("pending");
@@ -422,7 +425,7 @@ export function AdminDoctorVerificationClient() {
 
             <div className="border-t border-slate-100 pt-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {selectedDoctor.verificationStatus === 'pending' && (
+                {selectedDoctor.verificationStatus === 'pending' && canApprove && (
                   <>
                     <button
                       onClick={() => setRejectConfirm(selectedDoctor)}

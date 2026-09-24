@@ -4,6 +4,7 @@ import appointmentReducer, { loadAppointments } from './slices/appointmentSlice'
 import doctorReducer, { loadDoctors } from './slices/doctorSlice';
 import notificationReducer, { loadNotifications } from './slices/notificationSlice';
 import auditReducer, { loadAuditLogs } from './slices/auditSlice';
+import adminReducer, { loadAdminState } from './slices/adminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     doctors: doctorReducer,
     notifications: notificationReducer,
     audit: auditReducer,
+    adminState: adminReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 });
@@ -25,6 +27,7 @@ if (typeof window !== 'undefined') {
   store.dispatch(loadDoctors());
   store.dispatch(loadNotifications());
   store.dispatch(loadAuditLogs());
+  store.dispatch(loadAdminState());
 
   window.addEventListener('schedula_auth_change', () => {
     store.dispatch(loadSession());
@@ -34,6 +37,9 @@ if (typeof window !== 'undefined') {
   const DOCTORS_KEY = 'schedula_doctors';
   const NOTIFICATIONS_KEY = 'schedula_admin_notifications';
   const AUDIT_LOGS_KEY = 'schedula_audit_logs';
+  const ADMIN_USERS_KEY = 'schedula_admin_users';
+  const ADMIN_ROLES_KEY = 'schedula_admin_roles';
+  const ADMIN_SETTINGS_KEY = 'schedula_admin_settings';
   
   window.addEventListener('storage', (e) => {
     if (e.key === APPOINTMENTS_KEY) {
@@ -44,6 +50,8 @@ if (typeof window !== 'undefined') {
       store.dispatch(loadNotifications());
     } else if (e.key === AUDIT_LOGS_KEY) {
       store.dispatch(loadAuditLogs());
+    } else if (e.key === ADMIN_USERS_KEY || e.key === ADMIN_ROLES_KEY || e.key === ADMIN_SETTINGS_KEY) {
+      store.dispatch(loadAdminState());
     }
   });
 
@@ -54,3 +62,4 @@ if (typeof window !== 'undefined') {
     store.dispatch(loadAuditLogs());
   });
 }
+

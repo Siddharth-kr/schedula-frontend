@@ -9,11 +9,16 @@ import { AdminStatusBadge } from "./AdminStatusBadge";
 import { AdminModal } from "./AdminModal";
 import { AdminPageSkeleton } from "./AdminSkeleton";
 import { AdminEmptyState } from "./AdminEmptyState";
+import { usePermissions } from "@/lib/permissions";
 import type { Appointment } from "@/types/appointment";
 
 export function AdminAppointmentsClient() {
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('Appointments', 'edit');
+  const canDelete = hasPermission('Appointments', 'delete');
   
   const appointments = useAppSelector((state) => state.appointments.appointments);
 
