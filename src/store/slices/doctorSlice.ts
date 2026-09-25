@@ -9,7 +9,7 @@ interface DoctorState {
 
 const DOCTORS_KEY = 'schedula_doctors';
 
-const baseInitialDoctors: Doctor[] = mockDoctors.map((d, index) => {
+export const baseInitialDoctors: Doctor[] = mockDoctors.map((d, index) => {
   let status: 'pending' | 'approved' | 'rejected' = 'approved';
   let active = true;
   let submittedAt = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -49,6 +49,17 @@ const loadFromStorage = (): Doctor[] => {
       let parsedDoctors = JSON.parse(data) as Doctor[];
       let migrated = false;
       
+      // RECOVERY MIGRATION: If previous bug wiped out the base seeded doctors, restore them.
+      if (parsedDoctors.length < baseInitialDoctors.length) {
+        const missingBase = baseInitialDoctors.filter(
+          bd => !parsedDoctors.find(pd => pd.id === bd.id)
+        );
+        if (missingBase.length > 0) {
+          parsedDoctors = [...missingBase, ...parsedDoctors];
+          migrated = true;
+        }
+      }
+      
       parsedDoctors = parsedDoctors.map(doc => {
         const authAccount = defaultDoctorAccounts.find(acc => acc.id === doc.id);
         const updatedDoc = { ...doc };
@@ -70,6 +81,17 @@ const loadFromStorage = (): Doctor[] => {
           updatedDoc.verificationStatus = 'pending';
           updatedDoc.submittedAt = new Date().toISOString();
           updatedDoc.active = true;
+          modified = true;
+        }
+        
+        // Fix data-shape mismatch for newly registered doctors missing required Doctor type fields
+        if (updatedDoc.availableNextDays === undefined) {
+          updatedDoc.availableNextDays = 2; // Default to available in 2 days
+          modified = true;
+        }
+
+        if (updatedDoc.clinic === undefined) {
+          updatedDoc.clinic = 'Schedula Medical Center';
           modified = true;
         }
         

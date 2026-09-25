@@ -140,74 +140,108 @@ export default function HealthJourneyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background py-8 sm:py-12">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+    <main className="min-h-[calc(100vh-4rem)] bg-[#F8FAFC] py-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1440px]">
         
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black font-serif text-text-primary tracking-tight">Health Journey</h1>
-          <p className="mt-2 text-text-secondary">Your complete history of appointments, prescriptions, and healthcare activity.</p>
-        </div>
-
-        {/* Health Summary & Insights */}
-        <div className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-center">
-            <span className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-1">Total Visits</span>
-            <span className="text-3xl font-black text-primary">{totalVisits}</span>
+        {/* PAGE HEADER */}
+        <div className="bg-blue-50/50 rounded-2xl border border-blue-100 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-blue-100/50 to-transparent pointer-events-none rounded-r-2xl" />
+          <div className="size-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary border border-blue-100 shrink-0 relative z-10">
+            <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
           </div>
-          <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-center">
-            <span className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-1">Completed</span>
-            <span className="text-3xl font-black text-success">{completedVisits}</span>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-center">
-            <span className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-1">Prescriptions</span>
-            <span className="text-3xl font-black text-indigo-600">{totalPrescriptions}</span>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-center">
-            <span className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-1">Upcoming</span>
-            <span className="text-3xl font-black text-amber-600">{upcomingAppointments.length}</span>
+          <div className="relative z-10">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-serif mb-1">Health Journey</h1>
+            <p className="text-slate-500 text-sm">Your complete history of appointments, prescriptions, and healthcare activity.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="md:col-span-2 bg-primary/5 rounded-2xl p-5 border border-primary/20">
-            <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-2">Health Insights</h3>
-            <ul className="space-y-1.5 text-sm text-text-secondary font-medium">
-              {completedVisits > 0 && <li>&bull; You have {completedVisits} completed appointments in your history.</li>}
-              {totalPrescriptions > 0 && <li>&bull; You have {totalPrescriptions} prescriptions in your health history.</li>}
-              {nextAppointment && <li>&bull; You have an upcoming appointment on {format(parseISO(nextAppointment.startsAt), "MMM d, yyyy")} with {formatClinicianName(nextAppointment.clinician)}.</li>}
+        {/* SUMMARY STATISTICS */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="size-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Visits</span>
+            </div>
+            <span className="text-3xl font-black text-slate-900 ml-11">{totalVisits}</span>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="size-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Completed</span>
+            </div>
+            <span className="text-3xl font-black text-slate-900 ml-11">{completedVisits}</span>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="size-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Prescriptions</span>
+            </div>
+            <span className="text-3xl font-black text-slate-900 ml-11">{totalPrescriptions}</span>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="size-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upcoming</span>
+            </div>
+            <span className="text-3xl font-black text-slate-900 ml-11">{upcomingAppointments.length}</span>
+          </div>
+        </div>
+
+        {/* HEALTH INSIGHTS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 bg-blue-50/30 rounded-2xl p-6 border border-blue-100/50 flex flex-col justify-center">
+            <h3 className="text-xs font-bold text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Health Insights
+            </h3>
+            <ul className="space-y-2 text-sm text-slate-600 font-medium">
+              {completedVisits > 0 && <li>&bull; You have <span className="font-bold text-slate-900">{completedVisits}</span> completed appointments in your history.</li>}
+              {totalPrescriptions > 0 && <li>&bull; You have <span className="font-bold text-slate-900">{totalPrescriptions}</span> prescriptions in your health history.</li>}
+              {nextAppointment && <li>&bull; You have an upcoming appointment on <span className="font-bold text-slate-900">{format(parseISO(nextAppointment.startsAt), "MMM d, yyyy")}</span> with <span className="font-bold text-slate-900">{formatClinicianName(nextAppointment.clinician)}</span>.</li>}
               {completedVisits === 0 && totalPrescriptions === 0 && <li>&bull; Your health journey is just beginning. Book your first appointment!</li>}
             </ul>
           </div>
           {nextAppointment ? (
-            <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col">
-              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-1.5 h-full bg-amber-400" />
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                 </span>
                 Next Appointment
               </h3>
-              <p className="font-bold text-text-primary mb-0.5">{formatClinicianName(nextAppointment.clinician)}</p>
-              <p className="text-sm text-text-secondary mb-3">{format(parseISO(nextAppointment.startsAt), "MMM d")} at {format(parseISO(nextAppointment.startsAt), "h:mm a")}</p>
-              <Link href={`/confirmation/${nextAppointment.id}`} className="mt-auto block w-full text-center py-2 bg-background0 text-text-primary text-sm font-bold rounded-lg hover:bg-stone-200 transition-colors">
+              <p className="font-bold text-slate-900 mb-0.5 text-lg">{formatClinicianName(nextAppointment.clinician)}</p>
+              <p className="text-sm text-slate-500 mb-4">{format(parseISO(nextAppointment.startsAt), "MMM d, yyyy")} at {format(parseISO(nextAppointment.startsAt), "h:mm a")}</p>
+              <Link href={`/confirmation/${nextAppointment.id}`} className="mt-auto block w-full text-center py-2.5 bg-slate-50 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-100 hover:text-primary transition-colors border border-slate-200">
                 View Details
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-center items-center text-center">
-              <span className="text-text-secondary text-sm font-medium mb-3">No upcoming appointments.</span>
-              <Link href="/doctors" className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-dark transition-colors">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
+              <div className="size-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-3">
+                <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </div>
+              <span className="text-slate-500 text-sm font-medium mb-4">No upcoming appointments.</span>
+              <Link href="/doctors" className="px-6 py-2.5 bg-[#FF5A5F] text-white text-sm font-bold rounded-xl hover:bg-[#e0484d] transition-colors shadow-sm">
                 Book Now
               </Link>
             </div>
           )}
         </div>
 
-        {/* Controls: Search & Filters */}
-        <div className="mb-8 flex flex-col sm:flex-row justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* CONTROLS: SEARCH & FILTERS */}
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
+          <div className="relative w-full xl:max-w-md">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input 
@@ -215,51 +249,61 @@ export default function HealthJourneyPage() {
               placeholder="Search your health history..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-white outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow text-sm font-medium placeholder:text-slate-400 shadow-sm"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-text-primary"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                &times;
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             )}
           </div>
           
-          <div className="flex bg-white rounded-xl p-1 border border-border shadow-sm shrink-0 overflow-x-auto">
-            {(["all", "appointments", "prescriptions", "completed", "cancelled"] as const).map(f => (
-              <button 
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 whitespace-nowrap rounded-lg text-sm font-bold transition-all ${filter === f ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar w-full xl:w-auto">
+            {(['all', 'appointments', 'prescriptions', 'completed', 'cancelled'] as const).map(f => {
+              const isActive = filter === f;
+              let label = f.charAt(0).toUpperCase() + f.slice(1);
+              if (f === 'all') label = 'All Records';
+              
+              return (
+                <button 
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
+                    isActive 
+                      ? 'bg-[#0F2747] border-[#0F2747] text-white shadow-md' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Timeline */}
+        {/* TIMELINE */}
         {timelineItems.length === 0 ? (
-          <div className="rounded-3xl border border-border bg-white p-12 text-center shadow-sm">
-            <div className="mx-auto grid size-16 place-items-center rounded-full bg-stone-100 text-stone-400 mb-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm flex flex-col items-center">
+            <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-4 border border-slate-100">
               <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold font-serif text-text-primary mb-2">No matching records found</h3>
-            <p className="text-text-secondary mb-6">
+            <h3 className="text-xl font-bold font-serif text-slate-900 mb-2">No matching records found</h3>
+            <p className="text-slate-500 mb-8 max-w-md text-sm">
               {searchQuery ? "Try adjusting your search terms or clearing the search." : filter !== "all" ? `You don't have any ${filter} records yet.` : "Your health history is empty."}
             </p>
             {searchQuery ? (
-              <button onClick={() => setSearchQuery("")} className="px-5 py-2.5 rounded-xl border border-border bg-white font-bold text-text-primary hover:bg-stone-50">Clear Search</button>
+              <button onClick={() => setSearchQuery("")} className="px-6 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors text-sm">Clear Search</button>
             ) : (
-              <Link href="/doctors" className="inline-flex rounded-xl bg-primary px-6 py-3 font-bold text-white transition-colors hover:bg-primary-dark">Find a Doctor</Link>
+              <Link href="/doctors" className="inline-flex rounded-xl bg-primary px-6 py-2.5 font-bold text-white transition-colors hover:bg-primary-dark shadow-sm text-sm">Find a Doctor</Link>
             )}
           </div>
         ) : (
-          <div className="relative border-l-2 border-stone-200 ml-4 sm:ml-6 space-y-8 pb-12">
+          <div className="relative border-l-2 border-slate-200 ml-4 sm:ml-6 space-y-6 pb-12">
             {timelineItems.map((item) => {
               const dateObj = parseISO(item.date);
               const dateFormatted = format(dateObj, "MMM d, yyyy");
@@ -268,55 +312,65 @@ export default function HealthJourneyPage() {
               if (item.type === "prescription" && item.prescription) {
                 return (
                   <div key={item.id} className="relative pl-8 sm:pl-10">
-                    <div className="absolute -left-[17px] top-1 grid size-8 place-items-center rounded-full bg-indigo-600 text-white shadow-[0_0_0_4px_var(--color-background)]">
+                    {/* Timeline Marker */}
+                    <div className="absolute -left-[17px] top-4 grid size-8 place-items-center rounded-full bg-indigo-50 text-indigo-600 shadow-[0_0_0_4px_#F8FAFC] border border-indigo-200">
                       <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
                     
-                    <div className="group rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
-                              Prescription Issued
-                            </span>
-                            <span className="text-sm font-medium text-text-secondary">{dateFormatted}</span>
+                    {/* Prescription Card */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md">
+                      
+                      {/* Top Row: Status & Date & Button */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider border border-indigo-100">
+                            <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Prescription Issued
+                          </span>
+                          <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500">
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            {dateFormatted}
                           </div>
-                          <h3 className="text-xl font-bold font-serif text-text-primary mb-1">
-                            {item.prescription.diagnosis || "Medical Prescription"}
-                          </h3>
-                          <p className="text-sm text-text-secondary">
-                            Issued by <span className="font-semibold text-text-primary">{formatClinicianName(item.appointment.clinician)}</span>
-                          </p>
-                          <p className="text-xs text-stone-500 mt-1 flex items-center gap-1">
-                            <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                            Linked to appointment on {format(parseISO(item.appointment.startsAt), "MMM d, yyyy")}
-                          </p>
                         </div>
-                        <Button 
+                        <button 
                           onClick={() => setViewingPrescription({ apt: item.appointment, p: item.prescription! })}
-                          className="shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200"
+                          className="flex items-center justify-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50/50 hover:bg-indigo-100 px-4 py-2 rounded-xl border border-indigo-100 w-full sm:w-auto"
                         >
                           View Prescription
-                        </Button>
+                          <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                        </button>
                       </div>
 
+                      {/* Main Info */}
+                      <div className="mb-4">
+                        <h3 className="text-lg font-extrabold text-slate-900 mb-1">
+                          {item.prescription.diagnosis || "Medical Prescription"}
+                        </h3>
+                        <p className="text-sm text-slate-500 mb-2">
+                          Issued by <span className="font-bold text-slate-700">{formatClinicianName(item.appointment.clinician)}</span>
+                        </p>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100 text-xs font-medium text-slate-600">
+                          <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                          Linked to appointment on {format(parseISO(item.appointment.startsAt), "MMM d, yyyy")}
+                        </div>
+                      </div>
+
+                      {/* Medicines */}
                       {item.prescription.medicines.length > 0 && (
-                        <div className="mt-4 rounded-xl bg-stone-50 border border-stone-200 p-3">
-                          <div className="flex flex-wrap gap-2">
-                            {item.prescription.medicines.slice(0, 3).map((med, idx) => (
-                              <span key={idx} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-text-primary border border-stone-200 shadow-sm">
-                                <svg className="size-3.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6 10a4 4 0 118 0 4 4 0 01-8 0z" /></svg>
-                                {med.name}
-                              </span>
-                            ))}
-                            {item.prescription.medicines.length > 3 && (
-                              <span className="inline-flex items-center rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-bold text-stone-600 border border-stone-200">
-                                +{item.prescription.medicines.length - 3} more
-                              </span>
-                            )}
-                          </div>
+                        <div className="flex flex-wrap gap-2">
+                          {item.prescription.medicines.slice(0, 3).map((med, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[13px] font-bold text-slate-700 border border-slate-200 shadow-sm">
+                              <svg className="size-3.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6 10a4 4 0 118 0 4 4 0 01-8 0z" /></svg>
+                              {med.name}
+                            </span>
+                          ))}
+                          {item.prescription.medicines.length > 3 && (
+                            <span className="inline-flex items-center rounded-lg bg-slate-50 px-3 py-1.5 text-[13px] font-bold text-slate-500 border border-slate-200">
+                              +{item.prescription.medicines.length - 3} more
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -329,55 +383,81 @@ export default function HealthJourneyPage() {
               
               return (
                 <div key={item.id} className="relative pl-8 sm:pl-10">
-                  <div className={`absolute -left-[13px] top-2 grid size-6 place-items-center rounded-full shadow-[0_0_0_4px_var(--color-background)] ${
-                    item.appointment.status === 'completed' ? 'bg-success/20 text-success' : 
-                    item.appointment.status === 'cancelled' ? 'bg-error/20 text-error' : 
-                    'bg-primary/20 text-primary'
+                  {/* Timeline Marker */}
+                  <div className={`absolute -left-[13px] top-5 grid size-6 place-items-center rounded-full shadow-[0_0_0_4px_#F8FAFC] ${
+                    item.appointment.status === "completed" || item.appointment.status === "confirmed" ? "bg-emerald-50 border border-emerald-200" : 
+                    item.appointment.status === "cancelled" ? "bg-red-50 border border-red-200" : 
+                    item.appointment.status === "missed" ? "bg-slate-100 border border-slate-200" :
+                    "bg-amber-50 border border-amber-200"
                   }`}>
-                    <div className={`size-2 rounded-full ${
-                      item.appointment.status === 'completed' ? 'bg-success' : 
-                      item.appointment.status === 'cancelled' ? 'bg-error' : 
-                      'bg-primary'
+                    <div className={`size-2.5 rounded-full ${
+                      item.appointment.status === "completed" || item.appointment.status === "confirmed" ? "bg-emerald-500" : 
+                      item.appointment.status === "cancelled" ? "bg-red-500" : 
+                      item.appointment.status === "missed" ? "bg-slate-400" :
+                      "bg-amber-500"
                     }`} />
                   </div>
                   
-                  <div className="rounded-2xl border border-border bg-white p-5 shadow-sm transition-all hover:shadow-md flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                          item.appointment.status === 'completed' ? 'bg-success/10 text-success' : 
-                          item.appointment.status === 'missed' ? 'bg-amber-100 text-amber-700' : 
-                          item.appointment.status === 'cancelled' ? 'bg-error/10 text-error' :
-                          'bg-primary/10 text-primary'
+                  {/* Appointment Card */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md relative overflow-hidden">
+                    
+                    {/* Status colored left border */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                      item.appointment.status === "completed" || item.appointment.status === "confirmed" ? "bg-emerald-500" :
+                      item.appointment.status === "cancelled" ? "bg-red-500" :
+                      item.appointment.status === "missed" ? "bg-slate-400" :
+                      "bg-amber-400"
+                    }`} />
+
+                    {/* Top Row: Status & Date & Button */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100 pl-2">
+                      <div className="flex items-center gap-3">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider border ${
+                          item.appointment.status === "completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
+                          item.appointment.status === "missed" ? "bg-slate-50 text-slate-600 border-slate-200" : 
+                          item.appointment.status === "cancelled" ? "bg-red-50 text-red-600 border-red-100" :
+                          "bg-amber-50 text-amber-600 border-amber-100"
                         }`}>
-                          {item.appointment.status.charAt(0).toUpperCase() + item.appointment.status.slice(1)} Appointment
+                          {item.appointment.status} Appointment
                         </span>
-                        <span className="text-sm font-medium text-text-secondary">{dateFormatted} at {timeFormatted}</span>
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500">
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                          {dateFormatted}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hidden sm:flex">
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          {timeFormatted}
+                        </div>
                       </div>
-                      <h3 className="text-lg font-bold text-text-primary mb-1">
+                      <Link href={`/confirmation/${item.appointment.id}`} className="flex items-center justify-center gap-1.5 text-sm font-bold text-slate-700 hover:text-primary transition-colors bg-white hover:bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-sm w-full sm:w-auto">
+                        View Details
+                        <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                      </Link>
+                    </div>
+
+                    {/* Main Info */}
+                    <div className="pl-2">
+                      <h3 className="text-lg font-extrabold text-slate-900 mb-1">
                         {formatClinicianName(item.appointment.clinician)}
                       </h3>
-                      <p className="text-sm text-text-secondary mb-2">
+                      <p className="text-sm font-medium text-slate-500 mb-3">
                         {item.appointment.specialty} &bull; {item.appointment.durationMinutes} mins
                       </p>
-                      {item.appointment.reason && (
-                        <p className="text-sm text-text-primary bg-stone-50 rounded-lg p-2.5 border border-stone-100 inline-block">
-                          &quot;{item.appointment.reason}&quot;
-                        </p>
-                      )}
                       
-                      {hasPrescription && (
-                        <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 w-fit px-2.5 py-1 rounded-md">
-                          <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                          Prescription in records
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="shrink-0 flex flex-col gap-2 w-full sm:w-auto">
-                      <Link href={`/confirmation/${item.appointment.id}`} className="block w-full text-center px-4 py-2 bg-background0 text-text-primary text-sm font-bold rounded-lg hover:bg-stone-200 transition-colors border border-border">
-                        View Details
-                      </Link>
+                      <div className="flex flex-wrap gap-3">
+                        {item.appointment.reason && (
+                          <div className="text-[13px] font-medium text-slate-700 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-100">
+                            &quot;{item.appointment.reason}&quot;
+                          </div>
+                        )}
+                        
+                        {hasPrescription && (
+                          <div className="flex items-center gap-1.5 text-[13px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg">
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Prescription in records
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
