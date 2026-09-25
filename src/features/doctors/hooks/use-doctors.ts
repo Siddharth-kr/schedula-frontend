@@ -3,7 +3,8 @@ import type { Doctor } from "@/types/doctor";
 import { useAppSelector } from "@/store/hooks";
 
 export function useDoctors() {
-  const doctors = useAppSelector(state => state.doctors.doctors);
+  const allDoctors = useAppSelector(state => state.doctors.doctors);
+  const doctors = allDoctors.filter(d => d.active && d.verificationStatus === 'approved');
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
@@ -12,7 +13,7 @@ export function useDoctors() {
       setStatus("ready");
     }, 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [allDoctors, doctors]);
 
   return { data: doctors, status };
 }

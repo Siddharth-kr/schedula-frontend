@@ -12,6 +12,7 @@ import { AppointmentStatusBadge } from "@/components/ui/AppointmentStatusBadge";
 import { PrescriptionForm } from "./PrescriptionForm";
 import { PrescriptionDetails } from "./PrescriptionDetails";
 import { toast } from "react-toastify";
+import { freeSlot, getAllSlots } from "@/lib/availability-store";
 import { OnlineAppointmentActions } from "@/features/appointments/components/OnlineAppointmentActions";
 
 export function DoctorAppointmentDetails() {
@@ -75,6 +76,15 @@ export function DoctorAppointmentDetails() {
   const handleStatusChange = (newStatus: AppointmentStatus) => {
     updateAppointmentStatus(appointment.id, newStatus);
     setAppointment({ ...appointment, status: newStatus });
+    
+    if (newStatus === "cancelled") {
+      const slot = getAllSlots().find(s => s.appointmentId === appointment.id);
+      if (slot) {
+        freeSlot(slot.id);
+        window.dispatchEvent(new Event("schedula_slots_updated"));
+      }
+    }
+
     toast.success(`Appointment marked as ${newStatus}.`);
   };
 

@@ -27,9 +27,6 @@ function ensureSeeded(): void {
   const existing = localStorage.getItem(DOCTORS_KEY);
   if (existing) return;
 
-  // Seed doctor accounts
-  localStorage.setItem(DOCTORS_KEY, JSON.stringify(defaultDoctorAccounts));
-
   // Seed availability slots for the 4 existing doctors
   // Day 1 times
   const seededTimes = [
@@ -83,6 +80,9 @@ function readJSON<T>(key: string): T[] {
 function writeJSON<T>(key: string, data: T[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(key, JSON.stringify(data));
+  if (key === DOCTORS_KEY) {
+    window.dispatchEvent(new Event('schedula_doctors_change'));
+  }
 }
 
 function generateId(prefix: string): string {
@@ -293,9 +293,19 @@ export function getAvailableSlotsByDate(
 
 // ── Doctor Accounts ────────────────────────────────────────────────────────
 
+import { baseInitialDoctors } from "../store/slices/doctorSlice";
+
 export function getRegisteredDoctors(): DoctorProfile[] {
   ensureSeeded();
-  return readJSON<DoctorProfile>(DOCTORS_KEY);
+  const docs = readJSON<DoctorProfile>(DOCTORS_KEY);
+  if (docs.length === 0 && typeof window !== 'undefined') {
+    // If localStorage was cleared (e.g. during a test), we MUST fallback to the base mock doctors
+    // otherwise the new registration will completely overwrite the 12 existing doctors.
+    const baseDocs = baseInitialDoctors as unknown as DoctorProfile[];
+    writeJSON(DOCTORS_KEY, baseDocs);
+    return baseDocs;
+  }
+  return docs;
 }
 
 export function registerDoctor(

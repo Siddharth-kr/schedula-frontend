@@ -54,7 +54,7 @@ const authSlice = createSlice({
       state.patient = action.payload;
       state.doctor = null;
       state.admin = null;
-      window.dispatchEvent(new Event('schedula_auth_change'));
+      setTimeout(() => window.dispatchEvent(new Event('schedula_auth_change')), 0);
     },
     loginDoctor: (state, action: PayloadAction<DoctorProfile>) => {
       if (typeof window === 'undefined') return;
@@ -64,7 +64,7 @@ const authSlice = createSlice({
       state.patient = null;
       state.admin = null;
       state.doctor = action.payload;
-      window.dispatchEvent(new Event('schedula_auth_change'));
+      setTimeout(() => window.dispatchEvent(new Event('schedula_auth_change')), 0);
     },
     loginAdmin: (state, action: PayloadAction<User>) => {
       if (typeof window === 'undefined') return;
@@ -74,25 +74,25 @@ const authSlice = createSlice({
       state.patient = null;
       state.doctor = null;
       state.admin = action.payload;
-      window.dispatchEvent(new Event('schedula_auth_change'));
+      setTimeout(() => window.dispatchEvent(new Event('schedula_auth_change')), 0);
     },
     logoutPatient: (state) => {
       if (typeof window === 'undefined') return;
       localStorage.removeItem('mock_user');
       state.patient = null;
-      window.dispatchEvent(new Event('schedula_auth_change'));
+      setTimeout(() => window.dispatchEvent(new Event('schedula_auth_change')), 0);
     },
     logoutDoctor: (state) => {
       if (typeof window === 'undefined') return;
       clearDoctorSession();
       state.doctor = null;
-      window.dispatchEvent(new Event('schedula_auth_change'));
+      setTimeout(() => window.dispatchEvent(new Event('schedula_auth_change')), 0);
     },
     logoutAdmin: (state) => {
       if (typeof window === 'undefined') return;
       localStorage.removeItem('mock_admin');
       state.admin = null;
-      window.dispatchEvent(new Event('schedula_auth_change'));
+      setTimeout(() => window.dispatchEvent(new Event('schedula_auth_change')), 0);
     }
   }
 });
